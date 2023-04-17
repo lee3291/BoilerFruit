@@ -67,31 +67,73 @@ public class Customer extends User {
         this.shoppingCart.clear();
     }
 
+    /**
+     * buyItem method.
+     * <p>
+     * It will move a product in the shoppingCart into the itemsPurchased.
+     * quantity: quantity purchased
+     * decrement from store of the product.
+     */
+    public void buyItem(Product product, int quantity) {
+        // Get store and remove product from store shelf
+        Store store = Store.getAStore(product.getStore()); // <- store object
+        store.removeListing(product, quantity);
+
+        // Update store and customer history
+        Product productPurchased = new Product(product.getName(), product.getSeller(), product.getStore(),
+                product.getDescription(), product.getPrice(), quantity, this.getEmail());
+
+        store.addHistory(productPurchased);
+        this.addToItemsPurchased(productPurchased);
+    }
+
+    /**
+     * buyAllItem method.
+     * <p>
+     * It will move all the products in the shoppingCart into the itemsPurchased.
+     * only allowed to buy at shopping cart page.
+     * decrement from store of the product.
+     */
+    public void buyAllItem() {
+        for (Product p : this.getShoppingCart()) {
+            Store store = Store.getAStore(p.getStore()); // <- store object
+            store.removeListing(p, p.getQuantity());
+            this.addToItemsPurchased(p);
+        }
+
+        this.clearCart(); // empties customer shopping cart.
+        System.out.println("All items are bought. Cart is now empty!");
+        System.out.println("Going back...");
+    }
+
     // Data will include a list of stores by number of products sold and a list of stores by the products
     // purchased by that particular customer.
-    public void viewDashboard(Market market, boolean isAscending) {
+    public void viewDashboard(boolean isAscending) {
         //Customers can choose to sort the dashboard.
         ArrayList<Integer> quantities = new ArrayList<>();
-        int[] sales = new int[market.getStores().size()];
+        int[] sales = new int[Store.getStores().size()];
         ArrayList<String> purchasedFrom = new ArrayList<>();
         ArrayList<Store> stores = new ArrayList<>();
 
         // Loop through all stores on the marketplace
-        for (int i = 0; i < market.getStores().size(); i++) {
+        int index = 0;
+        for (String storeName : Store.getStores().keySet()) {
             // For each store, loop through its history and compute its net sales
-            Store ref = market.getStores().get(i);
+            Store ref = Store.getStores().get(storeName);
             int netSales = 0;
             for (int j = 0; j < ref.getHistory().size(); j++) {
                 Product purchased = ref.getHistory().get(j);
                 netSales += purchased.getQuantity();
             }
-            sales[i] = netSales;
+            sales[index] = netSales;
             quantities.add(netSales);
 
-            if (ref.getCustomers().contains(this)) {
+            if (ref.getCustomers().containsValue(this)) {
                 purchasedFrom.add(ref.getStoreName());
             }
             stores.add(ref);
+
+            index++;
         }
 
         Arrays.sort(sales);

@@ -1,0 +1,3 @@
+# Ignore the files generate the program
+*.csv
+*.txt

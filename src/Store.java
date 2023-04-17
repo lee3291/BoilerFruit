@@ -2,22 +2,24 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import com.opencsv.CSVWriterBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * A Store class that contains data about its products, its customers, and its history of purchased.
  */
 public class Store {
+    private static HashMap<String, Store> stores; // all the stores
+
     private String name; // name of the store
     private String seller; // the store's owner
     private ArrayList<Product> history; // the sale history
     private ArrayList<Product> currentProducts; // the current products listing
-    private ArrayList<Customer> customers; // the shop customers
+    private HashMap<String, Customer> customers; // the shop's customers
 
     /**
      * Initialize fields with only name seller
@@ -30,7 +32,7 @@ public class Store {
         this.seller = seller;
         currentProducts = new ArrayList<>();
         history = new ArrayList<>();
-        customers = new ArrayList<>();
+        customers = new HashMap<>();
     }
 
     /**
@@ -43,12 +45,46 @@ public class Store {
      * @param customers       the shop customers
      */
     public Store(String name, String seller, ArrayList<Product> history, ArrayList<Product> currentProducts,
-                 ArrayList<Customer> customers) {
+                 HashMap<String, Customer> customers) {
         this.name = name;
         this.seller = seller;
         this.currentProducts = currentProducts;
         this.history = history;
         this.customers = customers;
+    }
+
+    /**
+     * Get all stores from the stores hash map
+     * @return all store in the marketplace
+     */
+    public static HashMap<String, Store> getStores() {
+        return stores;
+    }
+
+    /**
+     * Get a store from stores
+     * @param storeName the name of the store to get
+     * @return the store specified by storeName
+     */
+    public static Store getAStore(String storeName) {
+        return stores.get(storeName);
+    }
+
+    /**
+     * Check if a store name existed
+     * @param storeName the store name to be checked
+     * @return true of store name existed; false otherwise
+     */
+    public static boolean isStoreNameExisted(String storeName) {
+        return getAStore(storeName) != null;
+    }
+
+    /**
+     * Add a new store to the global stores
+     * @param newStore the name of the new store
+     */
+    public static void addGlobalStore(Store newStore) {
+        stores.put(newStore.getStoreName(), newStore);
     }
 
     /**
@@ -60,14 +96,13 @@ public class Store {
      */
     public boolean addCustomer(Customer customer) {
         // Check if customer already exist; exit and return false if customer existed
-        for (Customer curr : customers) {
-            if (curr.getEmail().equalsIgnoreCase(customer.getEmail())) {
-                return false;
-            }
+        Customer potentialCustomer = customers.get(customer.getEmail());
+        if (potentialCustomer != null) {
+            return false;
         }
 
         // Add new customer to list if customer is new
-        customers.add(customer);
+        customers.put(customer.getEmail(), customer);
         return true;
     }
 
@@ -128,19 +163,20 @@ public class Store {
     /**
      * Add a new product to product listing; the product existed, increase the quantity by the product's quanity
      *
-     * @param product the product to be added
+     * @param newProduct the product to be added
      */
-    public void addListing(Product product) {
-        // Check if product already exist; exit and return false if product existed
-        for (Product curr : currentProducts) {
-            if (curr.getName().equalsIgnoreCase(product.getName())) {
-                curr.setQuantity(curr.getQuantity() + product.getQuantity());
+    public void addListing(Product newProduct) {
+        // Check if product already exist; increase the existing product quantity if it existed
+        for (Product product : currentProducts) {
+            if (product.getName().equalsIgnoreCase(newProduct.getName())) {
+                product.setQuantity(newProduct.getQuantity() + product.getQuantity());
                 return;
             }
         }
 
         // Add new product to listing if the product is new
-        currentProducts.add(product);
+        currentProducts.add(newProduct);
+        Product.addGlobalProduct(newProduct);
     }
 
     /**
@@ -156,59 +192,71 @@ public class Store {
     }
 
     /**
-     * Remove an existed product from product listing
+     * Remove quantity products from product listing
      *
-     * @param product  the product class product to be existed
+     * @param removeProduct the product class product to be existed
      * @param quantity the quantity to be removed
      */
-    public void removeListing(Product product, int quantity) {
-        Product deleteItem = null;
-        // Find the product in the listing; remove the product and return true
-        for (Product curr : currentProducts) {
-            if (curr.getName().equalsIgnoreCase(product.getName())) {
-                if (curr.getQuantity() != 0) {
-                    curr.setQuantity(curr.getQuantity() - quantity);
+    public boolean removeListing(String removeProduct, int quantity) {
+        // Search currentListing for product
+        int newQuantity;
+        Product product;
+        for (int i = 0; i < currentProducts.size(); i++) {
+            product = currentProducts.get(i);
+            if (product.getName().equalsIgnoreCase(removeProduct)) {
+                // Reduce the product's listing quantity to as much 0
+                newQuantity = Math.max(product.getQuantity() - quantity, 0);
 
-                    // Quantity reach 0 after purchase
-                    if (curr.getQuantity() == 0) {
-                        deleteItem = curr;
-                    }
-                } else {
-                    deleteItem = curr;
+                // New quantity is 0; remove the product from the hash map
+                if (newQuantity == 0) {
+                    currentProducts.remove(product);
                 }
-                break;
+
+                // New quantity is larger than 0; reduce the listing quantity to the new value
+                else {
+                    product.setQuantity(newQuantity);
+                }
+
+                return true;
             }
         }
 
-        // Product is not listed; exit and return false
-        if (deleteItem != null) {
-            currentProducts.remove(deleteItem);
-        }
+        // No removeProduct does not exist
+        return false;
     }
 
     /**
-     * Remove an existed product from product listing (regardless of quantity)
+     * Remove quantity products from product listing
      *
-     * @param productName the string product to be existed
-     * @return true if the product is successfully removed (existed product)
-     * or false if the product is not removed (new product)
+     * @param removeProduct the product class product to be existed
+     * @param quantity the quantity to be removed
      */
-    public boolean removeListing(String productName) {
-        Product deleteItem = null;
-        // Find the product in the listing; remove the product and return true
-        for (Product curr : currentProducts) {
-            if (curr.getName().equalsIgnoreCase(productName)) {
-                deleteItem = curr;
+    public boolean removeListing(Product removeProduct, int quantity) {
+        // Search currentListing for product
+        int newQuantity;
+        Product product;
+        for (int i = 0; i < currentProducts.size(); i++) {
+            product = currentProducts.get(i);
+            if (product.getName().equalsIgnoreCase(removeProduct.getName())) {
+                // Reduce the product's listing quantity to as much 0
+                newQuantity = Math.max(product.getQuantity() - quantity, 0);
+
+                // New quantity is 0; remove the product from the hash map
+                if (newQuantity == 0) {
+                    currentProducts.remove(product);
+                }
+
+                // New quantity is larger than 0; reduce the listing quantity to the new value
+                else {
+                    product.setQuantity(newQuantity);
+                }
+
+                return true;
             }
         }
 
-        // Product is not listed; exit and return false
-        if (deleteItem != null) {
-            currentProducts.remove(deleteItem);
-            return true;
-        } else {
-            return false;
-        }
+        // No removeProduct does not exist
+        return false;
     }
 
     /**
@@ -244,6 +292,7 @@ public class Store {
     public void viewHistory() {
         System.out.println("Store's purchases history");
         System.out.println("Product Name\t\t|\t\tPrice\t\t|\t\tBought By");
+
         for (Product product : history) {
             System.out.printf("%s\t\t|\t\t%.2f\t\t|\t\t%s",
                     product.getName(), product.getPrice(), product.getCustomerName());
@@ -255,7 +304,7 @@ public class Store {
      *
      * @return an array list customer of this store
      */
-    public ArrayList<Customer> getCustomers() {
+    public HashMap<String, Customer> getCustomers() {
         return customers;
     }
 
@@ -264,7 +313,7 @@ public class Store {
      *
      * @param customers an array list of customer
      */
-    public void setCustomers(ArrayList<Customer> customers) {
+    public void setCustomers(HashMap<String, Customer> customers) {
         this.customers = customers;
     }
 
@@ -273,8 +322,10 @@ public class Store {
      */
     public void viewCustomers() {
         System.out.printf("%s's Customers:\n", name);
-        for (int i = 0; i < customers.size(); i++) {
-            System.out.println((i + 1) + ". " + customers.get(i).getUserName());
+        int i = 1;
+        for (Customer customer : customers.values()) {
+            System.out.println(i + ". " + customer.getUserName());
+            i++;
         }
     }
 
@@ -329,7 +380,7 @@ public class Store {
         System.out.println("Customer\t\tTotal items purchased\t\tRevenue from customer");
         ArrayList<Product> currentHistory;
         double totalPaid = 0;
-        for (Customer customer : customers) {
+        for (Customer customer : customers.values()) {
             double currPaid = 0;
             // Get customer total paid
             currentHistory = searchProducts(customer);
@@ -359,7 +410,7 @@ public class Store {
         // Customer list
         System.out.println("Customers List:");
         ArrayList<Product> currentHistory;
-        for (Customer customer : customers) {
+        for (Customer customer : customers.values()) {
             // Customer email
             System.out.printf("\t%s :\n", customer.getEmail());
 
@@ -381,7 +432,7 @@ public class Store {
      * @param filePath the filePath to the CSV file for importing product
      * @return an array list of products imported from the CSV file; will be empty if filePath is invalid
      */
-    public ArrayList<Product> importCSV(String filePath, Market market) {
+    public ArrayList<Product> importCSV(String filePath) {
         ArrayList<Product> products = new ArrayList<>();
 
         List<String[]> strProduct;
@@ -397,7 +448,7 @@ public class Store {
                         Integer.parseInt(row[5]) // quanity
                 );
                 products.add(curr);
-                market.addProduct(curr);
+                Product.addGlobalProduct(curr);
             }
         } catch (FileNotFoundException e) { // Invalid file path error
             System.out.println("Invalid file path!");
@@ -439,5 +490,228 @@ public class Store {
         }
 
         System.out.printf("Products are written into\n\t%s\n", filePath);
+    }
+
+
+
+    /**
+     * Write store objects from {@link #stores} into a csv file.
+     * Create 2 type of file:
+     * Stores.txt:
+     * storeName1,storeName1's seller
+     * storeName2,storeName2's seller
+     * ...
+     * <p>
+     * ExampleStore.csv:
+     * ExampleStore's name,ExampleStore's seller
+     * <history>
+     * p1's name,p1's seller,p1's store,p1's description,p1's quantity purchased, p1's customer
+     * </history>
+     * <listing>
+     * p1's name,p1's seller,p1's store,p1's description,p1's quantity listing, p1's customer (will be <blank>)
+     * </listing>
+     * <customers>
+     * customer1's email
+     * customer2's email
+     * ...
+     * </customers>
+     */
+    public static void writeStoreInfo() {
+        try (PrintWriter pw = new PrintWriter(new FileWriter("Stores.txt"))) {
+            for (Store s : stores.values()) {
+                // Write a file containing all the unique store names
+                String line = String.format("%s,%s", s.getStoreName(), s.getSeller());
+                pw.println(line);
+
+                // For each store, write a CSV file for that store
+                try (CSVWriter writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(s.getStoreName() +
+                        ".csv"))
+                        .withSeparator(',')
+                        .build()) {
+                    ArrayList<String[]> lines = new ArrayList<>();
+
+                    String[] firstLine = new String[2];
+                    firstLine[0] = s.getStoreName();
+                    firstLine[1] = s.getSeller();
+                    lines.add(firstLine);
+
+                    lines.add(new String[]{"<history>"});
+                    for (Product p : s.getHistory()) {
+                        String[] productFields = p.productDetails();
+                        lines.add(productFields);
+                    }
+                    lines.add(new String[]{"</history>"});
+
+                    lines.add(new String[]{"<listing>"});
+                    for (Product p : s.getCurrentProducts()) {
+                        String[] productFields = p.productDetails();
+                        lines.add(productFields);
+                    }
+                    lines.add(new String[]{"</listing>"});
+
+                    lines.add(new String[]{"<customers>"});
+                    for (Customer c : s.getCustomers().values()) {
+                        String[] customerNames = {c.getUserName()};
+                        lines.add(customerNames);
+                    }
+                    lines.add(new String[]{"</customers>"});
+
+                    // write to csv file.
+                    writer.writeAll(lines);
+                }
+            }
+        } catch (Exception e) { // All other errors
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Read the Stores.txt from local storage, then read all the store that is listed in Stores.txt to initiate the
+     * {@link #stores} field
+     */
+    public static void readStoreInfo() {
+        stores = new HashMap<>();
+
+        // Initiate all stores from Stores.txt
+        try (BufferedReader bfr = new BufferedReader(new FileReader("Stores.txt"))) {
+            String line = bfr.readLine();
+            String name; // current store's name
+            String seller; // current store's seller
+
+            // Get each line's name and seller and create a new corresponding Store object
+            while (line != null) {
+                name = line.split(",")[0];
+                seller = line.split(",")[1];
+                stores.put(name, new Store(name, seller));
+                line = bfr.readLine();
+            }
+        } catch (FileNotFoundException e) { // first time running
+            System.out.println("Running readStoreInfo for the first time"); //TODO: delete when finish debugging
+            return;
+        } catch (IOException e) {
+            System.out.println("Failed to load customer files!");
+            e.printStackTrace();
+        }
+
+        // Loop through each store to find its correspond file; initiate its HashMap with the new info
+        for (Store store : stores.values()) {
+            try (CSVReader reader = new CSVReaderBuilder(new FileReader(store.getStoreName() + ".csv"))
+                    .build()) {
+                // Read name/seller
+                String[] row = reader.readNext();
+                String name = row[0]; // current store's name
+                String seller = row[1]; // current store's seller
+                if (!name.equals(store.getStoreName()) || !seller.equals(store.getSeller())) {
+                    System.out.println(store.getStoreName() + ".csv" + " is corrupted!");
+                    System.out.println("Store name and/or seller name does not matched!");
+                    System.out.printf("Seller: %s; Store Name: {%s}\n", seller, name);
+                    continue;
+                }
+
+                // Add store to seller
+                Seller currUser = (Seller) User.userGetterByName(seller);
+                if (currUser == null) {
+                    System.out.printf("Seller {%s} is not found for store {%s}\n", seller, name);
+                    continue;
+                }
+                currUser.addStore(store);
+
+                /// Read sale history
+                store.setHistory(new ArrayList<>()); // initialize store's history
+
+                // Make sure file is ok
+                row = reader.readNext();
+                if (!row[0].equals("<history>")) {
+                    System.out.println(store.getStoreName() + ".csv" + " is corrupted!");
+                    System.out.println("No <history> found");
+                    continue;
+                }
+
+                // Reading
+                row = reader.readNext();
+                while (row != null && !row[0].equals("</history>")) {
+                    Product curr = new Product(
+                            row[0], // store name
+                            row[1], //seller's name
+                            row[2], //product's store
+                            row[3], // description
+                            Double.parseDouble(row[4]), // price
+                            Integer.parseInt(row[5]), // quanity
+                            row[6] // customer
+                    );
+                    store.addHistory(curr);
+                    row = reader.readNext();
+                }
+
+                /// Read listing
+                store.setCurrentProducts(new ArrayList<>());
+
+                // Make sure file is ok
+                row = reader.readNext();
+                if (row == null) {
+                    System.out.println(store.getStoreName() + ".csv" + " is corrupted!");
+                    System.out.println("Reach end of file");
+                    continue;
+                } else if (!row[0].equals("<listing>")) {
+                    System.out.println(store.getStoreName() + ".csv" + " is corrupted!");
+                    System.out.printf("Expecting <listing> but get %s\n", row[0]);
+                    continue;
+                }
+
+                // Start reading
+                else {
+                    row = reader.readNext();
+                    while (row != null && !row[0].equals("</listing>")) {
+                        Product curr = new Product(
+                                row[0], // store name
+                                row[1], //seller's name
+                                row[2], //product's store
+                                row[3], // description
+                                Double.parseDouble(row[4]), // price
+                                Integer.parseInt(row[5]) // quanity
+                        );
+                        store.addListing(curr);
+                        row = reader.readNext();
+                    }
+                }
+
+                /// Read customers
+                store.setCustomers(new HashMap<>());
+
+                // Make sure file is ok
+                if (row == null) {
+                    System.out.println(store.getStoreName() + ".csv" + " is corrupted!");
+                    System.out.println("Reach end of file");
+                } else if (!row[0].equals("<customer>")) {
+                    System.out.println(store.getStoreName() + ".csv" + " is corrupted!");
+                    System.out.printf("Expecting <customer> but get %s\n", row[0]);
+                    continue;
+                }
+
+                // Reading
+                else {
+                    row = reader.readNext();
+                    while (row != null && !row[0].equals("</customer>")) {
+                        User temp = User.userGetterByName(row[0]);
+                        if (temp instanceof Customer) {
+                            store.addCustomer((Customer) temp);
+                        } else {
+                            System.out.println(store.getStoreName() + ".csv" + " is corrupted!");
+                            continue;
+                        }
+                        row = reader.readNext();
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("Failed to load customer files!");
+                e.printStackTrace();
+                return;
+            } catch (CsvValidationException e) {
+                System.out.println("CSV error occur!");
+                e.printStackTrace();
+                return;
+            }
+        }
     }
 }
