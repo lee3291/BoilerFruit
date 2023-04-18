@@ -14,9 +14,9 @@ public abstract class User {
 
     // For different user instance
     private String userName; // unique value per user
-    private String email; // unique value per user; user for Hashmap key
+    private final String email; // unique value per user; user for Hashmap key
     private String password;
-    private ArrayList<String> inbox;
+    private final ArrayList<String> inbox;
 
     // For signing up
     public final static int USERNAME_MAX_LENGTH = 15; // Max username length
@@ -75,7 +75,6 @@ public abstract class User {
      * @return {@link #userName}
      */
 
-
     public String getUserName() {
         return userName;
     }
@@ -88,10 +87,6 @@ public abstract class User {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getPassword() {
         return password;
     }
@@ -102,10 +97,6 @@ public abstract class User {
 
     public ArrayList<String> getInbox() {
         return inbox;
-    }
-
-    public void setInbox(ArrayList<String> inbox) {
-        this.inbox = inbox;
     }
 
     public void addInbox(String message) {
@@ -299,7 +290,7 @@ public abstract class User {
     }
 
     /**
-     * Create a new user (customer or seller)
+     * Create a new user (customer or seller) and add the new user to its corresponding hash map
      *
      * @param scanner for input
      * @param type    1 for customer, 2 for seller
@@ -324,10 +315,16 @@ public abstract class User {
             return null;
         }
 
-        // Return the newly created user
+        // Return the newly created user; added to its corresponding hashmap
         if (type == 1) {
-            return new Customer(username, email, password);
+            Customer newCustomer = new Customer(username, email, password);
+            users.put(email, newCustomer);
+            customers.put(email, newCustomer);
+            return newCustomer;
         } else {
+            Seller newSeller = new Seller(username, email, password);
+            users.put(email, newSeller);
+            sellers.put(email, newSeller);
             return new Seller(username, email, password);
         }
     }
@@ -427,11 +424,11 @@ public abstract class User {
             if (response.equals("1")) {
                 this.readInbox();
             } else if (response.equals("2")) {
-                System.out.println("Enter recipient: ");
+                System.out.println("Enter recipient email: ");
                 String receiver = scanner.nextLine();
                 System.out.println("Enter Message: ");
                 String message = scanner.nextLine();
-                if (this.sendMessage(userGetterByName(receiver), message)) {
+                if (this.sendMessage(userGetterByEmail(receiver), message)) {
                     System.out.println("Message Sent!");
                 } else {
                     System.out.println("Failed to send message!");
@@ -468,6 +465,8 @@ public abstract class User {
             System.out.println("An error occurred while writing to the file: ");
             e.printStackTrace();
         }
+
+        System.out.println("Users credential is written!");
     }
 
     /**
@@ -488,7 +487,7 @@ public abstract class User {
         try (BufferedReader bfr = new BufferedReader(new FileReader("userCredentials.txt"))) {
             String line = bfr.readLine();
             while (line != null) {
-                String[] temp = line.split(",");
+                String[] temp = line.split(", ");
                 for (int i = 0; i < temp.length; i++) {
                     String trimmer = temp[i].trim();
                     temp[i] = trimmer;
@@ -511,6 +510,8 @@ public abstract class User {
             System.out.println("Failed to load User info files!");
             e.printStackTrace();
         }
+
+        System.out.println("Users credential is loaded!");
     }
 
     /**
@@ -552,24 +553,32 @@ public abstract class User {
 
                 if (current instanceof Customer customer) {
                     pw.println("<shoppingCart>");
-                    for (int i = 0; i < customer.getShoppingCart().size(); i++) {
-                        pw.println(customer.getShoppingCart().get(i).getName() + "_" +
-                                customer.getShoppingCart().get(i).getStore());
+                    for (Product product : customer.getShoppingCart()) {
+                        String[] detail = product.productDetails();
+                        for (int i = 0; i < detail.length - 1; i++) {
+                            pw.print(detail[i] + "_");
+                        }
+                        pw.print(detail[detail.length - 1]);
                     }
                     pw.println("</shoppingCart>");
 
                     pw.println("<itemsPurchased>");
-                    for (int i = 0; i < customer.getItemsPurchased().size(); i++) {
-                        pw.println(customer.getItemsPurchased().get(i).getName() + "_" +
-                                customer.getItemsPurchased().get(i).getStore());
+                    for (Product product : customer.getItemsPurchased()) {
+                        String[] detail = product.productDetails();
+                        for (int i = 0; i < detail.length - 1; i++) {
+                            pw.print(detail[i] + "_");
+                        }
+                        pw.print(detail[detail.length - 1]);
                     }
                     pw.println("</itemsPurchased>");
                 }
             } catch (IOException e) {
-                System.out.println("Failed to write customer files!");
+                System.out.println("Failed to write user files!");
                 e.printStackTrace();
             }
         }
+
+        System.out.println("User data is written!");
     }
 
     /**
@@ -613,7 +622,8 @@ public abstract class User {
                         line = bfr.readLine();
                         while (!line.equals("</shoppingCart>")) {
                             temp = line.split("_");
-                            customer.addToShoppingCart(Product.productGetter(temp[0], temp[1]));
+                            customer.addToShoppingCart(new Product(temp[0], temp[1], temp[2], temp[3],
+                                    Double.parseDouble(temp[4]), Integer.parseInt(temp[5]), temp[6]));
                             line = bfr.readLine();
                         }
                         line = bfr.readLine(); // advance 1 more line (to escape the </shoppingCart> line)
@@ -627,7 +637,8 @@ public abstract class User {
                         line = bfr.readLine();
                         while (!line.equals("</itemsPurchased>")) {
                             temp = line.split("_");
-                            customer.addToItemsPurchased(Product.productGetter(temp[0], temp[1]));
+                            customer.addToItemsPurchased(new Product(temp[0], temp[1], temp[2], temp[3],
+                                    Double.parseDouble(temp[4]), Integer.parseInt(temp[5]), temp[6]));
                             line = bfr.readLine();
                         }
                         line = bfr.readLine(); // advance 1 more line (to escape the </itemsPurchased> line)
@@ -646,7 +657,7 @@ public abstract class User {
                 }
                 return;
             } catch (FileNotFoundException e) { // initial run
-                System.out.println("File not found info!"); // TODO: remove after finish debugging
+                System.out.println("File not found readUserInfo!"); // TODO: remove after finish debugging
                 break;
             } catch (IOException e) {
                 System.out.println("Failed to load customer files!");

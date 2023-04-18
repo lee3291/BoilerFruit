@@ -10,14 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Product {
-    private static ArrayList<Product> products; // all products in the Marketplace
-    private String name;
-    private String seller; //name of the seller selling this product
-    private String store;
-    private String description;
-    private double price;
+    private static ArrayList<Product> products = new ArrayList<>(); // all products in the Marketplace
+    private final String name;
+    private final String seller; //name of the seller selling this product
+    private final String store;
+    private final String description;
+    private final double price;
     private int quantity; // available products in store OR item purchased
-    private String customerName;
+    private final String customerName;
 
     public Product(String name, String seller, String store, String description, double price, int quantity) {
         this.name = name;
@@ -57,36 +57,50 @@ public class Product {
         products.add(newProduct);
     }
 
-    public String getName() {
-        return name;
+    /**
+     * Remove the specified product from the global products array list
+     * @param removeProduct the name of the product to be removed
+     * @param quantity the quantity to be removed
+     */
+    public static void removeGlobalProduct(String removeProduct, String storeName, int quantity) {
+        // Search currentListing for product
+        int newQuantity;
+        Product product;
+        for (int i = 0; i < products.size(); i++) {
+            product = products.get(i);
+            if (product.getName().equalsIgnoreCase(removeProduct) && product.getStore().equals(storeName)) {
+                // Reduce the product's listing quantity to as much 0
+                newQuantity = Math.max(product.getQuantity() - quantity, 0);
+
+                // New quantity is 0; remove the product from the hash map
+                if (newQuantity == 0) {
+                    products.remove(product);
+                }
+
+                // New quantity is larger than 0; reduce the listing quantity to the new value
+                else {
+                    product.setQuantity(newQuantity);
+                }
+
+                return;
+            }
+        }
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getName() {
+        return name;
     }
 
     public String getStore() {
         return store;
     }
 
-    public void setStore(String store) {
-        this.store = store;
-    }
-
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public double getPrice() {
         return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
     }
 
     public String displayProduct() {
@@ -101,10 +115,6 @@ public class Product {
         return seller;
     }
 
-    public void setSeller(String seller) {
-        this.seller = seller;
-    }
-
     public int getQuantity() {
         return quantity;
     }
@@ -115,10 +125,6 @@ public class Product {
 
     public String getCustomerName() {
         return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
     }
 
     /**
@@ -249,6 +255,8 @@ public class Product {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
+
+        System.out.println("Product data is written!");
     }
 
     /**
@@ -279,5 +287,7 @@ public class Product {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
+
+        System.out.println("Product data is loaded!"); // TODO: delete after finish debugging
     }
 }

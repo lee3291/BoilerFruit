@@ -10,8 +10,8 @@ import java.util.Arrays;
  * Customer class that extends User, contains shoppingCart field and itemsPurchased field.
  */
 public class Customer extends User {
-    private ArrayList<Product> shoppingCart;
-    private ArrayList<Product> itemsPurchased;
+    private final ArrayList<Product> shoppingCart;
+    private final ArrayList<Product> itemsPurchased;
 
     public Customer(String userName, String email, String password, ArrayList<String> inbox,
                     ArrayList<Product> shoppingCart, ArrayList<Product> itemsPurchased) {
@@ -30,16 +30,8 @@ public class Customer extends User {
         return shoppingCart;
     }
 
-    public void setShoppingCart(ArrayList<Product> shoppingCart) {
-        this.shoppingCart = shoppingCart;
-    }
-
     public ArrayList<Product> getItemsPurchased() {
         return itemsPurchased;
-    }
-
-    public void setItemsPurchased(ArrayList<Product> itemsPurchased) {
-        this.itemsPurchased = itemsPurchased;
     }
 
     public void addToShoppingCart(Product product) {
@@ -49,18 +41,26 @@ public class Customer extends User {
     /**
      * Add # quantity products to cart
      *
-     * @param product  the product to be added
+     * @param newProduct  the product to be added
      * @param quantity the quantity of the product
      */
-    public void addToShoppingCart(Product product, int quantity) {
-        this.shoppingCart.add(new Product(
-                product.getName(), product.getSeller(),
-                product.getStore(), product.getDescription(),
-                product.getPrice(), quantity, super.getUserName()));
-    }
+    public void addToShoppingCart(Product newProduct, int quantity) {
+        // If product is in shopping cart, increase the quantity
+        for (Product product : shoppingCart) {
+            if (product.getName().equals(newProduct.getName()) && product.getStore().equals(newProduct.getStore())) {
+                product.setQuantity(product.getQuantity() + quantity);
+            }
+            return;
+        }
 
-    public void addToItemsPurchased(Product product) {
-        this.itemsPurchased.add(product);
+        // Add new instance if product is not in shopping cart
+        this.shoppingCart.add(new Product(
+                newProduct.getName(), newProduct.getSeller(),
+                newProduct.getStore(), newProduct.getDescription(),
+                newProduct.getPrice(), quantity, super.getEmail()));
+    }
+    public void addToItemsPurchased(Product newProduct) {
+        this.itemsPurchased.add(newProduct);
     }
 
     public void clearCart() {
@@ -77,13 +77,17 @@ public class Customer extends User {
     public void buyItem(Product product, int quantity) {
         // Get store and remove product from store shelf
         Store store = Store.getAStore(product.getStore()); // <- store object
-        store.removeListing(product, quantity);
+        if (store.removeListing(product, quantity)) {
+            System.out.printf("Successfully bought %d of %s\n", quantity, product.getName());
+            removeFromShoppingCart(product.getName(), quantity);
+        }
 
         // Update store and customer history
         Product productPurchased = new Product(product.getName(), product.getSeller(), product.getStore(),
                 product.getDescription(), product.getPrice(), quantity, this.getEmail());
 
         store.addHistory(productPurchased);
+        store.addCustomer(this);
         this.addToItemsPurchased(productPurchased);
     }
 
@@ -98,6 +102,8 @@ public class Customer extends User {
         for (Product p : this.getShoppingCart()) {
             Store store = Store.getAStore(p.getStore()); // <- store object
             store.removeListing(p, p.getQuantity());
+            store.addHistory(p);
+            store.addCustomer(this);
             this.addToItemsPurchased(p);
         }
 
@@ -160,7 +166,7 @@ public class Customer extends User {
      *
      * @param filePath the path to the file to be created
      */
-    public void exportPurchaseHistory(String filePath) {
+    public boolean exportPurchaseHistory(String filePath) {
         try (CSVWriter writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(filePath))
                 .withSeparator(',')
                 .build()) {
@@ -177,12 +183,14 @@ public class Customer extends User {
         } catch (FileNotFoundException e) { // Invalid file path error
             System.out.println("Invalid file path!");
             e.printStackTrace();
+            return false;
         } catch (Exception e) { // All other errors
             System.out.println(e.getMessage());
             e.printStackTrace();
+            return false;
         }
 
-        System.out.printf("History is written into\n\t%s\n", filePath);
+        return true;
     }
 
     /**

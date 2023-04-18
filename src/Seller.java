@@ -1,29 +1,26 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Seller class that extends user, contains arraylist of stores the seller owns.
  */
 public class Seller extends User {
-    private ArrayList<Store> stores;
+    private final HashMap<String, Store> stores;
 
-    public Seller(String userName, String email, String password, ArrayList<String> inbox, ArrayList<Store> stores) {
+    public Seller(String userName, String email, String password, ArrayList<String> inbox, HashMap<String, Store> stores) {
         super(userName, email, password, inbox);
         this.stores = stores;
     }
 
     public Seller(String userName, String email, String password) {
         super(userName, email, password);
-        this.stores = new ArrayList<>();
+        this.stores = new HashMap<>();
         // pre-existing stores will be read from a file in a different method, and assigned
         // after instantiation of the object.
     }
 
-    public ArrayList<Store> getStores() {
+    public HashMap<String, Store> getStores() {
         return stores;
-    }
-
-    public void setStores(ArrayList<Store> stores) {
-        this.stores = stores;
     }
 
     /**
@@ -32,7 +29,7 @@ public class Seller extends User {
      * @param store the store to be added
      */
     public void addStore(Store store) {
-        this.stores.add(store);
+        stores.put(store.getStoreName(), store);
         Store.addGlobalStore(store);
     }
 
@@ -50,7 +47,7 @@ public class Seller extends User {
                     break;
                 }
 
-                System.out.println("In " + c.getUserName() + "'s shopping cart!\n");
+                System.out.println("In " + c.getUserName() + "'s shopping cart: \n");
                 for (Product p : currentCart) {
                     System.out.println("Product name: " + p.getName());
                     System.out.println("Seller: " + p.getSeller());

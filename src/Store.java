@@ -15,8 +15,8 @@ import java.util.List;
 public class Store {
     private static HashMap<String, Store> stores; // all the stores
 
-    private String name; // name of the store
-    private String seller; // the store's owner
+    private final String name; // name of the store
+    private final String seller; // the store's owner
     private ArrayList<Product> history; // the sale history
     private ArrayList<Product> currentProducts; // the current products listing
     private HashMap<String, Customer> customers; // the shop's customers
@@ -91,19 +91,16 @@ public class Store {
      * Add a new customer to the store's list of existing customers
      *
      * @param customer the new customer to be added
-     * @return true if the customer is successfully added (new customer)
-     * or false if the customer is not added (customer already existed)
      */
-    public boolean addCustomer(Customer customer) {
+    public void addCustomer(Customer customer) {
         // Check if customer already exist; exit and return false if customer existed
         Customer potentialCustomer = customers.get(customer.getEmail());
         if (potentialCustomer != null) {
-            return false;
+            return;
         }
 
         // Add new customer to list if customer is new
         customers.put(customer.getEmail(), customer);
-        return true;
     }
 
     /**
@@ -113,15 +110,6 @@ public class Store {
      */
     public String getStoreName() {
         return name;
-    }
-
-    /**
-     * Set the name of the current store
-     *
-     * @param name name of store
-     */
-    public void setName(String name) {
-        this.name = name;
     }
 
     /**
@@ -149,15 +137,6 @@ public class Store {
      */
     public String getSeller() {
         return seller;
-    }
-
-    /**
-     * Set the owner of this store
-     *
-     * @param seller the owner of this store
-     */
-    public void setSeller(String seller) {
-        this.seller = seller;
     }
 
     /**
@@ -217,6 +196,8 @@ public class Store {
                     product.setQuantity(newQuantity);
                 }
 
+                // Remove product in global array and return
+                Product.removeGlobalProduct(removeProduct, this.name, quantity);
                 return true;
             }
         }
@@ -251,6 +232,8 @@ public class Store {
                     product.setQuantity(newQuantity);
                 }
 
+                // Remove product in global array and return
+                Product.removeGlobalProduct(removeProduct.getName(), this.name, quantity);
                 return true;
             }
         }
@@ -327,25 +310,6 @@ public class Store {
             System.out.println(i + ". " + customer.getUserName());
             i++;
         }
-    }
-
-    /**
-     * Search for all products that are purchased by the specified customer
-     *
-     * @param customerName the customer name to search for their purchase products
-     * @return an array list of all product purchased by the specified customer
-     */
-    public ArrayList<Product> searchProducts(String customerName) {
-        ArrayList<Product> results = new ArrayList<>(); // array list of products results
-
-        // Loop through history and append results with product that has the same customer's username
-        for (Product product : history) {
-            if (product.getCustomerName().equalsIgnoreCase(customerName)) {
-                results.add(product);
-            }
-        }
-
-        return results;
     }
 
     /**
@@ -447,8 +411,7 @@ public class Store {
                         Double.parseDouble(row[4]), // price
                         Integer.parseInt(row[5]) // quanity
                 );
-                products.add(curr);
-                Product.addGlobalProduct(curr);
+                addListing(curr);
             }
         } catch (FileNotFoundException e) { // Invalid file path error
             System.out.println("Invalid file path!");
@@ -466,8 +429,9 @@ public class Store {
      * Export {@link #currentProducts} to the specified filePath
      *
      * @param filePath the filePath to the CSV file for exporting product
+     * @return true if success; false otherwise
      */
-    public void exportCSV(String filePath) {
+    public boolean exportCSV(String filePath) {
         try (CSVWriter writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(filePath))
                 .withSeparator(',')
                 .build()) {
@@ -484,12 +448,14 @@ public class Store {
         } catch (FileNotFoundException e) { // Invalid file path error
             System.out.println("Invalid file path!");
             e.printStackTrace();
+            return false;
         } catch (Exception e) { // All other errors
             System.out.println(e.getMessage());
             e.printStackTrace();
+            return false;
         }
 
-        System.out.printf("Products are written into\n\t%s\n", filePath);
+        return true;
     }
 
 
@@ -506,9 +472,11 @@ public class Store {
      * ExampleStore's name,ExampleStore's seller
      * <history>
      * p1's name,p1's seller,p1's store,p1's description,p1's quantity purchased, p1's customer
+     * ...
      * </history>
      * <listing>
      * p1's name,p1's seller,p1's store,p1's description,p1's quantity listing, p1's customer (will be <blank>)
+     * ...
      * </listing>
      * <customers>
      * customer1's email
@@ -564,6 +532,8 @@ public class Store {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
+
+        System.out.println("Store data is written!");
     }
 
     /**
@@ -680,10 +650,11 @@ public class Store {
                 store.setCustomers(new HashMap<>());
 
                 // Make sure file is ok
+                row = reader.readNext();
                 if (row == null) {
                     System.out.println(store.getStoreName() + ".csv" + " is corrupted!");
                     System.out.println("Reach end of file");
-                } else if (!row[0].equals("<customer>")) {
+                } else if (!row[0].equals("<customers>")) {
                     System.out.println(store.getStoreName() + ".csv" + " is corrupted!");
                     System.out.printf("Expecting <customer> but get %s\n", row[0]);
                     continue;
@@ -692,7 +663,7 @@ public class Store {
                 // Reading
                 else {
                     row = reader.readNext();
-                    while (row != null && !row[0].equals("</customer>")) {
+                    while (row != null && !row[0].equals("</customers>")) {
                         User temp = User.userGetterByName(row[0]);
                         if (temp instanceof Customer) {
                             store.addCustomer((Customer) temp);
@@ -713,5 +684,7 @@ public class Store {
                 return;
             }
         }
+
+        System.out.println("Stores data is loaded!");
     }
 }

@@ -6,11 +6,10 @@ public class Marketplace {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Creating a new market object
-//        Market market = new Market(); // initiate new Market; read existing data if needed
+        // Read in user data
         User.readUserCredentials();
         User.readUserInfo();
-        Product.readProductInfo();
+//        Product.readProductInfo();
         Store.readStoreInfo();
 
         // Program
@@ -43,7 +42,7 @@ public class Marketplace {
             // Sign Up
             if (initialState.equals("1")) {
 
-                // Taking user input and validate it
+                // Taking user type
                 String userType;
                 while (true) {
                     System.out.println("\n----------Signing up----------");
@@ -53,7 +52,7 @@ public class Marketplace {
                             \t1.Sign up customer
                             \t2.Sign up seller""");
                     userType = scanner.nextLine();
-                    if (!userType.equals("0") && !userType.equals("1") && !userType.equals("2")) {
+                    if (!userType.matches("[0-2]")) {
                         System.out.println("Please enter an integer from 0 to 2 inclusively");
                     } else {
                         break;
@@ -74,6 +73,11 @@ public class Marketplace {
                         System.out.println("Account successfully created.");
                         customerFunctions(scanner, customer);
                     }
+
+                    // Failed to create account
+                    else {
+                        System.out.println("Failed to create account. Please try again later!");
+                    }
                 }
 
                 // Seller sign up
@@ -84,6 +88,11 @@ public class Marketplace {
                     if (seller != null) {
                         System.out.println("Account successfully created.");
                         sellerFunctions(scanner, seller);
+                    }
+
+                    // Failed to create account
+                    else {
+                        System.out.println("Failed to create account. Please try again later!");
                     }
                 }
             }
@@ -111,7 +120,10 @@ public class Marketplace {
                         break;
                     }
 
+                    // Logging in
                     user = User.userLogIn(userID, password);
+
+                    // Login success
                     if (user != null) {
                         // If user is a customer
                         if (user instanceof Customer customer) {
@@ -173,22 +185,26 @@ public class Marketplace {
                 break;
             }
 
-            // if user chooses view all stores.
+            // User chooses view all stores.
             else if (command.equals("1")) {
                 // Get seller's stores
-                ArrayList<Store> stores = seller.getStores();
+                HashMap<String, Store> stores = seller.getStores();
                 if (stores == null || stores.isEmpty()) {
                     System.out.println("You do not have any store yet!");
                     continue;
                 }
 
                 // Display stores
-                for (int i = 1; i <= stores.size(); i++) {
-                    System.out.println((i) + ". " + stores.get(i - 1).getStoreName());
+                HashMap<Integer, Store> optionStores = new HashMap<>();
+                int i = 1;
+                for (Store store : stores.values()) {
+                    System.out.println((i) + ". " + store.getStoreName());
+                    optionStores.put(i, store);
+                    i++;
                 }
 
                 // Getting user's interested store
-                System.out.println("Enter number to view details of the store:");
+                System.out.println("Enter number to view details of the store (0 to cancel):");
                 int storeNum = -1;
                 do {
                     try {
@@ -199,28 +215,32 @@ public class Marketplace {
                         System.out.println("Please enter a valid number!");
                         continue;
                     }
-                    if (storeNum <= 0) {
+                    if (storeNum < 0) {
                         System.out.println("Enter positive integer!");
                     } else if (storeNum > stores.size()) {
                         System.out.printf("There is less than %d stores!\n", storeNum);
                     }
-                } while ((storeNum <= 0) || (storeNum > stores.size()));
-                Store store = stores.get(storeNum - 1);
+                } while ((storeNum < 0) || (storeNum > stores.size()));
+
+                if (storeNum == 0) {
+                    System.out.println("Going back to Main menu...");
+                    break;
+                }
 
                 // Store's menu
+                Store store = optionStores.get(storeNum); // get store
                 int action = -1;
                 while (true) {
-                    System.out.println(store.getStoreName() + ":");
-                    System.out.println("\t0. Go back to Main menu");
-                    System.out.println("\t1. Add listing");
-                    System.out.println("\t2. Remove listing");
-                    System.out.println("\t3. Show sales");
-                    System.out.println("\t4. Import products csv");
-                    System.out.println("\t5. Export products csv");
-
                     // Get user's input and validate
-                    System.out.println("Enter a number");
                     do {
+                        System.out.println(store.getStoreName() + ":");
+                        System.out.println("\t0. Go back to Main menu");
+                        System.out.println("\t1. Add listing");
+                        System.out.println("\t2. Remove listing");
+                        System.out.println("\t3. Show sales");
+                        System.out.println("\t4. Import products csv");
+                        System.out.println("\t5. Export products csv");
+                        System.out.println("Enter a number");
                         try {
                             action = scanner.nextInt();
                             scanner.nextLine();
@@ -263,6 +283,7 @@ public class Marketplace {
                                 scanner.nextLine();
 
                             } catch (NumberFormatException e) {
+                                scanner.nextLine();
                                 System.out.println("Please enter a valid number!");
                                 continue;
                             }
@@ -335,8 +356,12 @@ public class Marketplace {
                     // Export csv file
                     else {
                         System.out.println("Enter file path:");
-                        String filepath = scanner.nextLine();
-                        store.exportCSV(filepath);
+                        String filePath = scanner.nextLine();
+                        if (store.exportCSV(filePath)) {
+                            System.out.printf("Products are written into\n\t%s\n", filePath);
+                        } else {
+                            System.out.println("Failed to write products. Please try again!");
+                        }
                     }
                 }
             }
@@ -357,7 +382,8 @@ public class Marketplace {
                 if (ans.equals("1")) {
 
                     System.out.println("Do you want to sort in descending order?");
-                    System.out.println("Press 1 for yes. Press any key to display the statistics without sorting");
+                    System.out.println("Press 1 for descending order. " +
+                            "Press any key for ascending order");
                     ans = scanner.nextLine();
 
                     // Ascending
@@ -425,7 +451,7 @@ public class Marketplace {
                 }
 
                 // Display all seller's customers
-                for (Store store : seller.getStores()) {
+                for (Store store : seller.getStores().values()) {
                     store.viewCustomers();
                 }
 
@@ -476,13 +502,14 @@ public class Marketplace {
         while (true) {
             // Display all available products
             System.out.println("----------Current Market Listing---------");
+            System.out.println(Product.getProducts().size());
             for (Product product : Product.getProducts()) {
                 System.out.println(product.displayProduct());
             }
 
             // Display menu for customers
-            System.out.println("Welcome, " + customer.getUserName() + "!");
             System.out.println("----------Main Menu----------");
+            System.out.println("Welcome, " + customer.getUserName() + "!");
             System.out.println("Do you want to...");
             System.out.println("\t0. Logout");
             System.out.println("\t1. Search by stores");
@@ -539,7 +566,7 @@ public class Marketplace {
                     System.out.println("Press 0 to exit");
                     System.out.println("Enter store number to view details of the store:");
 
-                    // Take user's choice of store and validate it
+                    // Take user's choice of store
                     int storeNum = -1;
                     do {
                         try {
@@ -572,7 +599,6 @@ public class Marketplace {
                     }
 
                     // User interact with products
-                    System.out.println("Products:");
                     interactWithProduct(scanner, storeProducts, customer);
                 }
             }
@@ -601,7 +627,7 @@ public class Marketplace {
                     // Search through the database for matching products; add the matched product to results
                     ArrayList<Product> results = new ArrayList<>();
                     for (Product product : marketProduct) {
-                        if (product.getName().equalsIgnoreCase(productToSearch) ||
+                        if ((product.getName().toLowerCase()).contains(productToSearch.toLowerCase()) ||
                                 (product.getDescription().toLowerCase()).contains(productToSearch.toLowerCase())) {
                             results.add(product);
                         }
@@ -681,7 +707,7 @@ public class Marketplace {
                         break;
                     }
 
-                    // Actual sorting
+                    /// Actual sorting
                     ArrayList<Product> sortProducts;
 
                     // Ascending by price
@@ -943,7 +969,7 @@ public class Marketplace {
                 System.out.println("Do you want to export the history of purchase?");
                 System.out.println("0. No\n1.Yes");
 
-                // Take user input and validate
+                // Take user input
                 int choice;
                 while (true) {
                     try {
@@ -961,10 +987,15 @@ public class Marketplace {
                     }
                 }
 
+                // Write to file
                 if (choice == 1) {
                     System.out.println("Enter the file path: ");
                     String filePath = scanner.nextLine();
-                    customer.exportPurchaseHistory(filePath);
+                    if (customer.exportPurchaseHistory(filePath)) {
+                        System.out.printf("History is written into\n\t%s\n", filePath);
+                    } else {
+                        System.out.println("Failed to write purchase history. Please try again later!");
+                    }
                 }
             }
 
@@ -1013,7 +1044,7 @@ public class Marketplace {
 
             // Inspect each product
             System.out.println("Enter a number to view details of a product:");
-            System.out.println("Press 0 to exit");
+            System.out.println("Press -1 to exit");
 
             // Take customer's choice and validate
             int choice;
@@ -1022,7 +1053,7 @@ public class Marketplace {
                     choice = scanner.nextInt();
                     scanner.nextLine();
 
-                    if (choice < 0 || choice >= products.size()) {
+                    if (choice < -1 || choice > products.size()) {
                         System.out.printf("Please enter an integer from 0 to %d\n", products.size() - 1);
                     } else {
                         break;
@@ -1034,7 +1065,7 @@ public class Marketplace {
             }
 
             // Customer choose to go back
-            if (choice == 0) {
+            if (choice == -1) {
                 System.out.println("Going back...");
                 break;
             }
@@ -1096,7 +1127,7 @@ public class Marketplace {
 
                 // Buy if choice is not 0 (cancel)
                 if (choice != 0) {
-                    customer.buyItem(product, choice);
+                    customer.buyItem(product, choice); // TODO: reduce the amount of product in local ArrayList
                 }
             }
 
