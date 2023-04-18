@@ -74,7 +74,7 @@ public class Customer extends User {
      * quantity: quantity purchased
      * decrement from store of the product.
      */
-    public void buyItem(Product product, int quantity) {
+    public Product buyItem(Product product, int quantity) {
         // Get store and remove product from store shelf
         Store store = Store.getAStore(product.getStore()); // <- store object
         if (store.removeListing(product, quantity)) {
@@ -89,6 +89,8 @@ public class Customer extends User {
         store.addHistory(productPurchased);
         store.addCustomer(this);
         this.addToItemsPurchased(productPurchased);
+
+        return productPurchased;
     }
 
     /**

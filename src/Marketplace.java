@@ -224,7 +224,7 @@ public class Marketplace {
 
                 if (storeNum == 0) {
                     System.out.println("Going back to Main menu...");
-                    break;
+                    continue;
                 }
 
                 // Store's menu
@@ -368,11 +368,12 @@ public class Marketplace {
 
             // Statistic for all stores
             else if (command.equals("2")) {
-                ArrayList<Store> stores = (ArrayList<Store>) seller.getStores().clone();
+                HashMap<String, Store> stores = seller.getStores();
                 if (stores == null || stores.isEmpty()) {
                     System.out.println("You do not have any store yet!");
                     continue;
                 }
+                ArrayList<Store> sortStores = new ArrayList<>(stores.values()); // to array list to sort
 
                 System.out.println("Do you want to sort the stores by name?");
                 System.out.println("Press 1 for yes. Press any key to display the statistics without sorting");
@@ -388,39 +389,39 @@ public class Marketplace {
 
                     // Ascending
                     if (ans.equals("1")) {
-                        for (int i = 1; i < stores.size(); i++) {
-                            Store curr = stores.get(i);
+                        for (int i = 1; i < sortStores.size(); i++) {
+                            Store curr = sortStores.get(i);
                             int j = i - 1;
 
                             while (j >= 0 &&
-                                    Character.getNumericValue(stores.get(j).getStoreName().indexOf(0))
+                                    Character.getNumericValue(sortStores.get(j).getStoreName().indexOf(0))
                                             > Character.getNumericValue(curr.getStoreName().indexOf(0))) {
-                                stores.set(j + 1, stores.get(j));
+                                sortStores.set(j + 1, sortStores.get(j));
                                 j = j - 1;
                             }
-                            stores.set(j + 1, curr);
+                            sortStores.set(j + 1, curr);
                         }
                     }
 
                     // Descending
                     else {
-                        for (int i = 1; i < stores.size(); i++) {
-                            Store curr = stores.get(i);
+                        for (int i = 1; i < sortStores.size(); i++) {
+                            Store curr = sortStores.get(i);
                             int j = i - 1;
 
                             while (j >= 0 &&
-                                    Character.getNumericValue(stores.get(j).getStoreName().indexOf(0))
+                                    Character.getNumericValue(sortStores.get(j).getStoreName().indexOf(0))
                                             < Character.getNumericValue(curr.getStoreName().indexOf(0))) {
-                                stores.set(j + 1, stores.get(j));
+                                sortStores.set(j + 1, sortStores.get(j));
                                 j = j - 1;
                             }
-                            stores.set(j + 1, curr);
+                            sortStores.set(j + 1, curr);
                         }
                     }
                 }
 
                 // Display statistics
-                for (Store store : stores) {
+                for (Store store : sortStores) {
                     store.showStatistic();
                 }
             }
@@ -499,31 +500,31 @@ public class Marketplace {
      * @param customer current user and role
      */
     public static void customerFunctions(Scanner scanner, Customer customer) {
+        // Display all available products
+        System.out.println("----------Current Market Listing---------");
+        System.out.println(Product.getProducts().size());
+        for (Product product : Product.getProducts()) {
+            System.out.println(product.displayProduct());
+        }
         while (true) {
-            // Display all available products
-            System.out.println("----------Current Market Listing---------");
-            System.out.println(Product.getProducts().size());
-            for (Product product : Product.getProducts()) {
-                System.out.println(product.displayProduct());
-            }
-
             // Display menu for customers
             System.out.println("----------Main Menu----------");
             System.out.println("Welcome, " + customer.getUserName() + "!");
             System.out.println("Do you want to...");
             System.out.println("\t0. Logout");
-            System.out.println("\t1. Search by stores");
-            System.out.println("\t2. Search by products");
-            System.out.println("\t3. Sort products"); //sort price and quantity
-            System.out.println("\t4. View Shopping Cart");
-            System.out.println("\t5. View or Export purchase history");
-            System.out.println("\t6. View Mail Page");
-            System.out.println("\t7. View dashboard");
-            System.out.println("\t8. Edit profile");
+            System.out.println("\t1. View Current Marketplace Product");
+            System.out.println("\t2. Search by stores");
+            System.out.println("\t3. Search by products");
+            System.out.println("\t4. Sort products"); //sort price and quantity
+            System.out.println("\t5. View Shopping Cart");
+            System.out.println("\t6. View or Export purchase history");
+            System.out.println("\t7. View Mail Page");
+            System.out.println("\t8. View dashboard");
+            System.out.println("\t9. Edit profile");
 
             // Take user input and validate it
             String command; // the command input from customer
-            String test = "012345678";
+            String test = "0123456789";
             while (true) {
                 command = scanner.nextLine();
                 if (command.length() != 1 && !test.contains(command)) {
@@ -543,8 +544,18 @@ public class Marketplace {
                 break;
             }
 
-            // Customer want to search products by store
+            // View all
             else if (command.equals("1")) {
+                System.out.println("----------Current Market Listing---------");
+                System.out.println(Product.getProducts().size());
+                for (Product product : Product.getProducts()) {
+                    System.out.println(product.displayProduct());
+                }
+            }
+
+
+            // Customer want to search products by store
+            else if (command.equals("2")) {
                 HashMap<String, Store> stores = Store.getStores(); // get stores in market
                 if (stores == null || stores.isEmpty()) { // there are no store
                     System.out.println("There are no stores yet, please come back later.");
@@ -604,7 +615,7 @@ public class Marketplace {
             }
 
             // Customer want to search product by name/description
-            else if (command.equals("2")) {
+            else if (command.equals("3")) {
                 ArrayList<Product> marketProduct = Product.getProducts(); // get all market products
                 if (marketProduct == null || marketProduct.isEmpty()) { // no product
                     System.out.println("Market does not have any products yet, please come back later!");
@@ -643,7 +654,7 @@ public class Marketplace {
             }
 
             // Sorting
-            else if (command.equals("3")) {
+            else if (command.equals("4")) {
                 // Get all market products; make sure there are products listed
                 ArrayList<Product> marketProduct = Product.getProducts();
                 if (marketProduct == null || marketProduct.isEmpty()) { // no product
@@ -733,7 +744,7 @@ public class Marketplace {
             }
 
             // View cart
-            else if (command.equals("4")) {
+            else if (command.equals("5")) {
                 ArrayList<Product> cart = customer.getShoppingCart();
                 if (cart == null || cart.isEmpty()) {
                     System.out.println("Your shopping cart is empty!");
@@ -953,7 +964,7 @@ public class Marketplace {
             }
 
             // View/export purchase history
-            else if (command.equals("5")) {
+            else if (command.equals("6")) {
                 ArrayList<Product> purchaseHistory = customer.getItemsPurchased();
                 if (purchaseHistory == null || purchaseHistory.isEmpty()) {
                     System.out.println("Purchase history is empty");
@@ -961,8 +972,9 @@ public class Marketplace {
                 }
 
                 // Display purchase history
+                System.out.println("---------History----------");
                 for (Product product : purchaseHistory) {
-                    System.out.println(product.getName() + "    " + product.getPrice());
+                    System.out.println(product.page());
                 }
 
                 // Export history
@@ -1000,12 +1012,12 @@ public class Marketplace {
             }
 
             // View mail
-            else if (command.equals("6")) {
+            else if (command.equals("7")) {
                 customer.mailPage(scanner);
             }
 
             // View dashboard
-            else if (command.equals("7")) {
+            else if (command.equals("8")) {
                 System.out.println("Do you want to sort the dashboard in descending order?");
                 System.out.println("Press 1 for descending. Press any other key for ascending order.");
                 String ans = scanner.nextLine();
@@ -1044,7 +1056,7 @@ public class Marketplace {
 
             // Inspect each product
             System.out.println("Enter a number to view details of a product:");
-            System.out.println("Press -1 to exit");
+            System.out.println("Press 0 to exit");
 
             // Take customer's choice and validate
             int choice;
@@ -1053,7 +1065,7 @@ public class Marketplace {
                     choice = scanner.nextInt();
                     scanner.nextLine();
 
-                    if (choice < -1 || choice > products.size()) {
+                    if (choice < 0 || choice > products.size()) {
                         System.out.printf("Please enter an integer from 0 to %d\n", products.size() - 1);
                     } else {
                         break;
@@ -1065,7 +1077,7 @@ public class Marketplace {
             }
 
             // Customer choose to go back
-            if (choice == -1) {
+            if (choice == 0) {
                 System.out.println("Going back...");
                 break;
             }
@@ -1073,6 +1085,7 @@ public class Marketplace {
             // Customer picked a product
             choice--;
             Product product = products.get(choice);
+            int productIndex = choice; // the index to access in buy
 
             // Display chosen product detail and options
             System.out.println(product.page());
@@ -1127,7 +1140,11 @@ public class Marketplace {
 
                 // Buy if choice is not 0 (cancel)
                 if (choice != 0) {
-                    customer.buyItem(product, choice); // TODO: reduce the amount of product in local ArrayList
+                    Product afterPurchase = customer.buyItem(product, choice);
+
+                    Product newProductAfterPurchase = products.get(productIndex);
+                    newProductAfterPurchase.setQuantity(Math.max(0,
+                            newProductAfterPurchase.getQuantity() - afterPurchase.getQuantity()));
                 }
             }
 

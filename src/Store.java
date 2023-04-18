@@ -277,7 +277,7 @@ public class Store {
         System.out.println("Product Name\t\t|\t\tPrice\t\t|\t\tBought By");
 
         for (Product product : history) {
-            System.out.printf("%s\t\t|\t\t%.2f\t\t|\t\t%s",
+            System.out.printf("%s\t\t|\t\t%.2f\t\t|\t\t%s\n",
                     product.getName(), product.getPrice(), product.getCustomerName());
         }
     }
@@ -323,7 +323,7 @@ public class Store {
 
         // Loop through history and append results with product that has the same customer's username
         for (Product product : history) {
-            if (product.getCustomerName().equalsIgnoreCase(customer.getUserName())) {
+            if (product.getCustomerName().equalsIgnoreCase(customer.getEmail())) {
                 results.add(product);
             }
         }
@@ -388,6 +388,7 @@ public class Store {
         // Product list
         System.out.println("-------------------");
         viewHistory();
+        System.out.println();
     }
 
     /**
@@ -600,6 +601,7 @@ public class Store {
 
                 // Reading
                 row = reader.readNext();
+                System.out.println("About to get into history");
                 while (row != null && !row[0].equals("</history>")) {
                     Product curr = new Product(
                             row[0], // store name

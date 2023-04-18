@@ -558,7 +558,7 @@ public abstract class User {
                         for (int i = 0; i < detail.length - 1; i++) {
                             pw.print(detail[i] + "_");
                         }
-                        pw.print(detail[detail.length - 1]);
+                        pw.print(detail[detail.length - 1] + "\n");
                     }
                     pw.println("</shoppingCart>");
 
@@ -568,7 +568,7 @@ public abstract class User {
                         for (int i = 0; i < detail.length - 1; i++) {
                             pw.print(detail[i] + "_");
                         }
-                        pw.print(detail[detail.length - 1]);
+                        pw.print(detail[detail.length - 1]  + "\n");
                     }
                     pw.println("</itemsPurchased>");
                 }
@@ -653,9 +653,9 @@ public abstract class User {
                     } else { // TODO: remove after finish debugging
                         System.out.println("Something is wrong out");
                         System.out.println(line);
+                        return;
                     }
                 }
-                return;
             } catch (FileNotFoundException e) { // initial run
                 System.out.println("File not found readUserInfo!"); // TODO: remove after finish debugging
                 break;
@@ -663,6 +663,7 @@ public abstract class User {
                 System.out.println("Failed to load customer files!");
                 e.printStackTrace();
             }
+            System.out.printf("%s info is loaded!\n", email);
         }
     }
 
