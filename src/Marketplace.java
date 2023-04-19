@@ -1,27 +1,32 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Marketplace {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Creating a new market object
-        Market market = new Market(); // initiate new Market; read existing data if needed
-        System.out.println("Welcome to Secondhand Shop!");
-        System.out.println("We connect customers and sellers through a sustainable marketplace.");
+        // Read in user data
+        User.readUserCredentials();
+        User.readUserInfo();
+//        Product.readProductInfo();
+        Store.readStoreInfo();
 
         // Program
+        System.out.println("Welcome to Secondhand Shop!");
+        System.out.println("We connect customers and sellers through a sustainable marketplace.");
         while (true) {
             // Choosing to sign up, login, or quit
-            System.out.println("""
+            String initialState;
+            while (true) {
+                System.out.println("\n-----------Welcome-----------");
+                System.out.println("""
                     Would you like to...
                     \t0.Quit
                     \t1.Sign up
                     \t2.Log in""");
-            String initialState;
-            while (true) {
                 initialState = scanner.nextLine();
-                if (!initialState.equals("0") && !initialState.equals("1") && !initialState.equals("2")) {
+                if (!initialState.matches("[0-2]")) {
                     System.out.println("Please enter an integer from 0 to 2 inclusively");
                 } else {
                     break;
@@ -36,18 +41,18 @@ public class Marketplace {
 
             // Sign Up
             if (initialState.equals("1")) {
-                System.out.println("----------Signing up----------");
 
-                // Taking user input and validate it
-                System.out.println("""
-                        Would you like to...
-                        \t0.Go back (log in)
-                        \t1.Sign up customer
-                        \t2.Sign up seller""");
+                // Taking user type
                 String userType;
                 while (true) {
+                    System.out.println("\n----------Signing up----------");
+                    System.out.println("""
+                            Would you like to...
+                            \t0.Go back (log in)
+                            \t1.Sign up customer
+                            \t2.Sign up seller""");
                     userType = scanner.nextLine();
-                    if (!userType.equals("0") && !userType.equals("1") && !userType.equals("2")) {
+                    if (!userType.matches("[0-2]")) {
                         System.out.println("Please enter an integer from 0 to 2 inclusively");
                     } else {
                         break;
@@ -61,214 +66,91 @@ public class Marketplace {
 
                 // Customer sign up
                 if (userType.equals("1")) {
-                    Customer customer = (Customer) userSignUp(scanner, market, 1);
-                    market.addCustomer(customer);
-                    System.out.println("Account successfully created.");
-                    customerFunctions(scanner, customer, market);
+                    Customer customer = (Customer) User.userSignUp(scanner, 1);
+
+                    // User sign up successfully
+                    if (customer != null) {
+                        System.out.println("Account successfully created.");
+                        customerFunctions(scanner, customer);
+                    }
+
+                    // Failed to create account
+                    else {
+                        System.out.println("Failed to create account. Please try again later!");
+                    }
                 }
 
                 // Seller sign up
                 else {
-                    Seller seller = (Seller) userSignUp(scanner, market, 2);
-                    market.addSeller(seller);
-                    System.out.println("Account successfully created.");
-                    sellerFunctions(scanner, seller, market);
+                    Seller seller = (Seller) User.userSignUp(scanner, 2);
+
+                    // User sign up successfully
+                    if (seller != null) {
+                        System.out.println("Account successfully created.");
+                        sellerFunctions(scanner, seller);
+                    }
+
+                    // Failed to create account
+                    else {
+                        System.out.println("Failed to create account. Please try again later!");
+                    }
                 }
             }
 
             // Log in
             else {
-                System.out.println("-----------Logging in-----------");
-
-                // Taking user input and validate it
-                System.out.println("""
-                        Would you like to...
-                        \t0.Go back (sign up)
-                        \t1.Log in customer
-                        \t2.Log in seller""");
-                String userType;
+                // Taking username
+                int attempt = 3;
+                User user;
                 while (true) {
-                    userType = scanner.nextLine();
-                    if (!userType.equals("0") && !userType.equals("1") && !userType.equals("2")) {
-                        System.out.println("Please enter an integer from 0 to 2 inclusively");
-                    } else {
+                    System.out.println("\n-----------Logging in-----------");
+                    // Taking in username
+                    System.out.println("Enter a username or email (QUIT to cancel): ");
+                    String userID;
+                    userID = scanner.nextLine();
+                    if (userID.equals("QUIT")) {
                         break;
                     }
-                }
 
-                // User choose to go back
-                if (userType.equals("0")) {
-                    continue;
-                }
-
-                // User log in as a customer
-                if (userType.equals("1")) {
-                    // Taking customer's email
-                    System.out.println("Enter an email: ");
-                    String email = scanner.nextLine();
-
-                    // Search database for that user; exit program if user does no exit
-                    User temp = market.userGetterByEmail(email);
-                    if (temp == null) {
-                        System.out.printf("There is no user with email %s.\n", email);
-                        continue;
-                    }
-
-                    // Making sure user is a customer; exit if not
-                    Customer customer;
-                    if (temp instanceof Customer) {
-                        customer = (Customer) temp;
-                    } else {
-                        System.out.println("This is not a customer email");
-                        continue;
-                    }
-
-                    // Taking username and password and validate it
-                    String username;
+                    // Taking in password
+                    System.out.println("Enter a password (QUIT to cancel): ");
                     String password;
-                    int attempt = 3; // user's attempt to log in
-                    while (true) {
-                        System.out.println("Enter a username: ");
-                        username = scanner.nextLine();
-                        System.out.println("Enter a password: ");
-                        password = scanner.nextLine();
+                    password = scanner.nextLine();
+                    if (password.equals("QUIT")) {
+                        break;
+                    }
 
-                        // Log in successfully
-                        if (customer.logIn(username, password)) {
-                            customerFunctions(scanner, customer, market); // a while-true loop
-                            break;
+                    // Logging in
+                    user = User.userLogIn(userID, password);
+
+                    // Login success
+                    if (user != null) {
+                        // If user is a customer
+                        if (user instanceof Customer customer) {
+                            System.out.println("Log in successful.");
+                            customerFunctions(scanner, customer);
                         }
 
-                        // Fail to log in
-                        attempt--;
+                        // If user is a seller
+                        else if (user instanceof Seller seller) {
+                            System.out.println("Log in successful.");
+                            sellerFunctions(scanner, seller);
+                        }
+
+                        break;
+                    }
+
+                    // Log in failed
+                    else {
                         System.out.printf("Username or password is incorrect. " +
-                                "Please try again. Attempts: %d/3\n", attempt);
+                                "Please try again. Attempts: %d/3\n", --attempt);
                         if (attempt == 0) {
                             System.out.println("You exceeds the attempts limit!");
                             break;
                         }
                     }
                 }
-
-                // User log in as a seller
-                else {
-                    // Taking seller's email
-                    System.out.println("Enter an email: ");
-                    String email = scanner.nextLine();
-
-                    // Search database for that user; exit program if user does no exit
-                    User temp = market.userGetterByEmail(email);
-                    if (temp == null) {
-                        System.out.printf("There is no user with email %s.\n", email);
-                        continue;
-                    }
-
-                    // Making sure user is a seller; exit if not
-                    Seller seller;
-                    if (temp instanceof Seller) {
-                        seller = (Seller) temp;
-                    } else {
-                        System.out.println("This is not a seller email");
-                        continue;
-                    }
-
-                    // Taking username and password and validate it
-                    String username;
-                    String password;
-                    int attempt = 3; // user's attempt to log in
-                    while (true) {
-                        System.out.println("Enter a username: ");
-                        username = scanner.nextLine();
-                        System.out.println("Enter a password: ");
-                        password = scanner.nextLine();
-
-                        // Log in successfully
-                        if (seller.logIn(username, password)) {
-                            sellerFunctions(scanner, seller, market); // a while-true loop
-                            break;
-                        }
-
-                        // Log in failed
-                        else {
-                            attempt--;
-                            System.out.printf("Username or password is incorrect. " +
-                                    "Please try again. Attempts: %d/3\n", attempt);
-                            if (attempt == 0) {
-                                System.out.println("You exceeds the attempts limit!");
-                                break;
-                            }
-                        }
-                    }
-                }
             }
-        }
-    }
-
-    /**
-     * Create a new user (customer or seller)
-     *
-     * @param scanner for input
-     * @param market  database
-     * @param type    1 for customer, 2 for seller
-     * @return new customer/seller with user's typed info
-     */
-    public static User userSignUp(Scanner scanner, Market market, int type) {
-        // Get email; make sure it is in the right format
-        String email;
-        while (true) {
-            System.out.println("Enter your email:");
-            email = scanner.nextLine();
-
-            if (!(email.contains("@") && email.contains(".") && !email.contains(","))) {
-                System.out.println("Email must be in format [abc@xyz.com]\nAnd there is no \",\" allowed!");
-            } else if (market.emailExisted(email)) {
-                System.out.println("Email is taken by another user. Please try a different email!");
-            } else {
-                break;
-            }
-        }
-
-        // Take in username and validate username
-        System.out.println("Create a username:");
-        String username = scanner.nextLine();
-        while (market.userNameExisted(username) || username.length() > User.USERNAME_MAX_LENGTH) {
-            if (market.userNameExisted(username)) {
-                System.out.println("This username already exists, please enter another one:");
-            } else {
-                System.out.printf("Username cannot exceed %d characters. Please enter another one:\n",
-                        User.USERNAME_MAX_LENGTH);
-            }
-            username = scanner.nextLine();
-        }
-        System.out.println("Username successfully created!");
-
-        // Take in password and validate password
-        String password;
-        System.out.println("Create a password:");
-        while (true) {
-            System.out.printf("""
-                            \tPassword must have:
-                            \t\tMinimum %d
-                            \t\tMaximum %d characters
-                            \t\tAt least one uppercase letter
-                            \t\tAt least one lowercase letter
-                            \t\tAt least one number and one special character
-                            """,
-                    User.PASSWORD_MIN_LENGTH, User.PASSWORD_MAX_LENGTH);
-            password = scanner.nextLine();
-            if (!(password.matches(User.PASSWORD_REGEX))) {
-                System.out.println("Password does not meet the requirement. Please try again!");
-            } else {
-                break;
-            }
-        }
-        System.out.println("Password successfully created!");
-
-        // Return the newly created user
-        if (type == 1) {
-            return new Customer(username, email, password);
-        } else {
-            return new Seller(username, email, password);
         }
     }
 
@@ -277,9 +159,8 @@ public class Marketplace {
      *
      * @param scanner for input
      * @param seller  current user and role
-     * @param market  for database
      */
-    public static void sellerFunctions(Scanner scanner, Seller seller, Market market) {
+    public static void sellerFunctions(Scanner scanner, Seller seller) {
         while (true) {
             // Menu and take command
             System.out.println("----------Main Menu----------");
@@ -297,29 +178,33 @@ public class Marketplace {
             // Log out; save all data
             if (command.equals("0")) {
                 System.out.println("Logging out...");
-                market.writeUserCredentials();
-                market.writeProductInfo();
-                market.writeStoreInfo();
-                market.writeCustomerInfo();
+                User.writeUserCredentials();
+                User.writeUserInfo();
+                Product.writeProductInfo();
+                Store.writeStoreInfo();
                 break;
             }
 
-            // if user chooses view all stores.
+            // User chooses view all stores.
             else if (command.equals("1")) {
                 // Get seller's stores
-                ArrayList<Store> stores = seller.getStores();
+                HashMap<String, Store> stores = seller.getStores();
                 if (stores == null || stores.isEmpty()) {
                     System.out.println("You do not have any store yet!");
                     continue;
                 }
 
                 // Display stores
-                for (int i = 1; i <= stores.size(); i++) {
-                    System.out.println((i) + ". " + stores.get(i - 1).getStoreName());
+                HashMap<Integer, Store> optionStores = new HashMap<>();
+                int i = 1;
+                for (Store store : stores.values()) {
+                    System.out.println((i) + ". " + store.getStoreName());
+                    optionStores.put(i, store);
+                    i++;
                 }
 
                 // Getting user's interested store
-                System.out.println("Enter number to view details of the store:");
+                System.out.println("Enter number to view details of the store (0 to cancel):");
                 int storeNum = -1;
                 do {
                     try {
@@ -330,28 +215,32 @@ public class Marketplace {
                         System.out.println("Please enter a valid number!");
                         continue;
                     }
-                    if (storeNum <= 0) {
+                    if (storeNum < 0) {
                         System.out.println("Enter positive integer!");
                     } else if (storeNum > stores.size()) {
                         System.out.printf("There is less than %d stores!\n", storeNum);
                     }
-                } while ((storeNum <= 0) || (storeNum > stores.size()));
-                Store store = stores.get(storeNum - 1);
+                } while ((storeNum < 0) || (storeNum > stores.size()));
+
+                if (storeNum == 0) {
+                    System.out.println("Going back to Main menu...");
+                    continue;
+                }
 
                 // Store's menu
+                Store store = optionStores.get(storeNum); // get store
                 int action = -1;
                 while (true) {
-                    System.out.println(store.getStoreName() + ":");
-                    System.out.println("\t0. Go back to Main menu");
-                    System.out.println("\t1. Add listing");
-                    System.out.println("\t2. Remove listing");
-                    System.out.println("\t3. Show sales");
-                    System.out.println("\t4. Import products csv");
-                    System.out.println("\t5. Export products csv");
-
                     // Get user's input and validate
-                    System.out.println("Enter a number");
                     do {
+                        System.out.println(store.getStoreName() + ":");
+                        System.out.println("\t0. Go back to Main menu");
+                        System.out.println("\t1. Add listing");
+                        System.out.println("\t2. Remove listing");
+                        System.out.println("\t3. Show sales");
+                        System.out.println("\t4. Import products csv");
+                        System.out.println("\t5. Export products csv");
+                        System.out.println("Enter a number");
                         try {
                             action = scanner.nextInt();
                             scanner.nextLine();
@@ -394,6 +283,7 @@ public class Marketplace {
                                 scanner.nextLine();
 
                             } catch (NumberFormatException e) {
+                                scanner.nextLine();
                                 System.out.println("Please enter a valid number!");
                                 continue;
                             }
@@ -406,19 +296,13 @@ public class Marketplace {
                         Product addProduct = new Product(productName, seller.getUserName(), store.getStoreName(),
                                 productDescription, productPrice, productQty);
                         store.addListing(addProduct);
-                        market.addProduct(addProduct);
                     }
 
                     // Remove listing.
                     else if (action == 2) {
                         // Getting Product
                         System.out.println("Enter product name: ");
-                        String productName = scanner.nextLine();
-                        Product removeProduct = market.productGetter(productName);
-                        if (removeProduct == null) {
-                            System.out.println("Product does not exist!");
-                            continue;
-                        }
+                        String removeProduct = scanner.nextLine();
 
                         // Take user input and validate it
                         System.out.println("Enter quantity to remove (0 to cancel):");
@@ -428,9 +312,8 @@ public class Marketplace {
                                 quantity = scanner.nextInt();
                                 scanner.nextLine();
 
-                                if (quantity < 0 || quantity > removeProduct.getQuantity()) {
-                                    System.out.printf("Please enter a number between 0 and %d\n",
-                                            removeProduct.getQuantity());
+                                if (quantity < 0) {
+                                    System.out.println("Please enter a number larger than 0");
                                 } else {
                                     break;
                                 }
@@ -441,8 +324,12 @@ public class Marketplace {
                         }
 
                         // Remove product
-                        store.removeListing(removeProduct, quantity);
-                        market.removeProduct(removeProduct, quantity);
+                        if (store.removeListing(removeProduct, quantity)) {
+                            System.out.printf("Success! Removed %d %s from %s\n", quantity, removeProduct,
+                                    store.getStoreName());
+                        } else {
+                            System.out.printf("Cannot find %s in %s!\n", removeProduct, store.getStoreName());
+                        }
                     }
 
                     // Show sales
@@ -455,12 +342,11 @@ public class Marketplace {
                         System.out.println("Enter file path:");
                         String filepath = scanner.nextLine();
 
-                        ArrayList<Product> products = store.importCSV(filepath, market);
+                        ArrayList<Product> products = store.importCSV(filepath);
 
                         // Add listing if products is not empty
                         if (!products.isEmpty()) {
                             store.addListing(products);
-                            market.addProduct(products);
                             System.out.println("Products successfully added!");
                         } else {
                             System.out.println("There is no product to add!");
@@ -470,19 +356,24 @@ public class Marketplace {
                     // Export csv file
                     else {
                         System.out.println("Enter file path:");
-                        String filepath = scanner.nextLine();
-                        store.exportCSV(filepath);
+                        String filePath = scanner.nextLine();
+                        if (store.exportCSV(filePath)) {
+                            System.out.printf("Products are written into\n\t%s\n", filePath);
+                        } else {
+                            System.out.println("Failed to write products. Please try again!");
+                        }
                     }
                 }
             }
 
             // Statistic for all stores
             else if (command.equals("2")) {
-                ArrayList<Store> stores = (ArrayList<Store>) seller.getStores().clone();
+                HashMap<String, Store> stores = seller.getStores();
                 if (stores == null || stores.isEmpty()) {
                     System.out.println("You do not have any store yet!");
                     continue;
                 }
+                ArrayList<Store> sortStores = new ArrayList<>(stores.values()); // to array list to sort
 
                 System.out.println("Do you want to sort the stores by name?");
                 System.out.println("Press 1 for yes. Press any key to display the statistics without sorting");
@@ -492,44 +383,45 @@ public class Marketplace {
                 if (ans.equals("1")) {
 
                     System.out.println("Do you want to sort in descending order?");
-                    System.out.println("Press 1 for yes. Press any key to display the statistics without sorting");
+                    System.out.println("Press 1 for descending order. " +
+                            "Press any key for ascending order");
                     ans = scanner.nextLine();
 
                     // Ascending
                     if (ans.equals("1")) {
-                        for (int i = 1; i < stores.size(); i++) {
-                            Store curr = stores.get(i);
+                        for (int i = 1; i < sortStores.size(); i++) {
+                            Store curr = sortStores.get(i);
                             int j = i - 1;
 
                             while (j >= 0 &&
-                                    Character.getNumericValue(stores.get(j).getStoreName().indexOf(0))
+                                    Character.getNumericValue(sortStores.get(j).getStoreName().indexOf(0))
                                             > Character.getNumericValue(curr.getStoreName().indexOf(0))) {
-                                stores.set(j + 1, stores.get(j));
+                                sortStores.set(j + 1, sortStores.get(j));
                                 j = j - 1;
                             }
-                            stores.set(j + 1, curr);
+                            sortStores.set(j + 1, curr);
                         }
                     }
 
                     // Descending
                     else {
-                        for (int i = 1; i < stores.size(); i++) {
-                            Store curr = stores.get(i);
+                        for (int i = 1; i < sortStores.size(); i++) {
+                            Store curr = sortStores.get(i);
                             int j = i - 1;
 
                             while (j >= 0 &&
-                                    Character.getNumericValue(stores.get(j).getStoreName().indexOf(0))
+                                    Character.getNumericValue(sortStores.get(j).getStoreName().indexOf(0))
                                             < Character.getNumericValue(curr.getStoreName().indexOf(0))) {
-                                stores.set(j + 1, stores.get(j));
+                                sortStores.set(j + 1, sortStores.get(j));
                                 j = j - 1;
                             }
-                            stores.set(j + 1, curr);
+                            sortStores.set(j + 1, curr);
                         }
                     }
                 }
 
                 // Display statistics
-                for (Store store : stores) {
+                for (Store store : sortStores) {
                     store.showStatistic();
                 }
             }
@@ -539,14 +431,13 @@ public class Marketplace {
                 // Take store name and make sure it is unique
                 System.out.println("Enter name of new store:");
                 String storeName = scanner.nextLine();
-                while (market.storeNameExisted(storeName)) {
+                while (Store.isStoreNameExisted(storeName)) {
                     System.out.println("Store name existed. Please try a different name: ");
                     storeName = scanner.nextLine();
                 }
 
                 // Create new store
                 Store newStore = new Store(storeName, seller.getUserName());
-                market.addStore(newStore);
                 seller.addStore(newStore);
                 System.out.println("Store successfully created!");
             }
@@ -554,14 +445,14 @@ public class Marketplace {
             // View customer shopping cart
             else if (command.equals("4")) {
                 // Get list of customer
-                ArrayList<Customer> allCustomers = market.getCustomers();
+                HashMap<String, Customer> allCustomers = User.getCustomers();
                 if (allCustomers == null || allCustomers.isEmpty()) {
                     System.out.println("There is no customer yet. Please try again later");
                     continue;
                 }
 
                 // Display all seller's customers
-                for (Store store : seller.getStores()) {
+                for (Store store : seller.getStores().values()) {
                     store.viewCustomers();
                 }
 
@@ -575,22 +466,22 @@ public class Marketplace {
                     if (customerName.equals("QUIT")) {
                         break;
                     }
-                } while (!market.viewCustomerCarts(customerName));
+                } while (!seller.viewCustomerCarts(customerName));
             }
 
             // Mailing page
             else if (command.equals("5")) {
-                mailPage(seller, scanner, market);
+                seller.mailPage(scanner);
             }
 
             // Editing profile
             else if (command.equals("6")) {
-                if (editProfile(scanner, seller, market)) {
+                if (seller.editProfile(scanner)) {
                     System.out.println("Logging out...");
-                    market.writeUserCredentials();
-                    market.writeProductInfo();
-                    market.writeStoreInfo();
-                    market.writeCustomerInfo();
+                    User.writeUserCredentials();
+                    User.writeUserInfo();
+                    Product.writeProductInfo();
+                    Store.writeStoreInfo();
                     break;
                 }
             }
@@ -607,33 +498,33 @@ public class Marketplace {
      *
      * @param scanner  for inputs
      * @param customer current user and role
-     * @param market   for database
      */
-    public static void customerFunctions(Scanner scanner, Customer customer, Market market) {
+    public static void customerFunctions(Scanner scanner, Customer customer) {
+        // Display all available products
+        System.out.println("----------Current Market Listing---------");
+        System.out.println(Product.getProducts().size());
+        for (Product product : Product.getProducts()) {
+            System.out.println(product.displayProduct());
+        }
         while (true) {
-            // Display all available products
-            System.out.println("----------Current Market Listing---------");
-            for (int i = 0; i < market.getProducts().size(); i++) {
-                System.out.println(market.getProducts().get(i).displayProduct());
-            }
-
             // Display menu for customers
-            System.out.println("Welcome, " + customer.getUserName() + "!");
             System.out.println("----------Main Menu----------");
+            System.out.println("Welcome, " + customer.getUserName() + "!");
             System.out.println("Do you want to...");
             System.out.println("\t0. Logout");
-            System.out.println("\t1. Search by stores");
-            System.out.println("\t2. Search by products");
-            System.out.println("\t3. Sort products"); //sort price and quantity
-            System.out.println("\t4. View Shopping Cart");
-            System.out.println("\t5. View or Export purchase history");
-            System.out.println("\t6. View Mail Page");
-            System.out.println("\t7. View dashboard");
-            System.out.println("\t8. Edit profile");
+            System.out.println("\t1. View Current Marketplace Product");
+            System.out.println("\t2. Search by stores");
+            System.out.println("\t3. Search by products");
+            System.out.println("\t4. Sort products"); //sort price and quantity
+            System.out.println("\t5. View Shopping Cart");
+            System.out.println("\t6. View or Export purchase history");
+            System.out.println("\t7. View Mail Page");
+            System.out.println("\t8. View dashboard");
+            System.out.println("\t9. Edit profile");
 
             // Take user input and validate it
             String command; // the command input from customer
-            String test = "012345678";
+            String test = "0123456789";
             while (true) {
                 command = scanner.nextLine();
                 if (command.length() != 1 && !test.contains(command)) {
@@ -646,16 +537,26 @@ public class Marketplace {
             // Log out; save all data
             if (command.equals("0")) {
                 System.out.println("Logging out...");
-                market.writeUserCredentials();
-                market.writeProductInfo();
-                market.writeStoreInfo();
-                market.writeCustomerInfo();
+                User.writeUserCredentials();
+                User.writeUserInfo();
+                Product.writeProductInfo();
+                Store.writeStoreInfo();
                 break;
             }
 
-            // Customer want to search products by store
+            // View all
             else if (command.equals("1")) {
-                ArrayList<Store> stores = market.getStores(); // get stores in market
+                System.out.println("----------Current Market Listing---------");
+                System.out.println(Product.getProducts().size());
+                for (Product product : Product.getProducts()) {
+                    System.out.println(product.displayProduct());
+                }
+            }
+
+
+            // Customer want to search products by store
+            else if (command.equals("2")) {
+                HashMap<String, Store> stores = Store.getStores(); // get stores in market
                 if (stores == null || stores.isEmpty()) { // there are no store
                     System.out.println("There are no stores yet, please come back later.");
                     System.out.println("Going back to Main menu...");
@@ -666,13 +567,17 @@ public class Marketplace {
                 while (true) {
                     System.out.println("----------Stores----------");
                     // Display all stores in the market
-                    for (int i = 0; i < stores.size(); i++) {
-                        System.out.println((i + 1) + ". " + stores.get(i).getStoreName());
+                    HashMap<Integer, Store> optionStore = new HashMap<>();
+                    int i = 1;
+                    for (Store store : stores.values()) {
+                        System.out.println(i + ". " + store.getStoreName());
+                        optionStore.put(i, store);
+                        i++;
                     }
                     System.out.println("Press 0 to exit");
                     System.out.println("Enter store number to view details of the store:");
 
-                    // Take user's choice of store and validate it
+                    // Take user's choice of store
                     int storeNum = -1;
                     do {
                         try {
@@ -692,27 +597,26 @@ public class Marketplace {
 
                     // Get the chosen store
                     storeNum--;
-                    Store store = stores.get(storeNum);
+                    Store store = optionStore.get(storeNum);
 
                     // Display store and seller info; get store's products
                     System.out.println(store.getStoreName());
                     System.out.println("Seller: " + store.getSeller());
-                    ArrayList<Product> productsArrayList = store.getCurrentProducts();
-                    if (productsArrayList == null || productsArrayList.isEmpty()) {
+                    ArrayList<Product> storeProducts = store.getCurrentProducts();
+                    if (storeProducts == null || storeProducts.isEmpty()) {
                         System.out.println("Store currently has no product! Please comeback later");
                         System.out.println("Going back to Main menu...");
                         break;
                     }
 
                     // User interact with products
-                    System.out.println("Products:");
-                    interactWithProduct(scanner, market, productsArrayList, customer);
+                    interactWithProduct(scanner, storeProducts, customer);
                 }
             }
 
             // Customer want to search product by name/description
-            else if (command.equals("2")) {
-                ArrayList<Product> marketProduct = market.getProducts(); // get all market products
+            else if (command.equals("3")) {
+                ArrayList<Product> marketProduct = Product.getProducts(); // get all market products
                 if (marketProduct == null || marketProduct.isEmpty()) { // no product
                     System.out.println("Market does not have any products yet, please come back later!");
                     System.out.println("Going back to Main menu...");
@@ -734,7 +638,7 @@ public class Marketplace {
                     // Search through the database for matching products; add the matched product to results
                     ArrayList<Product> results = new ArrayList<>();
                     for (Product product : marketProduct) {
-                        if (product.getName().equalsIgnoreCase(productToSearch) ||
+                        if ((product.getName().toLowerCase()).contains(productToSearch.toLowerCase()) ||
                                 (product.getDescription().toLowerCase()).contains(productToSearch.toLowerCase())) {
                             results.add(product);
                         }
@@ -742,7 +646,7 @@ public class Marketplace {
 
                     // User interact with results
                     if (!results.isEmpty()) {
-                        interactWithProduct(scanner, market, results, customer);
+                        interactWithProduct(scanner, results, customer);
                     } else {
                         System.out.println("No matched product!");
                     }
@@ -750,9 +654,9 @@ public class Marketplace {
             }
 
             // Sorting
-            else if (command.equals("3")) {
+            else if (command.equals("4")) {
                 // Get all market products; make sure there are products listed
-                ArrayList<Product> marketProduct = market.getProducts();
+                ArrayList<Product> marketProduct = Product.getProducts();
                 if (marketProduct == null || marketProduct.isEmpty()) { // no product
                     System.out.println("There are no products in the market yet, please come back later!");
                     System.out.println("Going back to Main menu...");
@@ -814,33 +718,33 @@ public class Marketplace {
                         break;
                     }
 
-                    // Actual sorting
+                    /// Actual sorting
                     ArrayList<Product> sortProducts;
 
                     // Ascending by price
                     if (sortOption == 1 && sortOrder == 1) {
-                        sortProducts = sortByPrice(marketProduct, true);
+                        sortProducts = Product.sortByPrice(marketProduct, true);
                     }
                     // Descending by price
                     else if (sortOption == 1 && sortOrder == 2) {
-                        sortProducts = sortByPrice(marketProduct, false);
+                        sortProducts = Product.sortByPrice(marketProduct, false);
                     }
                     // Ascending by quantity
                     else if (sortOption == 2 && sortOrder == 1) {
-                        sortProducts = sortByQuantity(marketProduct, true);
+                        sortProducts = Product.sortByQuantity(marketProduct, true);
                     }
                     // Descending by quantity
                     else {
-                        sortProducts = sortByQuantity(marketProduct, false);
+                        sortProducts = Product.sortByQuantity(marketProduct, false);
                     }
 
                     // Interact with sorted products
-                    interactWithProduct(scanner, market, sortProducts, customer);
+                    interactWithProduct(scanner, sortProducts, customer);
                 }
             }
 
             // View cart
-            else if (command.equals("4")) {
+            else if (command.equals("5")) {
                 ArrayList<Product> cart = customer.getShoppingCart();
                 if (cart == null || cart.isEmpty()) {
                     System.out.println("Your shopping cart is empty!");
@@ -880,7 +784,7 @@ public class Marketplace {
 
                 // Buy all
                 if (choice == -1) {
-                    market.buyAllItem(customer);
+                    customer.buyAllItem();
                 }
 
                 // Clear cart
@@ -982,7 +886,7 @@ public class Marketplace {
 
                             // Buy if choice is not 0 (cancel)
                             if (choice != 0) {
-                                market.buyItem(customer, product, choice);
+                                customer.buyItem(product, choice);
                             }
                         }
 
@@ -1049,7 +953,7 @@ public class Marketplace {
                             System.out.println("Message:");
                             String message = scanner.nextLine();
 
-                            if (customer.sendMessage(market.userGetterByName(product.getSeller()), message)) {
+                            if (customer.sendMessage(User.userGetterByName(product.getSeller()), message)) {
                                 System.out.println("Message sent!");
                             } else {
                                 System.out.println("Failed to send message!");
@@ -1060,7 +964,7 @@ public class Marketplace {
             }
 
             // View/export purchase history
-            else if (command.equals("5")) {
+            else if (command.equals("6")) {
                 ArrayList<Product> purchaseHistory = customer.getItemsPurchased();
                 if (purchaseHistory == null || purchaseHistory.isEmpty()) {
                     System.out.println("Purchase history is empty");
@@ -1068,15 +972,16 @@ public class Marketplace {
                 }
 
                 // Display purchase history
+                System.out.println("---------History----------");
                 for (Product product : purchaseHistory) {
-                    System.out.println(product.getName() + "    " + product.getPrice());
+                    System.out.println(product.page());
                 }
 
                 // Export history
                 System.out.println("Do you want to export the history of purchase?");
                 System.out.println("0. No\n1.Yes");
 
-                // Take user input and validate
+                // Take user input
                 int choice;
                 while (true) {
                     try {
@@ -1094,34 +999,39 @@ public class Marketplace {
                     }
                 }
 
+                // Write to file
                 if (choice == 1) {
                     System.out.println("Enter the file path: ");
                     String filePath = scanner.nextLine();
-                    customer.exportPurchaseHistory(filePath);
+                    if (customer.exportPurchaseHistory(filePath)) {
+                        System.out.printf("History is written into\n\t%s\n", filePath);
+                    } else {
+                        System.out.println("Failed to write purchase history. Please try again later!");
+                    }
                 }
             }
 
             // View mail
-            else if (command.equals("6")) {
-                mailPage(customer, scanner, market);
+            else if (command.equals("7")) {
+                customer.mailPage(scanner);
             }
 
             // View dashboard
-            else if (command.equals("7")) {
+            else if (command.equals("8")) {
                 System.out.println("Do you want to sort the dashboard in descending order?");
                 System.out.println("Press 1 for descending. Press any other key for ascending order.");
                 String ans = scanner.nextLine();
-                customer.viewDashboard(market, ans.equals("1"));
+                customer.viewDashboard(ans.equals("1"));
             }
 
             // Edit profile
             else {
-                if (editProfile(scanner, customer, market)) {
+                if (customer.editProfile(scanner)) {
                     System.out.println("Logging out...");
-                    market.writeUserCredentials();
-                    market.writeProductInfo();
-                    market.writeStoreInfo();
-                    market.writeCustomerInfo();
+                    User.writeUserCredentials();
+                    User.writeUserInfo();
+                    Product.writeProductInfo();
+                    Store.writeStoreInfo();
                     break;
                 }
             }
@@ -1133,17 +1043,15 @@ public class Marketplace {
      * decide to buy, add to cart, or contact seller
      *
      * @param scanner  for input
-     * @param market   for database
      * @param products current list of product (sorted/by store/etc)
      * @param customer current customer
      */
-    public static void interactWithProduct(Scanner scanner, Market market,
-                                           ArrayList<Product> products, Customer customer) {
+    public static void interactWithProduct(Scanner scanner, ArrayList<Product> products, Customer customer) {
         while (true) {
             // Display products
             System.out.println("----------Products----------");
             for (int i = 0; i < products.size(); i++) {
-                System.out.println((i + 1) + ". " + products.get(i).page());
+                System.out.println((i + 1) + ". " + products.get(i).getName());
             }
 
             // Inspect each product
@@ -1157,7 +1065,7 @@ public class Marketplace {
                     choice = scanner.nextInt();
                     scanner.nextLine();
 
-                    if (choice < 0 || choice >= products.size()) {
+                    if (choice < 0 || choice > products.size()) {
                         System.out.printf("Please enter an integer from 0 to %d\n", products.size() - 1);
                     } else {
                         break;
@@ -1177,6 +1085,7 @@ public class Marketplace {
             // Customer picked a product
             choice--;
             Product product = products.get(choice);
+            int productIndex = choice; // the index to access in buy
 
             // Display chosen product detail and options
             System.out.println(product.page());
@@ -1231,7 +1140,11 @@ public class Marketplace {
 
                 // Buy if choice is not 0 (cancel)
                 if (choice != 0) {
-                    market.buyItem(customer, product, choice);
+                    Product afterPurchase = customer.buyItem(product, choice);
+
+                    Product newProductAfterPurchase = products.get(productIndex);
+                    newProductAfterPurchase.setQuantity(Math.max(0,
+                            newProductAfterPurchase.getQuantity() - afterPurchase.getQuantity()));
                 }
             }
 
@@ -1269,218 +1182,11 @@ public class Marketplace {
                 System.out.println("Message:");
                 String message = scanner.nextLine();
 
-                if (customer.sendMessage(market.userGetterByName(product.getSeller()), message)) {
+                if (customer.sendMessage(User.userGetterByName(product.getSeller()), message)) {
                     System.out.println("Message sent!");
                 } else {
                     System.out.println("Failed to send message!");
                 }
-            }
-        }
-    }
-
-    /**
-     * Sort the input products by ascending or descending order by price
-     *
-     * @param products    the product ArrayList to be sorted
-     * @param isAscending whether to sort in ascending or descending
-     * @return the sorted ArrayList
-     */
-    public static ArrayList<Product> sortByPrice(ArrayList<Product> products, boolean isAscending) {
-        ArrayList<Product> sorted = (ArrayList<Product>) products.clone();
-
-        // Insertion sort ascending
-        if (isAscending) {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getPrice() > curr.getPrice()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
-            }
-        } else {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getPrice() < curr.getPrice()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
-            }
-        }
-
-        return sorted;
-    }
-
-    /**
-     * Sort the input products by ascending or descending order by quantity
-     *
-     * @param products    the product ArrayList to be sorted
-     * @param isAscending whether to sort in ascending or descending
-     * @return the sorted ArrayList
-     */
-    public static ArrayList<Product> sortByQuantity(ArrayList<Product> products, boolean isAscending) {
-        ArrayList<Product> sorted = (ArrayList<Product>) products.clone();
-
-        // Insertion sort ascending
-        if (isAscending) {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getQuantity() > curr.getQuantity()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
-            }
-        } else {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getQuantity() < curr.getQuantity()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
-            }
-        }
-
-        return sorted;
-    }
-
-    /**
-     * Mail page interface for user
-     *
-     * @param user    current user (customer/seller)
-     * @param scanner for input
-     * @param market  for database
-     */
-    public static void mailPage(User user, Scanner scanner, Market market) {
-        String response;
-        do {
-            System.out.println("----------Mailing----------");
-            System.out.println("1. View Inbox");
-            System.out.println("2. Send Message");
-            System.out.println("3. Quit");
-            response = scanner.nextLine();
-            if (response.equals("1")) {
-                user.readInbox();
-            } else if (response.equals("2")) {
-                System.out.println("Enter recipient: ");
-                String receiver = scanner.nextLine();
-                System.out.println("Enter Message: ");
-                String message = scanner.nextLine();
-                if (user.sendMessage(market.userGetterByName(receiver), message)) {
-                    System.out.println("Message Sent!");
-                } else {
-                    System.out.println("Failed to send message!");
-                    System.out.println("Recipient does not exist or is the same user type as you!");
-                }
-            } else if (!response.equals("3")) {
-                System.out.println("Please enter valid input!");
-            }
-        } while (!response.equals("3"));
-    }
-
-    /**
-     * Edit the current user username/password or delete the account
-     *
-     * @param scanner for input
-     * @param user    current user and role
-     * @param market  for database
-     * @return false if account is NOT DELETED; true if account is DELETED
-     */
-    public static boolean editProfile(Scanner scanner, User user, Market market) {
-        while (true) {
-            System.out.println("----------Edit Profile----------");
-            System.out.println("Select an action:");
-            System.out.println("0. Exit");
-            System.out.println("1. Change username");
-            System.out.println("2. Change password");
-            System.out.println("3. Delete account");
-
-            // Take input and validate
-            int action;
-            while (true) {
-                try {
-                    action = scanner.nextInt();
-                    scanner.nextLine();
-
-                    if (action < 0 || action > 3) {
-                        System.out.println("Please enter an integer from 0 to 3 inclusively");
-                    } else {
-                        break;
-                    }
-                } catch (Exception e) {
-                    scanner.nextLine();
-                    System.out.println("Please enter an integer from 0 to 3 inclusively");
-                }
-            }
-
-            // Exit
-            if (action == 0) {
-                System.out.println("Exiting...");
-                return false;
-            }
-
-            // Change username
-            else if (action == 1) {
-                System.out.println("Current username: " + user.getUserName());
-
-                String newUsername = scanner.nextLine();
-                while (market.userNameExisted(newUsername) || newUsername.length() > User.USERNAME_MAX_LENGTH) {
-                    System.out.println("Enter new username:");
-                    if (market.userNameExisted(newUsername)) {
-                        System.out.println("This username already exists, please enter another one:");
-                    } else {
-                        System.out.printf("Username cannot exceed %d characters\n", User.USERNAME_MAX_LENGTH);
-                    }
-                    newUsername = scanner.nextLine();
-                }
-
-                user.setUserName(newUsername);
-                System.out.println("Username updated!");
-            }
-
-            // Change password
-            else if (action == 2) {
-                System.out.println("Current password: " + user.getPassword());
-
-                System.out.println("Enter new password:");
-                String newPassword;
-                while (true) {
-                    System.out.printf("""
-                                    \tPassword must have:
-                                    \t\tMinimum %d characters
-                                    \t\tMaximum %d characters
-                                    \t\tAt least one uppercase letter
-                                    \t\tAt least one lowercase letter
-                                    \t\tAt least one number and one special character
-                                    """,
-                            User.PASSWORD_MIN_LENGTH, User.PASSWORD_MAX_LENGTH);
-                    newPassword = scanner.nextLine();
-                    if (!(newPassword.matches(User.PASSWORD_REGEX))) {
-                        System.out.println("Password does not meet the requirement. Please try again!");
-                    } else {
-                        break;
-                    }
-                }
-
-                user.setPassword(newPassword);
-                System.out.println("Password updated!");
-            }
-
-            // Delete account
-            else {
-                market.deleteUser(user);
-                System.out.println("Account is being deleted...");
-                return true;
             }
         }
     }
