@@ -1,4 +1,0 @@
-Amazon,bao2803
-Lazada,bao2803
-Shopee,bao2803
-Tiki,bao2803
