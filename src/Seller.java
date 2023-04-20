@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -5,6 +6,7 @@ import java.util.HashMap;
  */
 public class Seller extends User {
     private final HashMap<String, Store> stores; // Key is store name.
+    private ArrayList<String> contactingCustomers; // Customer emails who tried to contact seller
 
     public Seller(String userName, String email, String password, HashMap<String, Store> stores) {
         super(userName, email, password);
