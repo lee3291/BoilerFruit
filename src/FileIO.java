@@ -3,13 +3,74 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import com.opencsv.CSVWriterBuilder;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class FileIO {
+    private final String dataFolder = "./data/"; // the path to the data directory
+    private final String usersFile = "allUsers.ser"; // the file name of the file contain all users
+
+    /**
+     * Write all user objects in users into a file (path: ./data/users.ser)
+     * @param users a hashmap of all users
+     * @return true if success, false otherwise
+     */
+    public boolean writeUsers(HashMap<String, User> users) {
+        new File(dataFolder).mkdirs();
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataFolder + usersFile))) {
+            // Write object to file
+            for (User user : users.values()) {
+                if (user != null) { // make sure there is no null object (will break the readUsers)
+                    oos.writeObject(user);
+                }
+            }
+            oos.writeObject(null); // used to terminate the readUsers
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Read all user object from data file (path: ./data/users.ser)
+     * @param customers the customer hashmap to be updated during file input
+     * @param sellers the seller hashmap to be updated during file input
+     * @return the HashMap<String, User> if success, null otherwise
+     */
+    public HashMap<String, User> readUsers(HashMap<String, Customer> customers, HashMap<String, Seller> sellers) {
+        HashMap<String, User> users = new HashMap<>();
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(dataFolder + usersFile))) {
+            User curr = (User) ois.readObject();
+            while (curr != null) {
+                // User is a seller
+                if (curr instanceof Seller newSeller) {
+                    users.put(curr.getUserName(), newSeller);
+                    sellers.put(curr.getUserName(), newSeller);
+                }
+
+                // User is a customer
+                else if (curr instanceof Customer newCustomer) {
+                    users.put(curr.getUserName(), newCustomer);
+                    customers.put(curr.getUserName(), newCustomer);
+                }
+
+                curr = (User) ois.readObject();
+            }
+        } catch (FileNotFoundException ef) {
+            System.out.println("First time running readUsers!"); // First time running the program, no user
+            return users;
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+
+        return users;
+    }
 
     //TODO: Fix this
     /**
