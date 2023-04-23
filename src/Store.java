@@ -172,7 +172,7 @@ public class Store {
      */
     public String makeSaleDetail(Product product, int saleQuantity, String customerName) {
         //TODO:
-
+        return "";
     }
 
     public ArrayList<String> getCustomerEmails() {
