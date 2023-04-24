@@ -46,25 +46,22 @@ public class FileIO {
 
     /**
      * Read all user object from data file (path: ./data/users.ser)
-     * @param customers the customer hashmap to be updated during file input
-     * @param sellers the seller hashmap to be updated during file input
      * @return the HashMap<String, User> if success, null otherwise
      */
-    public HashMap<String, User> readUsers(HashMap<String, Customer> customers, HashMap<String, Seller> sellers) {
+    public HashMap<String, User> readUsers() {
         HashMap<String, User> users = new HashMap<>();
+
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(dataFolder + usersFile))) {
             User curr = (User) ois.readObject();
             while (curr != null) {
                 // User is a seller
                 if (curr instanceof Seller newSeller) {
                     users.put(curr.getUserName(), newSeller);
-                    sellers.put(curr.getUserName(), newSeller);
                 }
 
                 // User is a customer
                 else if (curr instanceof Customer newCustomer) {
                     users.put(curr.getUserName(), newCustomer);
-                    customers.put(curr.getUserName(), newCustomer);
                 }
 
                 curr = (User) ois.readObject();
@@ -77,7 +74,6 @@ public class FileIO {
             e.printStackTrace();
             return null;
         }
-
         return users;
     }
 
