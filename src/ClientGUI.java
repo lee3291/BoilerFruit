@@ -3,7 +3,7 @@ import java.awt.*;
 
 public class ClientGUI implements Runnable {
 
-    JFrame frame;
+    static JFrame frame;
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new ClientGUI());
     }
@@ -26,7 +26,7 @@ public class ClientGUI implements Runnable {
     }
 
     void welcomePage() {
-        // TODO: Add resetFrame method.
+
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new GridLayout(4, 0, 10, 10));
 
@@ -110,5 +110,11 @@ public class ClientGUI implements Runnable {
 
         frame.add(jPanel);
 
+    }
+
+     static void resetFrame() {
+        frame.getContentPane().removeAll(); // Removes all components from frame.
+        frame.revalidate(); // Notifies layout manager that component has changed.
+        frame.repaint(); // repaints the components
     }
 }
