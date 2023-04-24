@@ -11,8 +11,7 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
-        // welcomePage();
-        loginPage("Customer");
+        loginPage();
 
     }
 
@@ -24,51 +23,15 @@ public class ClientGUI implements Runnable {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
-
-    void welcomePage() {
-
-        JPanel jPanel = new JPanel();
-        jPanel.setLayout(new GridLayout(4, 0, 10, 10));
-
-        JLabel welcome = new JLabel("Welcome to Boiler Fruits");
-        welcome.setPreferredSize(new Dimension(100, 100));
-        welcome.setHorizontalAlignment(JLabel.CENTER);
-        welcome.setVerticalAlignment(JLabel.CENTER);
-        welcome.setFont(new Font("", Font.PLAIN, 20));
-
-        JLabel question = new JLabel("Are you a CUSTOMER or a SELLER?");
-        question.setPreferredSize(new Dimension(100, 100));
-        question.setHorizontalAlignment(JLabel.CENTER);
-        question.setVerticalAlignment(JLabel.NORTH);
-        question.setFont(new Font("", Font.PLAIN, 20));
-
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(0, 2, 10,20));
-        buttonPanel.setPreferredSize(new Dimension(100, 100));
-        JButton customerButton = new JButton("CUSTOMER");
-        customerButton.setSize(50, 50);
-        JButton sellerButton = new JButton("SELLER");
-        sellerButton.setSize(50,50);
-        buttonPanel.add(customerButton);
-        buttonPanel.add(sellerButton);
-
-        jPanel.add(welcome);
-        jPanel.add(question);
-        jPanel.add(buttonPanel);
-
-        frame.add(jPanel);
-
-    }
-
-    void loginPage(String userType) {
+    
+    void loginPage() {
         //TODO: Add action listeners
         JPanel jPanel = new JPanel();
-        jPanel.setLayout(new GridLayout(4, 0, 10, 10));
+        jPanel.setLayout(new GridLayout(3, 0, 10, 10));
 
 
         // First Row
-        String message = String.format("Log-In or Sign-up as a %s", userType);
-        JLabel firstLabel = new JLabel(message);
+        JLabel firstLabel = new JLabel("Welcome to Boiler Fruits");
         firstLabel.setPreferredSize(new Dimension(100, 100));
         firstLabel.setHorizontalAlignment(JLabel.CENTER);
         firstLabel.setVerticalAlignment(JLabel.CENTER);
@@ -88,8 +51,8 @@ public class ClientGUI implements Runnable {
         pwLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField pwTxtField = new JTextField(10);
 
-        JButton goBackButton = new JButton("Go Back");
         JButton logInButton = new JButton("Log-In");
+        JButton signUpButton = new JButton("Sign Up");
 
         JPanel txtFieldPanel = new JPanel();
         txtFieldPanel.setLayout(new GridLayout(3, 1, 10, 10));
@@ -97,16 +60,9 @@ public class ClientGUI implements Runnable {
         txtFieldPanel.add(idTxtField);
         txtFieldPanel.add(pwLabel);
         txtFieldPanel.add(pwTxtField);
-        txtFieldPanel.add(goBackButton);
         txtFieldPanel.add(logInButton);
+        txtFieldPanel.add(signUpButton);
         jPanel.add(txtFieldPanel);
-
-        // Third Row TODO: Change Layout Manager
-        JPanel botPanel = new JPanel();
-        botPanel.setLayout(new BorderLayout());
-        JButton signUpButton = new JButton("Sign Up");
-        botPanel.add(signUpButton, BorderLayout.CENTER);
-        jPanel.add(botPanel);
 
         frame.add(jPanel);
 
