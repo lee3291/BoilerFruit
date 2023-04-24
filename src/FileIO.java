@@ -3,7 +3,16 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import com.opencsv.CSVWriterBuilder;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,20 +81,20 @@ public class FileIO {
         return users;
     }
 
-    //TODO: Fix this
     /**
      * Export purchase history into a CSV file at filePath
      *
      * @param filePath the path to the file to be created
+     * @param purchaseHistory the purchase history
      */
-    public boolean exportPurchaseHistory(String filePath) {
+    public boolean exportPurchaseHistory(String filePath, ArrayList<Product> purchaseHistory) {
         try (CSVWriter writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(filePath))
                 .withSeparator(',')
                 .build()) {
 
             // Create a String array of entries
             ArrayList<String[]> lines = new ArrayList<>();
-            for (Product product : itemsPurchased) {
+            for (Product product : purchaseHistory) {
                 String[] entries = product.productDetails();
                 lines.add(entries);
             }
@@ -105,14 +114,11 @@ public class FileIO {
         return true;
     }
 
-
-    //TODO: FIX EVERYTHING!!!
-
     /**
-     * Import {@link #currentProducts} from the specified filePath
+     * Import a list of products from the specified filePath.
      *
      * @param filePath the filePath to the CSV file for importing product
-     * @return an array list of products imported from the CSV file; will be empty if filePath is invalid
+     * @return an array list of products imported from the CSV file; will be null if unsuccessful
      */
     public ArrayList<Product> importCSV(String filePath) {
         ArrayList<Product> products = new ArrayList<>();
@@ -122,21 +128,19 @@ public class FileIO {
             strProduct = reader.readAll(); // read all rows from CSV files
             for (String[] row : strProduct) { // loop through each row and create a new product per row
                 Product curr = new Product(
-                        row[0], // store name
-                        row[1], //seller's name
-                        row[2], //product's store
-                        row[3], // description
+                        row[0], // product name
+                        row[1], // store's name
+                        row[2], // description
                         Double.parseDouble(row[4]), // price
                         Integer.parseInt(row[5]) // quanity
                 );
-                addListing(curr);
             }
         } catch (FileNotFoundException e) { // Invalid file path error
             System.out.println("Invalid file path!");
-            return products;
+            return null;
         } catch (Exception e) { // All other errors
             System.out.printf("Failed to import products due to: %s\n", e.getMessage());
-            return products;
+            return null;
         }
 
         System.out.printf("Products are imported from\n\t%s\n", filePath);
@@ -144,12 +148,13 @@ public class FileIO {
     }
 
     /**
-     * Export {@link #currentProducts} to the specified filePath
+     * Export the currentProducts to the specified filePath
      *
      * @param filePath the filePath to the CSV file for exporting product
+     * @param currentProducts the current product
      * @return true if success; false otherwise
      */
-    public boolean exportCSV(String filePath) {
+    public boolean exportCSV(String filePath, ArrayList<Product> currentProducts) {
         try (CSVWriter writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(filePath))
                 .withSeparator(',')
                 .build()) {
