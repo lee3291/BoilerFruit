@@ -11,9 +11,9 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
-        loginPage();
+        // loginPage();
         // signUpPage();
-
+        customerPage();
     }
 
     void createGUI() {
@@ -22,6 +22,7 @@ public class ClientGUI implements Runnable {
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setSize(800, 600);
         frame.setLocationRelativeTo(null);
+        frame.setResizable(false);
         frame.setVisible(true);
     }
 
@@ -65,6 +66,7 @@ public class ClientGUI implements Runnable {
                         JOptionPane.ERROR_MESSAGE);
             }
 
+            // TODO: Sign in info is valid, send user to customer page or seller page
             // TODO: Client-Server implementation comes here. Wrong ID & Pw error message with JOptionPane
         });
 
@@ -189,6 +191,85 @@ public class ClientGUI implements Runnable {
         botPanel.add(goBackButton);
         botPanel.add(signUpButton);
         jPanel.add(botPanel);
+
+        frame.add(jPanel);
+        frame.revalidate();
+        frame.repaint();
+    }
+
+    void customerPage() {
+        resetFrame();
+
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new BorderLayout());
+
+        // North, search bar, search button, refresh button, to add two components, make an inner panel with boxlayout.
+        JPanel northPanel = new JPanel();
+        northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
+
+        JTextField searchBar = new JTextField("Search for product name, store, or description", 10);
+        JButton searchButton = new JButton("Search");
+        searchButton.addActionListener(e -> {
+            String query = searchBar.getText();
+            if (query.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Please fill in blank field!", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+            //TODO: Client-Server implementation, send query to server
+        });
+
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(e -> {
+            //TODO: Refresh listing, when new products are added to server from a seller,
+            // this customer should be able to view it after clicking this button.
+        });
+
+        northPanel.add(searchBar);
+        northPanel.add(searchButton);
+        northPanel.add(refreshButton);
+        jPanel.add(northPanel, BorderLayout.NORTH);
+
+        // West, usertype label, username label, edit account button, logout button
+        JPanel westPanel = new JPanel();
+        westPanel.setLayout(new BoxLayout(westPanel, BoxLayout.Y_AXIS));
+
+        JLabel userType = new JLabel("  Customer"); // Space for alignment with buttons
+        String userNameStr = "  UserName123"; //TODO: Get from server
+        JLabel userNameLabel = new JLabel(userNameStr);
+
+        JButton editAccountButton = new JButton("Edit Account");
+        editAccountButton.setPreferredSize(new Dimension(100, 50));
+        editAccountButton.setMaximumSize(editAccountButton.getPreferredSize());
+        // editAccountButton.addActionListener(e -> editAccountPage());
+
+        JButton logOutButton = new JButton("Log Out");
+        logOutButton.setPreferredSize(new Dimension(100 ,50));
+        logOutButton.setMaximumSize(logOutButton.getPreferredSize());
+        logOutButton.addActionListener(e -> loginPage());
+
+        westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        westPanel.add(userType);
+        westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        westPanel.add(userNameLabel);
+        westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        westPanel.add(editAccountButton);
+        westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        westPanel.add(logOutButton);
+
+        jPanel.add(westPanel, BorderLayout.WEST);
+
+        // South, review Purchase History button. use box layout for size
+        JPanel southPanel = new JPanel();
+        southPanel.setLayout(new BoxLayout(southPanel, BoxLayout.X_AXIS));
+
+        JButton reviewHistoryButton = new JButton("Review Purchase History");
+        reviewHistoryButton.setPreferredSize(new Dimension(300, 100));
+        reviewHistoryButton.setMaximumSize(reviewHistoryButton.getPreferredSize());
+        // reviewHistoryButton.addActionListener(e -> reviewHistoryPage());
+
+        southPanel.add(Box.createRigidArea(new Dimension(250, 0)));
+        southPanel.add(reviewHistoryButton);
+        jPanel.add(southPanel, BorderLayout.SOUTH);
 
         frame.add(jPanel);
         frame.revalidate();
