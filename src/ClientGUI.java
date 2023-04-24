@@ -2,18 +2,31 @@ import javax.swing.*;
 import java.awt.*;
 
 public class ClientGUI implements Runnable {
+
+    JFrame frame;
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new ClientGUI());
     }
 
+    @Override
     public void run() {
-        DefaultFrame dFrame = new DefaultFrame("Boiler Fruit Market");
-        dFrame.add(welcomePagePanel());
-        // dFrame.pack();
-        dFrame.setVisible(true);
+        createGUI();
+        // welcomePage();
+        loginPage("Customer");
+
     }
 
-    public static JPanel welcomePagePanel() {
+    void createGUI() {
+        frame = new JFrame();
+        frame.setTitle("Boiler Fruit Market");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(800, 600);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    void welcomePage() {
+        // TODO: Add resetFrame method.
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new GridLayout(4, 0, 10, 10));
 
@@ -43,6 +56,59 @@ public class ClientGUI implements Runnable {
         jPanel.add(question);
         jPanel.add(buttonPanel);
 
-        return jPanel;
+        frame.add(jPanel);
+
+    }
+
+    void loginPage(String userType) {
+        //TODO: Add action listeners
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new GridLayout(4, 0, 10, 10));
+
+
+        // First Row
+        String message = String.format("Log-In or Sign-up as a %s", userType);
+        JLabel firstLabel = new JLabel(message);
+        firstLabel.setPreferredSize(new Dimension(100, 100));
+        firstLabel.setHorizontalAlignment(JLabel.CENTER);
+        firstLabel.setVerticalAlignment(JLabel.CENTER);
+        firstLabel.setFont(new Font(null, Font.PLAIN, 20));
+        jPanel.add(firstLabel);
+
+        // Second Row
+        JLabel idLabel = new JLabel("ID: ");
+        idLabel.setHorizontalAlignment(JLabel.CENTER);
+        idLabel.setVerticalAlignment(JLabel.CENTER);
+        idLabel.setFont(new Font("", Font.PLAIN, 20));
+        JTextField idTxtField = new JTextField(10);
+
+        JLabel pwLabel = new JLabel("PW: ");
+        pwLabel.setHorizontalAlignment(JLabel.CENTER);
+        pwLabel.setVerticalAlignment(JLabel.CENTER);
+        pwLabel.setFont(new Font(null, Font.PLAIN, 20));
+        JTextField pwTxtField = new JTextField(10);
+
+        JButton goBackButton = new JButton("Go Back");
+        JButton logInButton = new JButton("Log-In");
+
+        JPanel txtFieldPanel = new JPanel();
+        txtFieldPanel.setLayout(new GridLayout(3, 1, 10, 10));
+        txtFieldPanel.add(idLabel);
+        txtFieldPanel.add(idTxtField);
+        txtFieldPanel.add(pwLabel);
+        txtFieldPanel.add(pwTxtField);
+        txtFieldPanel.add(goBackButton);
+        txtFieldPanel.add(logInButton);
+        jPanel.add(txtFieldPanel);
+
+        // Third Row TODO: Change Layout Manager
+        JPanel botPanel = new JPanel();
+        botPanel.setLayout(new BorderLayout());
+        JButton signUpButton = new JButton("Sign Up");
+        botPanel.add(signUpButton, BorderLayout.CENTER);
+        jPanel.add(botPanel);
+
+        frame.add(jPanel);
+
     }
 }
