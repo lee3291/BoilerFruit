@@ -22,6 +22,7 @@ public class ClientGUI implements Runnable {
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setSize(800, 600);
         frame.setLocationRelativeTo(null);
+        frame.setResizable(false);
         frame.setVisible(true);
     }
 
