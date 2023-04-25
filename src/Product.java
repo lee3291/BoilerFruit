@@ -29,7 +29,8 @@ public class Product {
         return price;
     }
 
-    public String productInfo() {
+    @Override
+    public String toString() {
         return String.format("Product name: %s\tPrice: $%.2f\tQty: %d", name, price, quantity);
     }
 
