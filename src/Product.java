@@ -30,7 +30,7 @@ public class Product {
     }
 
     public String productInfo() {
-        return String.format("Product name: %s\n\tPrice: $%.2f\n\tQty: %d left\n", name, price, quantity);
+        return String.format("Product name: %s\tPrice: $%.2f\tQty: %d", name, price, quantity);
     }
 
     public int getQuantity() {
