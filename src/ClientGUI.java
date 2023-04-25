@@ -16,7 +16,8 @@ public class ClientGUI implements Runnable {
         // loginPage();
         // signUpPage();
         // customerPage();
-        editAccountPage();
+        // editAccountPage();
+        reviewHistoryPage();
     }
 
     void createGUI() {
@@ -264,7 +265,7 @@ public class ClientGUI implements Runnable {
         JButton reviewHistoryButton = new JButton("Review Purchase History");
         reviewHistoryButton.setPreferredSize(new Dimension(300, 100));
         reviewHistoryButton.setMaximumSize(reviewHistoryButton.getPreferredSize());
-        // reviewHistoryButton.addActionListener(e -> reviewHistoryPage());
+        reviewHistoryButton.addActionListener(e -> reviewHistoryPage());
 
         southPanel.add(Box.createRigidArea(new Dimension(250, 0)));
         southPanel.add(reviewHistoryButton);
@@ -423,6 +424,65 @@ public class ClientGUI implements Runnable {
         fourthPanel.add(deleteAccountButton);
 
         jPanel.add(fourthPanel);
+
+        frame.add(jPanel);
+        frame.revalidate();
+        frame.repaint();
+    }
+
+    void reviewHistoryPage() {
+        resetFrame();
+
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new BorderLayout());
+
+        // north
+        JLabel titleLabel = new JLabel("Purchase History");
+        titleLabel.setHorizontalAlignment(JLabel.CENTER);
+        titleLabel.setFont(new Font(null, Font.PLAIN, 30));
+        jPanel.add(titleLabel, BorderLayout.NORTH);
+
+        // Center, list
+        ArrayList<String> purchaseHistory = new ArrayList<>(); //TODO: Get from server
+        for (int i = 0; i < 15; i++) {
+            purchaseHistory.add("Some purchase history example" + i);
+        }
+
+        JList<String> historyList = new JList<>();
+        DefaultListModel<String> model = new DefaultListModel<>();
+        historyList.setModel(model);
+
+        for (String s : purchaseHistory) {
+            model.addElement(s);
+        }
+
+        jPanel.add(new JScrollPane(historyList), BorderLayout.CENTER);
+
+        // south
+        JPanel southPanel = new JPanel();
+        southPanel.setLayout(new BoxLayout(southPanel, BoxLayout.X_AXIS));
+
+        JButton goBackButton = new JButton("Go Back");
+        goBackButton.setMaximumSize(new Dimension(200, 50));
+        goBackButton.addActionListener(e -> customerPage());
+
+        JButton exportHistoryButton = new JButton("Export History");
+        exportHistoryButton.setMaximumSize(new Dimension(200, 50));
+        exportHistoryButton.addActionListener(e -> {
+            String filePath = JOptionPane.showInputDialog(frame, "Enter file path for export: ",
+                    "Export Purchase History", JOptionPane.PLAIN_MESSAGE);
+            if (filePath == null || filePath.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please give valid file path!", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+            // TODO: server, export purchase history
+        });
+        southPanel.add(Box.createRigidArea(new Dimension(170, 0)));
+        southPanel.add(goBackButton);
+        southPanel.add(Box.createRigidArea(new Dimension(50, 0)));
+        southPanel.add(exportHistoryButton);
+
+        jPanel.add(southPanel, BorderLayout.SOUTH);
 
         frame.add(jPanel);
         frame.revalidate();
