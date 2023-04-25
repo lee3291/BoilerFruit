@@ -13,9 +13,9 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
-        loginPage();
+        //loginPage();
         // signUpPage();
-        // customerPage();
+         customerPage();
         //editAccountPage();
         // reviewHistoryPage();
     }
@@ -115,7 +115,7 @@ public class ClientGUI implements Runnable {
         resetFrame();
 
         JPanel jPanel = new JPanel();
-        jPanel.setLayout(new GridLayout(4, 1, 10, 10));
+        jPanel.setLayout(new GridLayout(3, 1, 10, 10));
 
         // top panel first row, Sign Up label.
         JPanel topPanel = new JPanel();
@@ -144,9 +144,9 @@ public class ClientGUI implements Runnable {
         topPanel.add(secondRowPanel);
         jPanel.add(topPanel);
 
-        // mid panel, for ID and PW labels and text fields.
+        // mid panel, for ID, PW, email labels and text fields
         JPanel midPanel = new JPanel();
-        midPanel.setLayout(new GridLayout(2, 2, 10, 10));
+        midPanel.setLayout(new GridLayout(3, 2, 10, 10));
         JLabel idLabel = new JLabel("ID: ");
         idLabel.setHorizontalAlignment(JLabel.CENTER);
         idLabel.setVerticalAlignment(JLabel.CENTER);
@@ -159,40 +159,33 @@ public class ClientGUI implements Runnable {
         pwLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField pwTxtField = new JTextField(10);
 
-        midPanel.add(idLabel);
-        midPanel.add(idTxtField);
-        midPanel.add(pwLabel);
-        midPanel.add(pwTxtField);
-
-        jPanel.add(midPanel);
-
-
-        // bot panel, email label and text field, and go back and sign up buttons.
-        JPanel botPanel = new JPanel();
-        botPanel.setLayout(new GridLayout(2, 2, 10, 10));
-
         JLabel emailLabel = new JLabel("Email: ");
         emailLabel.setHorizontalAlignment(JLabel.CENTER);
         emailLabel.setVerticalAlignment(JLabel.CENTER);
         emailLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField emailTxtField = new JTextField(10);
 
-        botPanel.add(emailLabel);
-        botPanel.add(emailTxtField);
+        midPanel.add(idLabel);
+        midPanel.add(idTxtField);
+        midPanel.add(pwLabel);
+        midPanel.add(pwTxtField);
+        midPanel.add(emailLabel);
+        midPanel.add(emailTxtField);
+
+        jPanel.add(midPanel);
 
         // Go back and sign up button
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+
         JButton goBackButton = new JButton("Go Back");
-        goBackButton.setPreferredSize(new Dimension(100, 100));
-        goBackButton.setMaximumSize(goBackButton.getPreferredSize());
-        goBackButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        goBackButton.setMaximumSize(new Dimension(200, 50));
         goBackButton.addActionListener(e -> {
             loginPage();
         });
 
         JButton signUpButton = new JButton("Sign Up");
-        signUpButton.setPreferredSize(new Dimension(100, 100));
-        signUpButton.setMaximumSize(signUpButton.getPreferredSize());
-        signUpButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        signUpButton.setMaximumSize(new Dimension(200, 50));
         signUpButton.addActionListener(e -> {
             String id = idTxtField.getText();
             String pw = pwTxtField.getText();
@@ -207,10 +200,12 @@ public class ClientGUI implements Runnable {
 
             //TODO: Client-Server implementation
         });
+        buttonPanel.add(Box.createRigidArea(new Dimension(172, 0)));
+        buttonPanel.add(goBackButton);
+        buttonPanel.add(Box.createRigidArea(new Dimension(50, 0)));
+        buttonPanel.add(signUpButton);
 
-        botPanel.add(goBackButton);
-        botPanel.add(signUpButton);
-        jPanel.add(botPanel);
+        jPanel.add(buttonPanel);
 
         frame.add(jPanel);
         frame.revalidate();
