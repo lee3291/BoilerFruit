@@ -13,11 +13,11 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
-        // loginPage();
+        loginPage();
         // signUpPage();
         // customerPage();
-        // editAccountPage();
-        reviewHistoryPage();
+        //editAccountPage();
+        // reviewHistoryPage();
     }
 
     void createGUI() {
@@ -35,7 +35,7 @@ public class ClientGUI implements Runnable {
 
         //TODO: Add action listeners, error message for invalid input
         JPanel jPanel = new JPanel();
-        jPanel.setLayout(new GridLayout(3, 0, 10, 10));
+        jPanel.setLayout(new GridLayout(5, 0));
 
 
         // First Row
@@ -44,22 +44,46 @@ public class ClientGUI implements Runnable {
         firstLabel.setFont(new Font(null, Font.PLAIN, 20));
         jPanel.add(firstLabel);
 
+
         // Second Row
+        JPanel secondPanel = new JPanel();
+        secondPanel.setLayout(new BoxLayout(secondPanel, BoxLayout.X_AXIS));
+
         JLabel idLabel = new JLabel("ID: ");
-        idLabel.setHorizontalAlignment(JLabel.CENTER);
-        idLabel.setFont(new Font("", Font.PLAIN, 20));
-        JTextField idTxtField = new JTextField(10);
+        idLabel.setFont(new Font(null, Font.PLAIN, 20));
+        JTextField idTxt = new JTextField( 10);
+        idTxt.setMaximumSize(new Dimension(200, 50));
+
+        secondPanel.add(Box.createRigidArea(new Dimension(255, 0)));
+        secondPanel.add(idLabel);
+        secondPanel.add(idTxt);
+
+        jPanel.add(secondPanel);
+
+        // Third Row
+        JPanel thirdPanel = new JPanel();
+        thirdPanel.setLayout(new BoxLayout(thirdPanel, BoxLayout.X_AXIS));
 
         JLabel pwLabel = new JLabel("PW: ");
-        pwLabel.setHorizontalAlignment(JLabel.CENTER);
         pwLabel.setFont(new Font(null, Font.PLAIN, 20));
-        JTextField pwTxtField = new JTextField(10);
+        JTextField pwTxt = new JTextField( 10);
+        pwTxt.setMaximumSize(new Dimension(200, 50));
+
+        thirdPanel.add(Box.createRigidArea(new Dimension(250, 0)));
+        thirdPanel.add(pwLabel);
+        thirdPanel.add(pwTxt);
+
+        jPanel.add(thirdPanel);
+
+        // Fourth Row
+        JLabel fourthPanel = new JLabel();
+        fourthPanel.setLayout(new BoxLayout(fourthPanel, BoxLayout.X_AXIS));
 
         JButton logInButton = new JButton("Log-In");
-
+        logInButton.setMaximumSize(new Dimension(200, 50));
         logInButton.addActionListener(e -> {
-            String id = idTxtField.getText();
-            String pw = pwTxtField.getText();
+            String id = idTxt.getText();
+            String pw = pwTxt.getText();
 
             if (id.isEmpty() || pw.isEmpty()) {
                 JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
@@ -71,19 +95,15 @@ public class ClientGUI implements Runnable {
         });
 
         JButton signUpButton = new JButton("Sign Up");
-        signUpButton.addActionListener(e -> {
-            signUpPage();
-        });
+        signUpButton.setMaximumSize(new Dimension(200, 50));
+        signUpButton.addActionListener(e -> signUpPage());
 
-        JPanel txtFieldPanel = new JPanel();
-        txtFieldPanel.setLayout(new GridLayout(3, 1, 10, 10));
-        txtFieldPanel.add(idLabel);
-        txtFieldPanel.add(idTxtField);
-        txtFieldPanel.add(pwLabel);
-        txtFieldPanel.add(pwTxtField);
-        txtFieldPanel.add(logInButton);
-        txtFieldPanel.add(signUpButton);
-        jPanel.add(txtFieldPanel);
+        fourthPanel.add(Box.createRigidArea(new Dimension(172, 0)));
+        fourthPanel.add(logInButton);
+        fourthPanel.add(Box.createRigidArea(new Dimension(50, 0)));
+        fourthPanel.add(signUpButton);
+
+        jPanel.add(fourthPanel);
 
         frame.add(jPanel);
         frame.revalidate();
