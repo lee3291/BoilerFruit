@@ -279,17 +279,67 @@ public class ClientGUI implements Runnable {
 
         // Get products arraylist from server, loop and make a String[] of productInfo.
         // Below is an example. TODO: client-server implementation required
-        String product = "Product name: Apple\tPrice: $2.00\tQty: 10";
-        String[] productInfo = new String[13];
-        for (int i = 0; i < 13; i++) {
-            productInfo[i] = product;
+        ArrayList<Product> products = new ArrayList<>(); // get from server
+
+        // Example products
+        Product product1 = new Product("Apple", "Store", "Some Apples", 2.00, 3);
+        Product product2 = new Product("Banana", "Store", "Some Bananas", 3.00, 6);
+        Product product3 = new Product("Oranges", "Store", "Some Oranges", 4.00, 12);
+        products.add(product1);
+        products.add(product2);
+        products.add(product3);
+
+        // JList
+        JList<Product> productListing = new JList<>();
+        DefaultListModel<Product> model = new DefaultListModel<>();
+        productListing.setModel(model);
+
+        for (Product p : products) {
+            model.addElement(p); // Add products to list
         }
-        JComboBox productsListing = new JComboBox(productInfo);
-        productsListing.setPreferredSize(new Dimension(700, 700));
-        productsListing.setMaximumSize(productsListing.getPreferredSize());
-        productsListing.setMaximumRowCount(10);
-        centerPanel.add(productsListing);
-        jPanel.add(centerPanel, BorderLayout.CENTER);
+
+        //Left
+        JSplitPane splitPane = new JSplitPane();
+        splitPane.setLeftComponent(new JScrollPane(productListing));
+
+        //Right
+        JPanel productPagePanel = new JPanel();
+        productPagePanel.setLayout(new BorderLayout());
+
+        JLabel pDescLabel = new JLabel(); // product description label
+        productListing.getSelectionModel().addListSelectionListener(e -> {
+            Product p = productListing.getSelectedValue();
+            pDescLabel.setText(p.getDescription());
+        });
+
+        JButton buyItemButton = new JButton("Purchase Item");
+        buyItemButton.setPreferredSize(new Dimension(200, 50));
+        buyItemButton.setMaximumSize(buyItemButton.getPreferredSize());
+        buyItemButton.addActionListener(e -> {
+            // TODO: client-server implementation, error message if nothing is selected(pDescLabel.getText().isEmpty),
+            //  confirm purchase with JOptionPain message. Concurrency for purchasing item.
+        });
+        JButton contactSellerButton = new JButton("Contact Seller");
+        contactSellerButton.setPreferredSize(new Dimension(200, 50));
+        contactSellerButton.setMaximumSize(contactSellerButton.getPreferredSize());
+        contactSellerButton.addActionListener(e -> {
+            // TODO: JOptionPane message: "Seller has been notified!" Get seller email from server and display.
+            //  Send customer email to seller
+        });
+
+        productPagePanel.add(pDescLabel, BorderLayout.NORTH);
+
+        JPanel centerRightBottomPanel = new JPanel();
+        centerRightBottomPanel.setLayout(new BoxLayout(centerRightBottomPanel, BoxLayout.X_AXIS));
+        centerRightBottomPanel.add(buyItemButton);
+        centerRightBottomPanel.add(Box.createRigidArea(new Dimension(18, 0)));
+        centerRightBottomPanel.add(contactSellerButton);
+        productPagePanel.add(centerRightBottomPanel, BorderLayout.SOUTH);
+
+        splitPane.setRightComponent(new JScrollPane(productPagePanel));
+
+        jPanel.add(splitPane, BorderLayout.CENTER);
+
 
         frame.add(jPanel);
         frame.revalidate();
