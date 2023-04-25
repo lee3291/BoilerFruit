@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ClientGUI implements Runnable {
 
@@ -270,6 +272,24 @@ public class ClientGUI implements Runnable {
         southPanel.add(Box.createRigidArea(new Dimension(250, 0)));
         southPanel.add(reviewHistoryButton);
         jPanel.add(southPanel, BorderLayout.SOUTH);
+
+        // Center, combobox in box layout
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+
+        // Get products arraylist from server, loop and make a String[] of productInfo.
+        // Below is an example. TODO: client-server implementation required
+        String product = "Product name: Apple\tPrice: $2.00\tQty: 10";
+        String[] productInfo = new String[13];
+        for (int i = 0; i < 13; i++) {
+            productInfo[i] = product;
+        }
+        JComboBox productsListing = new JComboBox(productInfo);
+        productsListing.setPreferredSize(new Dimension(700, 700));
+        productsListing.setMaximumSize(productsListing.getPreferredSize());
+        productsListing.setMaximumRowCount(10);
+        centerPanel.add(productsListing);
+        jPanel.add(centerPanel, BorderLayout.CENTER);
 
         frame.add(jPanel);
         frame.revalidate();
