@@ -15,7 +15,8 @@ public class ClientGUI implements Runnable {
         createGUI();
         // loginPage();
         // signUpPage();
-        customerPage();
+        // customerPage();
+        editAccountPage();
     }
 
     void createGUI() {
@@ -38,22 +39,18 @@ public class ClientGUI implements Runnable {
 
         // First Row
         JLabel firstLabel = new JLabel("Welcome to Boiler Fruits");
-        firstLabel.setPreferredSize(new Dimension(100, 100));
         firstLabel.setHorizontalAlignment(JLabel.CENTER);
-        firstLabel.setVerticalAlignment(JLabel.CENTER);
         firstLabel.setFont(new Font(null, Font.PLAIN, 20));
         jPanel.add(firstLabel);
 
         // Second Row
         JLabel idLabel = new JLabel("ID: ");
         idLabel.setHorizontalAlignment(JLabel.CENTER);
-        idLabel.setVerticalAlignment(JLabel.CENTER);
         idLabel.setFont(new Font("", Font.PLAIN, 20));
         JTextField idTxtField = new JTextField(10);
 
         JLabel pwLabel = new JLabel("PW: ");
         pwLabel.setHorizontalAlignment(JLabel.CENTER);
-        pwLabel.setVerticalAlignment(JLabel.CENTER);
         pwLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField pwTxtField = new JTextField(10);
 
@@ -64,7 +61,7 @@ public class ClientGUI implements Runnable {
             String pw = pwTxtField.getText();
 
             if (id.isEmpty() || pw.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Please fill in blank field!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
 
@@ -181,7 +178,7 @@ public class ClientGUI implements Runnable {
             String email = emailTxtField.getText();
 
             if (id.isEmpty() || pw.isEmpty() || email.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Please fill in blank field!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
 
@@ -214,7 +211,7 @@ public class ClientGUI implements Runnable {
         searchButton.addActionListener(e -> {
             String query = searchBar.getText();
             if (query.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Please fill in blank field!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
             //TODO: Client-Server implementation, send query to server
@@ -242,7 +239,7 @@ public class ClientGUI implements Runnable {
         JButton editAccountButton = new JButton("Edit Account");
         editAccountButton.setPreferredSize(new Dimension(100, 50));
         editAccountButton.setMaximumSize(editAccountButton.getPreferredSize());
-        // editAccountButton.addActionListener(e -> editAccountPage());
+        editAccountButton.addActionListener(e -> editAccountPage());
 
         JButton logOutButton = new JButton("Log Out");
         logOutButton.setPreferredSize(new Dimension(100 ,50));
@@ -340,6 +337,92 @@ public class ClientGUI implements Runnable {
 
         jPanel.add(splitPane, BorderLayout.CENTER);
 
+
+        frame.add(jPanel);
+        frame.revalidate();
+        frame.repaint();
+    }
+
+    void editAccountPage() {
+        resetFrame();
+
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new GridLayout(4, 1));
+
+        // first
+        JLabel firstPanel = new JLabel();
+        firstPanel.setLayout(new GridLayout(2, 1));
+
+        String userEmail = "example123@purdue.edu"; //TODO: Get from server
+        String emailStr = String.format("Email: %s", userEmail);
+
+        JLabel titleLabel = new JLabel("Edit Account Page");
+        titleLabel.setHorizontalAlignment(JLabel.CENTER);
+        titleLabel.setFont(new Font(null, Font.PLAIN, 30));
+        firstPanel.add(titleLabel);
+
+        JLabel emailLabel = new JLabel(emailStr);
+        emailLabel.setHorizontalAlignment(JLabel.CENTER);
+        emailLabel.setFont(new Font(null, Font.PLAIN, 20));
+        firstPanel.add(emailLabel);
+
+        jPanel.add(firstPanel);
+
+        // second
+        JPanel secondPanel = new JPanel();
+        secondPanel.setLayout(new BoxLayout(secondPanel, BoxLayout.X_AXIS));
+
+        JLabel idLabel = new JLabel("ID: ");
+        idLabel.setFont(new Font(null, Font.PLAIN, 20));
+        JTextField idTxt = new JTextField("Enter new user name", 10);
+        idTxt.setMaximumSize(new Dimension(200, 50));
+        JButton idChangeButton = new JButton("Change ID");
+
+        secondPanel.add(Box.createRigidArea(new Dimension(250, 0)));
+        secondPanel.add(idLabel);
+        secondPanel.add(idTxt);
+        secondPanel.add(idChangeButton);
+
+        jPanel.add(secondPanel);
+
+        // Third
+        JPanel thirdPanel = new JPanel();
+        thirdPanel.setLayout(new BoxLayout(thirdPanel, BoxLayout.X_AXIS));
+
+        JLabel pwLabel = new JLabel("PW: ");
+        pwLabel.setFont(new Font(null, Font.PLAIN, 20));
+        JTextField pwTxt = new JTextField("Enter new password", 10);
+        pwTxt.setMaximumSize(new Dimension(200, 50));
+        JButton pwChangeButton = new JButton("Change PW");
+
+        thirdPanel.add(Box.createRigidArea(new Dimension(240, 0)));
+        thirdPanel.add(pwLabel);
+        thirdPanel.add(pwTxt);
+        thirdPanel.add(pwChangeButton);
+
+        jPanel.add(thirdPanel);
+
+        // fourth, bottom last
+        JLabel fourthPanel = new JLabel();
+        fourthPanel.setLayout(new BoxLayout(fourthPanel, BoxLayout.X_AXIS));
+
+        JButton goBackButton = new JButton("Go Back");
+        goBackButton.setMaximumSize(new Dimension(200, 50));
+        goBackButton.addActionListener(e -> customerPage());
+
+        JButton deleteAccountButton = new JButton("Delete Account");
+        deleteAccountButton.setMaximumSize(new Dimension(200, 50));
+        deleteAccountButton.addActionListener(e -> {
+            int answer = JOptionPane.showConfirmDialog(frame, "Are you sure?");
+            // TODO: Depending on response, delete account or don't. Null pointer exception needs to be taken care of
+        });
+
+        fourthPanel.add(Box.createRigidArea(new Dimension(172, 0)));
+        fourthPanel.add(goBackButton);
+        fourthPanel.add(Box.createRigidArea(new Dimension(50, 0)));
+        fourthPanel.add(deleteAccountButton);
+
+        jPanel.add(fourthPanel);
 
         frame.add(jPanel);
         frame.revalidate();
