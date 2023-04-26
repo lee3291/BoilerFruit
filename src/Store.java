@@ -172,7 +172,7 @@ public class Store {
      */
     public String makeSaleDetail(Product product, int saleQuantity, String customerName) {
         //TODO:
-
+        return "";
     }
 
     public ArrayList<String> getCustomerEmails() {
@@ -261,5 +261,10 @@ public class Store {
             }
         }
         return sorted;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s's %s", sellerName, name);
     }
 }
