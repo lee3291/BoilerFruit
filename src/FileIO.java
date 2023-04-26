@@ -130,6 +130,7 @@ public class FileIO {
                         Double.parseDouble(row[4]), // price
                         Integer.parseInt(row[5]) // quanity
                 );
+                products.add(curr);
             }
         } catch (FileNotFoundException e) { // Invalid file path error
             System.out.println("Invalid file path!");
