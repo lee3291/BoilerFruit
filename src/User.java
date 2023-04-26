@@ -1,7 +1,9 @@
+import java.io.Serializable;
+
 /**
  * Abstraction of User class with constructor and getter.
  */
-public abstract class User {
+public abstract class User implements Serializable {
     // For different user instance
     private String userName; // unique value per user
     private final String email; // unique value per user; Hashmap key for user

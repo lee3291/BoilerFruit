@@ -1,10 +1,11 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
  * Seller class that extends user, contains arraylist of stores the seller owns.
  */
-public class Seller extends User {
+public class Seller extends User implements Serializable {
     private final HashMap<String, Store> stores; // Key is store name.
     private ArrayList<String> contactingCustomers; // Customer emails who tried to contact seller
 
