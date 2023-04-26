@@ -11,3 +11,5 @@
 .idea/dataSources.local.xml
 
 /out/
+.DS_Store
+/Test/
