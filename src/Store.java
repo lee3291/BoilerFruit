@@ -12,8 +12,8 @@ public class Store implements Serializable {
     private ArrayList<String> saleHistory; // the sale history: item name, quantity, revenue(price), customerName
     private ArrayList<String> customerEmails; // Customers who shopped at this store.
 
-    public Store(String name, String sellerName, double totalRevenue, ArrayList<Product> currentProducts, ArrayList<String> saleHistory,
-                 ArrayList<String> customerEmails) {
+    public Store(String name, String sellerName, double totalRevenue, ArrayList<Product> currentProducts,
+                 ArrayList<String> saleHistory, ArrayList<String> customerEmails) {
         this.name = name;
         this.sellerName = sellerName;
         this.totalRevenue = totalRevenue;
