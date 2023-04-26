@@ -305,11 +305,17 @@ public class ClientGUI implements Runnable {
         //Right
         JPanel productPagePanel = new JPanel();
         productPagePanel.setLayout(new BorderLayout());
-
         JLabel pDescLabel = new JLabel(); // product description label
-        productListing.getSelectionModel().addListSelectionListener(e -> {
-            Product p = productListing.getSelectedValue();
-            pDescLabel.setText(p.getDescription());
+
+        ListSelectionModel productList = productListing.getSelectionModel();
+        productList.setValueIsAdjusting(false);
+        productList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                System.out.println(1);
+                Product p = productListing.getSelectedValue();
+                pDescLabel.setText(p.getDescription());
+                System.out.println(2);
+            }
         });
 
         JButton buyItemButton = new JButton("Purchase Item");
@@ -342,8 +348,7 @@ public class ClientGUI implements Runnable {
 
 
         frame.add(jPanel);
-        frame.revalidate();
-        frame.repaint();
+        updateFrame();
     }
 
     void editAccountPage() {
@@ -428,8 +433,7 @@ public class ClientGUI implements Runnable {
         jPanel.add(fourthPanel);
 
         frame.add(jPanel);
-        frame.revalidate();
-        frame.repaint();
+        updateFrame();
     }
 
     void reviewHistoryPage() {
@@ -487,8 +491,7 @@ public class ClientGUI implements Runnable {
         jPanel.add(southPanel, BorderLayout.SOUTH);
 
         frame.add(jPanel);
-        frame.revalidate();
-        frame.repaint();
+        updateFrame();
     }
 
     void sellerPage() {
@@ -534,7 +537,7 @@ public class ClientGUI implements Runnable {
         JButton editAccountButton = new JButton("Edit Account");
         editAccountButton.setPreferredSize(new Dimension(100, 50));
         editAccountButton.setMaximumSize(editAccountButton.getPreferredSize());
-        // editAccountButton.addActionListener(e -> editAccountPage());
+         editAccountButton.addActionListener(e -> editAccountPage());
 
         JButton logOutButton = new JButton("Log Out");
         logOutButton.setPreferredSize(new Dimension(100 ,50));
@@ -609,9 +612,17 @@ public class ClientGUI implements Runnable {
         for (Store s : stores) {
             model.addElement(s); // Add stores to list
         }
-        userStores.getSelectionModel().addListSelectionListener(e -> {
-            Store store = userStores.getSelectedValue();
-            storePage(store);
+
+        // Implement ListSelectionModel (avoid it from fire twice)
+        ListSelectionModel storeList = userStores.getSelectionModel();
+        storeList.setValueIsAdjusting(false);
+        storeList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Store store = userStores.getSelectedValue();
+                System.out.println(1);
+                storePage(store);
+                System.out.println(2);
+            }
         });
 
         JPanel centerPanel = new JPanel();
