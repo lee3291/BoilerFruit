@@ -29,8 +29,9 @@ public class Product {
         return price;
     }
 
-    public String productInfo() {
-        return String.format("Product name: %s\n\tPrice: $%.2f\n\tQty: %d left\n", name, price, quantity);
+    @Override
+    public String toString() {
+        return String.format("Product name: %s\tPrice: $%.2f\tQty: %d", name, price, quantity);
     }
 
     public int getQuantity() {
