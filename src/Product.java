@@ -1,4 +1,6 @@
-public class Product {
+import java.io.Serializable;
+
+public class Product implements Serializable {
     private final String name;
     private final String storeName; // unique storeName
     private final String description;

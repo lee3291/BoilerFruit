@@ -1,14 +1,16 @@
+import java.io.Serializable;
+
 /**
  * Abstraction of User class with constructor and getter.
  */
-public abstract class User {
+public abstract class User implements Serializable {
     // For different user instance
     private String userName; // unique value per user
     private final String email; // unique value per user; Hashmap key for user
     private String password;
-    public final static int USERNAME_MAX_LENGTH = 8; // Max username length
-    public final static int PASSWORD_MIN_LENGTH = 5; // Min password length
-    public final static int PASSWORD_MAX_LENGTH = 15; // Max password length
+    public final int USERNAME_MAX_LENGTH = 8; // Max username length
+    public final int PASSWORD_MIN_LENGTH = 5; // Min password length
+    public final int PASSWORD_MAX_LENGTH = 15; // Max password length
 
 
     /**
