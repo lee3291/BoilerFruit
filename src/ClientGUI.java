@@ -15,7 +15,7 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
-        // loginPage();
+//        loginPage();
         // signUpPage();
 //        customerPage();
         sellerPage();
@@ -223,8 +223,7 @@ public class ClientGUI implements Runnable {
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            //TODO: Refresh listing, when new products are added to server from a seller,
-            // this customer should be able to view it after clicking this button.
+            customerPage();
         });
 
         northPanel.add(searchBar);
@@ -283,9 +282,12 @@ public class ClientGUI implements Runnable {
         ArrayList<Product> products = new ArrayList<>(); // get from server
 
         // Example products
-        Product product1 = new Product("Apple", "Store", "Some Apples", 2.00, 3);
-        Product product2 = new Product("Banana", "Store", "Some Bananas", 3.00, 6);
-        Product product3 = new Product("Oranges", "Store", "Some Oranges", 4.00, 12);
+        Product product1 = new Product("Apple", "Store", "Some Apples", 2.00,
+                3);
+        Product product2 = new Product("Banana", "Store", "Some Bananas", 3.00,
+                6);
+        Product product3 = new Product("Oranges", "Store", "Some Oranges", 4.00,
+                12);
         products.add(product1);
         products.add(product2);
         products.add(product3);
@@ -516,8 +518,7 @@ public class ClientGUI implements Runnable {
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            //TODO: Refresh listing, when new stores are added to server from a seller,
-            // this seller should be able to view it after clicking this button.
+            sellerPage();
         });
 
         northPanel.add(searchBar);
@@ -655,8 +656,7 @@ public class ClientGUI implements Runnable {
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            //TODO: Refresh listing, when new products are added to server from a seller,
-            // this customer should be able to view it after clicking this button.
+            storePage(store);
         });
 
         northPanel.add(searchBar);
@@ -675,12 +675,15 @@ public class ClientGUI implements Runnable {
         viewSaleButton.setMaximumSize(viewSaleButton.getPreferredSize());
 //        viewSaleButton.addActionListener(e -> storeViewSale());
 
-        JButton exportProductButton = new JButton("Export Products");
-        exportProductButton.setPreferredSize(new Dimension(120, 50));
-        exportProductButton.setMaximumSize(exportProductButton.getPreferredSize());
-//        exportProductButton.addActionListener(e -> storeExportProduct());
+        JButton addProductButton = new JButton("Add Product");
+        addProductButton.setPreferredSize(new Dimension(120, 50));
+        addProductButton.setMaximumSize(addProductButton.getPreferredSize());
+        addProductButton.addActionListener(e -> {
+            // TODO: get client's product detail and send to server
+            updateFrame();
+        });
 
-        JButton backButton = new JButton("Back");
+        JButton backButton = new JButton("Go Back");
         backButton.setPreferredSize(new Dimension(120 ,50));
         backButton.setMaximumSize(backButton.getPreferredSize());
         backButton.addActionListener(e -> sellerPage());
@@ -690,7 +693,7 @@ public class ClientGUI implements Runnable {
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(viewSaleButton);
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
-        westPanel.add(exportProductButton);
+        westPanel.add(addProductButton);
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(backButton);
 
@@ -700,7 +703,7 @@ public class ClientGUI implements Runnable {
         JPanel southPanel = new JPanel();
         southPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 0));
 
-        JButton importProductButton = new JButton("Import Product");
+        JButton importProductButton = new JButton("Import Products");
         importProductButton.setPreferredSize(new Dimension(120, 50));
         importProductButton.setMaximumSize(importProductButton.getPreferredSize());
         importProductButton.addActionListener(e -> {
@@ -708,16 +711,15 @@ public class ClientGUI implements Runnable {
             updateFrame();
         });
 
-        JButton addProductButton = new JButton("Add Product");
-        addProductButton.setPreferredSize(new Dimension(120, 50));
-        addProductButton.setMaximumSize(addProductButton.getPreferredSize());
-        addProductButton.addActionListener(e -> {
-            // TODO: get client's product detail and send to server
-            updateFrame();
+        JButton exportProductButton = new JButton("Export Products");
+        exportProductButton.setPreferredSize(new Dimension(120, 50));
+        exportProductButton.setMaximumSize(exportProductButton.getPreferredSize());
+        exportProductButton.addActionListener(e -> {
+            // TODO: get client's path and ArrayList from server?
         });
 
         southPanel.add(importProductButton);
-        southPanel.add(addProductButton);
+        southPanel.add(exportProductButton);
         jPanel.add(southPanel, BorderLayout.SOUTH);
 
         // Center, combo-box in box layout
