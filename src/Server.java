@@ -1,6 +1,5 @@
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -8,8 +7,8 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class Server implements Runnable {
-    User currentUser; // the client user
-    Socket socket; // the client socket
+    private User currentUser; // the client user
+    private final Socket socket; // the client socket
     public final static Object sentinel = new Object(); // gatekeeper object for concurrency
     private static HashMap<String, User> users; // all the users
 
@@ -280,7 +279,7 @@ public class Server implements Runnable {
      * Create a new user in {@link #users} and set the {@link #currentUser} to the newly created User if success;
      * Send a  1 integer object to client if success;
      * Send a  0 integer object to client if email is taken
-     * Send a -1 integer object to client if username is taken)
+     * Send a -1 integer object to client if username is taken
      * @param output the output stream to communicate with client
      * @param username the username of the new user
      * @param email the email of the new user
@@ -307,7 +306,8 @@ public class Server implements Runnable {
         switch (command) {
             // Signing up (Query: SIGNUP_username_email_password)
             case "SIGNUP" -> {
-
+                System.out.printf("Received Query: %s\n->Calling signUp()\n", query);
+                signUp(output, queryPart[1], queryPart[2], queryPart[3]);
             }
 
             // Logging in (Query: LOGIN_username/email_password)
@@ -315,12 +315,10 @@ public class Server implements Runnable {
 
             }
 
-
             // Logging out (Query: LOGOUT)
             case "LOGOUT" -> {
 
             }
-
 
             // Modifying account (Query: MODACC_email_username_password)
             case "MODACC" -> {
