@@ -122,7 +122,21 @@ public class Server implements Runnable {
      */
     private void sortProductPrice(ObjectOutputStream output) throws IOException {
         // @Ethan
-        ArrayList<Product> allProduct = collectMarketProduct();
+        // this method was in Store class, but it's relocated to Server class.
+        // Clone to protect original ArrayList
+        ArrayList<Product> sortedProducts = (ArrayList<Product>) collectMarketProduct().clone();
+        // Sorting in ascending order
+        for (int i = 1; i < sortedProducts.size(); i++) {
+            Product p = sortedProducts.get(i);
+            int j = i - 1;
+            while (j >= 0 && sortedProducts.get(j).getPrice() > p.getPrice()) {
+                sortedProducts.set(j + 1, sortedProducts.get(j));
+                j = j - 1;
+            }
+            sortedProducts.set(j + 1, p);
+        }
+        output.writeObject(sortedProducts);
+        output.flush();
     }
 
     /**
@@ -131,7 +145,22 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void sortProductQty(ObjectOutputStream output) throws IOException {
-        ArrayList<Product> allProduct = collectMarketProduct();
+        // @Ethan
+        // this method was in Store class, but it's relocated to Server class.
+        // Clone to protect original ArrayList
+        ArrayList<Product> sortedProducts = (ArrayList<Product>) collectMarketProduct().clone();
+        // Sorting in ascending order
+        for (int i = 1; i < sortedProducts.size(); i++) {
+            Product p = sortedProducts.get(i);
+            int j = i - 1;
+            while (j >= 0 && sortedProducts.get(j).getQuantity() > p.getQuantity()) {
+                sortedProducts.set(j + 1, sortedProducts.get(j));
+                j = j - 1;
+            }
+            sortedProducts.set(j + 1, p);
+        }
+        output.writeObject(sortedProducts);
+        output.flush();
     }
 
     /**
