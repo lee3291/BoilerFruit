@@ -47,12 +47,24 @@ public class Server implements Runnable {
     }
 
     /**
+     * Loop through all Seller in the Market and collect all the Store
+     * @return an ArrayList of Store currently in the Marketplace
+     */
+    private ArrayList<Store> collectMarketStore() {
+        ArrayList<Store> result = new ArrayList<>();
+
+        return result;
+    }
+
+    /**
      * Loop through all Store in the Marketplace and collect all the Product
      * @return an ArrayList of Product currently in the Marketplace
      */
     private ArrayList<Product> collectMarketProduct() {
         ArrayList<Product> result = new ArrayList<>();
-
+        for (Store store : collectMarketStore()) {
+            // TODO
+        }
         return result;
     }
 
@@ -117,13 +129,14 @@ public class Server implements Runnable {
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. product's name is taken within the same store)
      * @param output the output stream to communicate with client
-     * @param name the new product name
-     * @param description the description of the product
-     * @param price the price of the product
-     * @param quantity the quantity of the product
+     * @param name the new product name (not allowed to be changed; used to search)
+     * @param storeName the store name (not allowed to be changed; used to search)
+     * @param description the description of the product (same if description is not changed)
+     * @param price the price of the product (same if description is not changed)
+     * @param quantity the quantity of the product (same if description is not changed)
      */
     private void modifyProduct(ObjectOutputStream output,
-                            String name, String description, double price, int quantity) throws IOException {
+                            String name, String storeName, String description, double price, int quantity) throws IOException {
 
     }
 
@@ -199,7 +212,15 @@ public class Server implements Runnable {
      * Send a string object containing the {@link #currentUser}'s username to the client
      * @param output the output stream to communicate with client
      */
-    private void getUsertype(ObjectOutputStream output) throws IOException {
+    private void getUserType(ObjectOutputStream output) throws IOException {
+
+    }
+
+    /**
+     * Send a string object containing the {@link #currentUser}'s email to the client
+     * @param output the output stream to communicate with client
+     */
+    private void getUserEmail(ObjectOutputStream output) throws IOException {
 
     }
 
@@ -207,7 +228,7 @@ public class Server implements Runnable {
      * Send a string object containing the {@link #currentUser}'s username to the client
      * @param output the output stream to communicate with client
      */
-    private void getUsername(ObjectOutputStream output) throws IOException {
+    private void getUserName(ObjectOutputStream output) throws IOException {
 
     }
 
@@ -225,10 +246,12 @@ public class Server implements Runnable {
      * Send a TRUE boolean object to client if success;
      * Send a FALSE boolean object to client if failed (i.e. username is taken)
      * @param output the output stream to communicate with client
+     * @param email the user's email (not allow to be changed; used to search user)
      * @param username the username of the new user
      * @param password the password of the new user
      */
-    private void modifyAccount(ObjectOutputStream output, String username, String password) throws IOException {
+    private void modifyAccount(ObjectOutputStream output, String email,
+                               String username, String password) throws IOException {
 
     }
 
@@ -268,12 +291,122 @@ public class Server implements Runnable {
     }
 
     /**
-     * Process the command get from the Client GUI and call the appropriate method with appropriate parameters
-     * @param command the command from the Client
+     * Process the query get from the Client GUI and call the appropriate method with appropriate parameters
+     * Query will always be in the form: command_pram1_param2_..., where:
+     * command is the command (used to decide which method to be called)
+     * param* are the parameters for the method to be called.
+     * This function only called other methods IFF the there are enough parameter to do so.
+     * Print to terminal the query and method called; print FAILED if params are missing // TODO: delete after finish debugging
+     * @param query the query from the Client
      * @param output the ObjectOutputStream to send object to client
      */
-    private void processCommand(String command, ObjectOutputStream output) throws IOException {
+    private void processCommand(String query, ObjectOutputStream output) throws IOException {
+        String[] queryPart = query.split("_");
 
+        String command = queryPart[0];
+        switch (command) {
+            // Signing up (Query: SIGNUP_username_email_password)
+            case "SIGNUP" -> {
+
+            }
+
+            // Logging in (Query: LOGIN_username/email_password)
+            case "LOGIN" -> {
+
+            }
+
+
+            // Logging out (Query: LOGOUT)
+            case "LOGOUT" -> {
+
+            }
+
+
+            // Modifying account (Query: MODACC_email_username_password)
+            case "MODACC" -> {
+
+            }
+
+            // Deleting account (Query: DELACC_username)
+            case "DELACC" -> {
+
+            }
+
+            // Getting username (Query: NAME)
+            case "NAME" -> {
+
+            }
+
+            // Getting email (Query: EMAIL)
+            case "EMAIL" -> {
+
+            }
+
+            // Getting usertype (Query: TYPE)
+            case "TYPE" -> {
+
+            }
+
+            // Creating a store (Query: CRTSTR_storeName)
+            case "CRTSTR" -> {
+
+            }
+
+            // Deleting a store (Query: DELSTR_storeName)
+            case "DELSTR" -> {
+
+            }
+
+            // Getting a list of stores (can be used for searching) (Query: GETSELLSTR_searchKey)
+            case "GETSELLSTR" -> {
+
+            }
+
+            // Getting a store's list of products (can be used for searching) (Query: GETSTRPROD_searchKey)
+            case "GETSTRPROD" -> {
+
+            }
+
+            // Adding a new product to a store (Query: ADDPROD_productName_storeName_description_price_quantity)
+            case "ADDPROD" -> {
+
+            }
+
+            // Modifying a store's product (Query: MODPROD_productName_storeName_description_price_quantity)
+            case "MODPROD" -> {
+
+            }
+
+            // Deleting a store's product (Query: DELPROD_sellerEmail_storeName_productName)
+            case "DELPROD" -> {
+
+            }
+
+            // Sorting market's product by price (Query: SORTP)
+            case "SORTP" -> {
+
+            }
+
+            // Sorting market's product by quantity (Query: SORTQ)
+            case "SORTQ" -> {
+
+            }
+
+            // Getting the market's list of products (can be used for searching) (Query: GETMRKPROD_searchKey)
+            case "GETMRKPROD" -> {
+
+            }
+
+            // Buying a product (Query: BUY_sellerEmail_storeName_productName_quantity)
+            case "BUY" -> {
+
+            }
+
+            // Getting customer history (Query: GETHIS)
+            case "GETHIS" -> {
+
+            }
+        }
     }
 
     /**
