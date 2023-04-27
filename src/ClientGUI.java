@@ -1,6 +1,8 @@
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Flow;
@@ -17,8 +19,8 @@ public class ClientGUI implements Runnable {
         createGUI();
 //        loginPage();
 //         signUpPage();
-//         sellerPage();
-          customerPage();
+         sellerPage();
+//          customerPage();
         //editAccountPage();
         // reviewHistoryPage();
     }
@@ -540,6 +542,22 @@ public class ClientGUI implements Runnable {
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
         JTextField searchBar = new JTextField("Search for store", 10);
+        searchBar.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (searchBar.getText().equals("Search for store")) {
+                    searchBar.setText("");}
+                    searchBar.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (searchBar.getText().isEmpty()) {
+                    searchBar.setForeground(Color.GRAY);
+                    searchBar.setText("Search for store");
+                }
+            }
+        });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
             String query = searchBar.getText();
@@ -678,6 +696,23 @@ public class ClientGUI implements Runnable {
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
         JTextField searchBar = new JTextField("Search for product name or description", 10);
+        searchBar.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (searchBar.getText().equals("Search for product name or description")) {
+                    searchBar.setForeground(Color.BLACK);
+                    searchBar.setText("");
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (searchBar.getText().isEmpty()) {
+                    searchBar.setForeground(Color.GRAY);
+                    searchBar.setText("Search for product name or description");
+                }
+            }
+        });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
             String query = searchBar.getText();
