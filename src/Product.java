@@ -33,7 +33,7 @@ public class Product implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("Product name: %s\tPrice: $%.2f\tQty: %d", name, price, quantity);
+        return String.format("Store: %s Product: %s Price: $%.2f Qty: %d", storeName, name, price, quantity);
     }
 
     public int getQuantity() {
