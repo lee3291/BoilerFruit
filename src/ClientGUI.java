@@ -18,11 +18,12 @@ public class ClientGUI implements Runnable {
     public void run() {
         createGUI();
 //        loginPage();
-//         signUpPage();
-         sellerPage();
-//          customerPage();
-        //editAccountPage();
-        // reviewHistoryPage();
+//        signUpPage();
+//        sellerPage();
+        ArrayList<Product> products = new ArrayList<>();
+        customerPage(products);
+//        editAccountPage();
+//        reviewHistoryPage();
     }
 
     void createGUI() {
@@ -218,7 +219,7 @@ public class ClientGUI implements Runnable {
         frame.repaint();
     }
 
-    void customerPage() {
+    void customerPage(ArrayList<Product> products) { // this products will be allProducts, or sorted/searched products.
         resetFrame();
 
         JPanel jPanel = new JPanel();
@@ -298,7 +299,6 @@ public class ClientGUI implements Runnable {
 
         // Get products arraylist from server, loop and make a String[] of productInfo.
         // Below is an example. TODO: client-server implementation required
-        ArrayList<Product> products = new ArrayList<>(); // get from server
 
         // Example products
         Product product1 = new Product("Apple", "FruitStore1", "Some Apples", 2.00, 3);
@@ -452,7 +452,10 @@ public class ClientGUI implements Runnable {
 
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setMaximumSize(new Dimension(200, 50));
-        goBackButton.addActionListener(e -> customerPage());
+        goBackButton.addActionListener(e -> {
+            // TODO: Get products ArrayList from server
+            // customerPage(allProducts);
+        });
 
         JButton deleteAccountButton = new JButton("Delete Account");
         deleteAccountButton.setMaximumSize(new Dimension(200, 50));
@@ -507,7 +510,10 @@ public class ClientGUI implements Runnable {
 
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setMaximumSize(new Dimension(200, 50));
-        goBackButton.addActionListener(e -> customerPage());
+        goBackButton.addActionListener(e -> {
+            // TODO: Get allProducts ArrayList from server
+            // customerPage(allProducts);
+        });
 
         JButton exportHistoryButton = new JButton("Export History");
         exportHistoryButton.setMaximumSize(new Dimension(200, 50));
@@ -531,7 +537,7 @@ public class ClientGUI implements Runnable {
         updateFrame();
     }
 
-    void sellerPage() {
+    void sellerPage(ArrayList<Store> stores) { // this products will be allStores
         resetFrame();
 
         JPanel jPanel = new JPanel();
@@ -570,7 +576,8 @@ public class ClientGUI implements Runnable {
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            sellerPage();
+            // TODO: Get stores ArrayList from server
+            // sellerPage(stores);
         });
 
         northPanel.add(searchBar);
@@ -655,7 +662,7 @@ public class ClientGUI implements Runnable {
         exampleStores.add(store2);
         exampleStores.add(store3);
 
-        ArrayList<Store> stores = exampleStores; // TODO: get from server
+        stores = exampleStores; // TODO: get from server
 
         // JList
         JList<Store> userStores = new JList<>();
@@ -755,7 +762,10 @@ public class ClientGUI implements Runnable {
         JButton backButton = new JButton("Go Back");
         backButton.setPreferredSize(new Dimension(120 ,50));
         backButton.setMaximumSize(backButton.getPreferredSize());
-        backButton.addActionListener(e -> sellerPage());
+        backButton.addActionListener(e -> {
+            // TODO: Get stores ArrayList from server.
+            // sellerPage(Stores);
+        });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(userType);
