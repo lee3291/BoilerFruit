@@ -16,9 +16,9 @@ public class ClientGUI implements Runnable {
     public void run() {
         createGUI();
 //        loginPage();
-        // signUpPage();
-         sellerPage();
-         // customerPage();
+//         signUpPage();
+//         sellerPage();
+          customerPage();
         //editAccountPage();
         // reviewHistoryPage();
     }
@@ -299,9 +299,9 @@ public class ClientGUI implements Runnable {
         ArrayList<Product> products = new ArrayList<>(); // get from server
 
         // Example products
-        Product product1 = new Product("Apple", "Store", "Some Apples", 2.00, 3);
-        Product product2 = new Product("Banana", "Store", "Some Bananas", 3.00, 6);
-        Product product3 = new Product("Oranges", "Store", "Some Oranges", 4.00, 12);
+        Product product1 = new Product("Apple", "FruitStore1", "Some Apples", 2.00, 3);
+        Product product2 = new Product("Banana", "FruitStore2", "Some Bananas", 3.00, 6);
+        Product product3 = new Product("Oranges", "FruitStore3", "Some Oranges", 4.00, 12);
         products.add(product1);
         products.add(product2);
         products.add(product3);
@@ -323,35 +323,57 @@ public class ClientGUI implements Runnable {
         JPanel productPagePanel = new JPanel();
         productPagePanel.setLayout(new BorderLayout());
 
-        JLabel pDescLabel = new JLabel(); // product description label
+        JTextPane pDescTxtPane = new JTextPane(); // product description label
+        pDescTxtPane.setEditable(false);
+
         productListing.getSelectionModel().addListSelectionListener(e -> {
             Product p = productListing.getSelectedValue();
-            pDescLabel.setText(p.getDescription());
+            pDescTxtPane.setText(p.toString()+ '\n' + p.getDescription());
         });
 
+        JButton sortByPriceButton = new JButton("Sort By Price");
+        sortByPriceButton.setPreferredSize(new Dimension(100, 50));
+        sortByPriceButton.setMaximumSize(sortByPriceButton.getPreferredSize());
+        sortByPriceButton.addActionListener(e -> {
+            // TODO:
+        });
+
+        JButton sortByQtyButton = new JButton("Sort By Qty");
+        sortByQtyButton.setPreferredSize(new Dimension(100, 50));
+        sortByQtyButton.setMaximumSize(sortByQtyButton.getPreferredSize());
+        sortByQtyButton.addActionListener(e -> {
+            // TODO:
+        });
+
+
         JButton buyItemButton = new JButton("Purchase Item");
-        buyItemButton.setPreferredSize(new Dimension(200, 50));
+        buyItemButton.setPreferredSize(new Dimension(100, 50));
         buyItemButton.setMaximumSize(buyItemButton.getPreferredSize());
         buyItemButton.addActionListener(e -> {
             // TODO: client-server implementation, error message if nothing is selected(pDescLabel.getText().isEmpty),
             //  confirm purchase with JOptionPain message. Concurrency for purchasing item.
         });
         JButton contactSellerButton = new JButton("Contact Seller");
-        contactSellerButton.setPreferredSize(new Dimension(200, 50));
+        contactSellerButton.setPreferredSize(new Dimension(100, 50));
         contactSellerButton.setMaximumSize(contactSellerButton.getPreferredSize());
         contactSellerButton.addActionListener(e -> {
             // TODO: JOptionPane message: "Seller has been notified!" Get seller email from server and display.
             //  Send customer email to seller
         });
 
-        productPagePanel.add(pDescLabel, BorderLayout.NORTH);
+        productPagePanel.add(pDescTxtPane, BorderLayout.NORTH);
 
         JPanel centerRightBottomPanel = new JPanel();
-        centerRightBottomPanel.setLayout(new BoxLayout(centerRightBottomPanel, BoxLayout.X_AXIS));
+        centerRightBottomPanel.setLayout(new BoxLayout(centerRightBottomPanel, BoxLayout.Y_AXIS));
+        centerRightBottomPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        centerRightBottomPanel.add(sortByPriceButton);
+        centerRightBottomPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        centerRightBottomPanel.add(sortByQtyButton);
+        centerRightBottomPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         centerRightBottomPanel.add(buyItemButton);
-        centerRightBottomPanel.add(Box.createRigidArea(new Dimension(18, 0)));
+        centerRightBottomPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         centerRightBottomPanel.add(contactSellerButton);
-        productPagePanel.add(centerRightBottomPanel, BorderLayout.SOUTH);
+        jPanel.add(centerRightBottomPanel, BorderLayout.EAST);
 
         splitPane.setRightComponent(new JScrollPane(productPagePanel));
 
