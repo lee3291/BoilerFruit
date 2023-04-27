@@ -20,10 +20,10 @@ public class ClientGUI implements Runnable {
 //        loginPage();
 //        signUpPage();
 //        sellerPage();
-        ArrayList<Product> products = new ArrayList<>();
-        customerPage(products);
+//        ArrayList<Product> products = new ArrayList<>();
+//        customerPage(products);
 //        editAccountPage();
-//        reviewHistoryPage();
+        reviewHistoryPage();
     }
 
     void createGUI() {
@@ -230,6 +230,22 @@ public class ClientGUI implements Runnable {
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
         JTextField searchBar = new JTextField("Search for product name, store, or description", 10);
+        searchBar.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (searchBar.getText().equals("Search for product name, store, or description")) {
+                    searchBar.setText("");}
+                searchBar.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (searchBar.getText().isEmpty()) {
+                    searchBar.setForeground(Color.GRAY);
+                    searchBar.setText("Search for product name, store, or description");
+                }
+            }
+        });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
             String query = searchBar.getText();
@@ -419,6 +435,22 @@ public class ClientGUI implements Runnable {
         JLabel idLabel = new JLabel("ID: ");
         idLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField idTxt = new JTextField("Enter new user name", 10);
+        idTxt.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (idTxt.getText().equals("Enter new user name")) {
+                    idTxt.setText("");}
+                idTxt.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (idTxt.getText().isEmpty()) {
+                    idTxt.setForeground(Color.GRAY);
+                    idTxt.setText("Enter new user name");
+                }
+            }
+        });
         idTxt.setMaximumSize(new Dimension(200, 50));
         JButton idChangeButton = new JButton("Change ID");
 
@@ -436,6 +468,23 @@ public class ClientGUI implements Runnable {
         JLabel pwLabel = new JLabel("PW: ");
         pwLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField pwTxt = new JTextField("Enter new password", 10);
+        pwTxt.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (pwTxt.getText().equals("Enter new password")) {
+                    pwTxt.setText("");}
+                pwTxt.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (pwTxt.getText().isEmpty()) {
+                    pwTxt.setForeground(Color.GRAY);
+                    pwTxt.setText("Enter new password");
+                }
+            }
+        });
+
         pwTxt.setMaximumSize(new Dimension(200, 50));
         JButton pwChangeButton = new JButton("Change PW");
 
