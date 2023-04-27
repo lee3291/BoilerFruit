@@ -34,15 +34,16 @@ public class Server implements Runnable {
      * Add the current {@link #currentUser} to the {@link Store}'s customer field
      * Add the new sale history to the {@link Store}'s saleHistory field
      * Add the new purchase history to the {@link #currentUser} purchaseHistory field
+     * Send a TRUE boolean if success
+     * Send a FALSE boolean if failed (i.e. product is sold out)
      * @param output the output stream to communicate with client
      * @param sellerEmail the store's sellerName (used for quicker searching)
      * @param storeName the product's storeName
      * @param productName the product's name
-     * @param purchaseQty the quantity purchase
+     * @param strPurchaseQty the quantity purchase
      */
     private void buyItem(ObjectOutputStream output,
-                         String sellerEmail, String storeName, String productName, int purchaseQty) {
-
+                         String sellerEmail, String storeName, String productName, String strPurchaseQty) {
     }
 
     /**
@@ -123,23 +124,55 @@ public class Server implements Runnable {
 
     }
 
-    /** TODO: Can we make sure price and quantity to be > 0 in GUI?
+    /**
      * Modify an existing product in the specified store, which exist in the {@link #currentUser}'s store field
      * Send a TRUE boolean object to client if success
-     * Send a FALSE boolean object to client if failed (i.e. product's name is taken within the same store)
+     * Send a FALSE boolean object to client if failed (i.e. product name is taken)
      * @param output the output stream to communicate with client
-     * @param name the new product name (not allowed to be changed; used to search)
+     * @param oldName the old product name (used for searching)
+     * @param newName the new product name
      * @param storeName the store name (not allowed to be changed; used to search)
      * @param description the description of the product (same if description is not changed)
-     * @param price the price of the product (same if description is not changed)
-     * @param quantity the quantity of the product (same if description is not changed)
+     * @param strPrice the price of the product (same if description is not changed)
+     * @param strQuantity the quantity of the product (same if description is not changed)
      */
-    private void modifyProduct(ObjectOutputStream output,
-                            String name, String storeName, String description, double price, int quantity) throws IOException {
+    private void modifyProduct(ObjectOutputStream output, String oldName, String newName, String storeName, String description,
+                               String strPrice, String strQuantity) throws IOException {
+        // Get the store
+        Store store = ((Seller) currentUser).getStores().get(storeName);
 
+        // Make sure new name is unique;
+        if (!oldName.equalsIgnoreCase(newName)) {
+            for (Product p : store.getCurrentProducts()) {
+                if (p.getName().equalsIgnoreCase(newName)) {
+                    output.writeObject(false);
+                    output.flush();
+                    return;
+                }
+            }
+        }
+
+        // Find the product
+        Product targetProduct = null;
+        for (Product p : store.getCurrentProducts()) {
+            if (p.getName().equalsIgnoreCase(oldName)) {
+                targetProduct = p;
+            }
+        }
+
+        // Modify product
+        if (targetProduct != null) {
+            targetProduct.setName(newName);
+            targetProduct.setDescription(description);
+            targetProduct.setPrice(Double.parseDouble(strPrice));
+            targetProduct.setQuantity(Integer.parseInt(strQuantity));
+
+            output.writeObject(true);
+            output.flush();
+        }
     }
 
-    /** TODO: Can we make sure price and quantity to be > 0 in GUI?
+    /**
      * Create a new product in the specified store, which exist in the {@link #currentUser}'s store field
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. product's name is taken within the same store)
@@ -147,12 +180,26 @@ public class Server implements Runnable {
      * @param name the new product name
      * @param storeName the product's store
      * @param description the description of the product
-     * @param price the price of the product
-     * @param quantity the quantity of the product
+     * @param strPrice the price of the product
+     * @param strQuantity the quantity of the product
      */
     private void addProduct(ObjectOutputStream output, String name, String storeName, String description,
-                            double price, int quantity) throws IOException {
+                            String strPrice, String strQuantity) throws IOException {
+        // Get the store
+        Store store = ((Seller) currentUser).getStores().get(storeName);
 
+        // Add the product
+        Product newProduct = new Product(name, storeName, description,
+                Double.parseDouble(strPrice), Integer.parseInt(strQuantity));
+
+        // Add to store
+        if (store.addProduct(newProduct)) {
+            output.writeObject(true);
+            output.flush();
+        } else {
+            output.writeObject(false);
+            output.flush();
+        }
     }
 
     /**
@@ -240,7 +287,6 @@ public class Server implements Runnable {
     }
 
     /**
-     * Validate the username, and password; TODO: Can this be done in the GUI?
      * Modify the {@link #users}'s username and password
      * Send a TRUE boolean object to client if success;
      * Send a FALSE boolean object to client if failed (i.e. username is taken)
@@ -275,7 +321,6 @@ public class Server implements Runnable {
     }
 
     /**
-     * Validate the username, email, and password; TODO: Can this be done in the GUI?
      * Create a new user in {@link #users} and set the {@link #currentUser} to the newly created User if success;
      * Send a  1 integer object to client if success;
      * Send a  0 integer object to client if email is taken
@@ -295,115 +340,140 @@ public class Server implements Runnable {
      * command is the command (used to decide which method to be called)
      * param* are the parameters for the method to be called.
      * This function only called other methods IFF the there are enough parameter to do so.
-     * Print to terminal the query and method called; print FAILED if params are missing // TODO: delete after finish debugging
+     * Print to terminal the query and method called TODO: delete after finish debugging
      * @param query the query from the Client
      * @param output the ObjectOutputStream to send object to client
      */
     private void processCommand(String query, ObjectOutputStream output) throws IOException {
-        String[] queryPart = query.split("_");
+        String[] queryComponents = query.split("_");
 
-        String command = queryPart[0];
+        String command = queryComponents[0];
         switch (command) {
             // Signing up (Query: SIGNUP_username_email_password)
             case "SIGNUP" -> {
                 System.out.printf("Received Query: %s\n->Calling signUp()\n", query);
-                signUp(output, queryPart[1], queryPart[2], queryPart[3]);
+                signUp(output, queryComponents[1], queryComponents[2], queryComponents[3]);
             }
 
             // Logging in (Query: LOGIN_username/email_password)
             case "LOGIN" -> {
-
+                System.out.printf("Received Query: %s\n->Calling logIn()\n", query);
+                logIn(output, queryComponents[1], queryComponents[2]);
             }
 
             // Logging out (Query: LOGOUT)
             case "LOGOUT" -> {
-
+                System.out.printf("Received Query: %s\n->Calling logOut()\n", query);
+                logOut();
             }
 
             // Modifying account (Query: MODACC_email_username_password)
             case "MODACC" -> {
-
+                System.out.printf("Received Query: %s\n->Calling modifyAccount()\n", query);
+                modifyAccount(output, queryComponents[1], queryComponents[2], queryComponents[3]);
             }
 
-            // Deleting account (Query: DELACC_username)
+            // Deleting account (Query: DELACC_userEmail)
             case "DELACC" -> {
-
+                System.out.printf("Received Query: %s\n->Calling deleteAccount()\n", query);
+                deleteAccount(queryComponents[1]);
             }
 
             // Getting username (Query: NAME)
             case "NAME" -> {
-
+                System.out.printf("Received Query: %s\n->Calling getUserName()\n", query);
+                getUserName(output);
             }
 
             // Getting email (Query: EMAIL)
             case "EMAIL" -> {
-
+                System.out.printf("Received Query: %s\n->Calling getUserEmail()\n", query);
+                getUserEmail(output);
             }
 
             // Getting usertype (Query: TYPE)
             case "TYPE" -> {
-
+                System.out.printf("Received Query: %s\n->Calling getUserType()\n", query);
+                getUserType(output);
             }
 
             // Creating a store (Query: CRTSTR_storeName)
             case "CRTSTR" -> {
-
+                System.out.printf("Received Query: %s\n->Calling createStore()\n", query);
+                createStore(output, queryComponents[1]);
             }
 
             // Deleting a store (Query: DELSTR_storeName)
             case "DELSTR" -> {
-
+                System.out.printf("Received Query: %s\n->Calling deleteStore()\n", query);
+                deleteStore(output, queryComponents[1]);
             }
 
             // Getting a list of stores (can be used for searching) (Query: GETSELLSTR_searchKey)
             case "GETSELLSTR" -> {
-
+                System.out.printf("Received Query: %s\n->Calling getSellerStores()\n", query);
+                getSellerStores(output, queryComponents[1]);
             }
 
-            // Getting a store's list of products (can be used for searching) (Query: GETSTRPROD_searchKey)
+            // Getting a store's list of products (can be used for searching)
+            // (Query: GETSTRPROD_sellerEmail_storeName_searchKey)
             case "GETSTRPROD" -> {
-
+                System.out.printf("Received Query: %s\n->Calling getStoreProduct()\n", query);
+                getStoreProduct(output, queryComponents[1], queryComponents[2], queryComponents[3]);
             }
 
             // Adding a new product to a store (Query: ADDPROD_productName_storeName_description_price_quantity)
             case "ADDPROD" -> {
-
+                System.out.printf("Received Query: %s\n->Calling addProduct()\n", query);
+                addProduct(output, queryComponents[1], queryComponents[2], queryComponents[3],
+                        queryComponents[4], queryComponents[5]);
             }
 
             // Modifying a store's product (Query: MODPROD_productName_storeName_description_price_quantity)
             case "MODPROD" -> {
+                System.out.printf("Received Query: %s\n->Calling modifyProduct()\n", query);
+                modifyProduct(output, queryComponents[1], queryComponents[2], queryComponents[3],
+                        queryComponents[4], queryComponents[5]);
 
             }
 
             // Deleting a store's product (Query: DELPROD_sellerEmail_storeName_productName)
             case "DELPROD" -> {
-
+                System.out.printf("Received Query: %s\n->Calling deleteProduct()\n", query);
+                deleteProduct(output, queryComponents[1], queryComponents[2], queryComponents[3]);
             }
 
             // Sorting market's product by price (Query: SORTP)
             case "SORTP" -> {
-
+                System.out.printf("Received Query: %s\n->Calling sortProductPrice()\n", query);
+                sortProductPrice(output);
             }
 
             // Sorting market's product by quantity (Query: SORTQ)
             case "SORTQ" -> {
-
+                System.out.printf("Received Query: %s\n->Calling sortProductQty()\n", query);
+                sortProductQty(output);
             }
 
             // Getting the market's list of products (can be used for searching) (Query: GETMRKPROD_searchKey)
             case "GETMRKPROD" -> {
-
+                System.out.printf("Received Query: %s\n->Calling getMarketProduct()\n", query);
+                getMarketProduct(output, queryComponents[1]);
             }
 
             // Buying a product (Query: BUY_sellerEmail_storeName_productName_quantity)
             case "BUY" -> {
-
+                System.out.printf("Received Query: %s\n->Calling buyItem()\n", query);
+                buyItem(output, queryComponents[1], queryComponents[2], queryComponents[3], queryComponents[4]);
             }
 
             // Getting customer history (Query: GETHIS)
             case "GETHIS" -> {
-
+                System.out.printf("Received Query: %s\n->Calling getPurchaseHistory()\n", query);
+                getPurchaseHistory(output);
             }
+
+            default -> System.out.printf("Received Query: %s. ERROR!", query);
         }
     }
 
@@ -414,6 +484,7 @@ public class Server implements Runnable {
         System.out.printf("Connection received from %s\n", socket);
         try (Scanner input = new Scanner(socket.getInputStream())) {
             try (ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream())) {
+                output.flush();
                 while (input.hasNextLine()) {
                     String command = input.nextLine();
                     System.out.printf("Received command: %s", command);
@@ -425,7 +496,7 @@ public class Server implements Runnable {
         }
     }
 
-    public static void main(String[] args) throws IOException { // TODO: handle exception instead
+    public static void main(String[] args) {
 //        ArrayList<String> product = new ArrayList<>();
 //        product.add("apple");
 //        product.add("pen");
@@ -463,16 +534,20 @@ public class Server implements Runnable {
         Server.users = fileIO.readUsers();
 
         // Allocate server socket at given port...
-        ServerSocket serverSocket = new ServerSocket(8080);
+        try {
+            ServerSocket serverSocket = new ServerSocket(8080);
 
-        // infinite server loop: accept connection,
-        // spawn thread to handle...
-        while (true) {
-            System.out.printf("Socket open, waiting for connections on %s\n",
-                    serverSocket); // TODO: delete all print statements after debugging
-            Socket socket = serverSocket.accept();
-            Server server = new Server(socket);
-            new Thread(server).start();
+            // infinite server loop: accept connection,
+            // spawn thread to handle...
+            while (true) {
+                System.out.printf("Socket open, waiting for connections on %s\n",
+                        serverSocket); // TODO: delete all print statements after debugging
+                Socket socket = serverSocket.accept();
+                Server server = new Server(socket);
+                new Thread(server).start();
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
         }
     }
 }
