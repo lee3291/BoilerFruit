@@ -45,8 +45,36 @@ public class Server implements Runnable {
      * @param productName the product's name
      * @param strPurchaseQty the quantity purchase
      */
-    private void buyItem(ObjectOutputStream output,
-                         String sellerEmail, String storeName, String productName, String strPurchaseQty) {
+    private void buyItem(ObjectOutputStream output, String sellerEmail, String storeName,
+                         String productName, String strPurchaseQty) throws IOException{
+        Seller productSeller = (Seller) users.get(sellerEmail);
+        Store productStore = productSeller.getStores().get(storeName);
+
+        synchronized (sentinel) {
+            for (Product p : productStore.getCurrentProducts()) {
+                // Found the product
+                if (p.getName().equalsIgnoreCase(productName)) {
+                    int quantity = Integer.parseInt(strPurchaseQty);
+
+                    // Making sure product is not sold out
+                    if (quantity > p.getQuantity()) {
+                        output.writeObject(false);
+                        output.flush();
+                        return;
+                    }
+
+                    // Change data in appropriate location
+                    p.setQuantity(p.getQuantity() - quantity);
+                    productStore.setTotalRevenue(productStore.getTotalRevenue() + p.getPrice());
+                    productStore.addCustomerEmail(currentUser.getEmail());
+                    productStore.addToSaleHistory(productStore.makeSaleDetail(p, quantity, currentUser.getEmail()));
+                    ((Customer) currentUser).addToPurchaseHistory(p, quantity);
+
+                    output.writeObject(true);
+                    output.writeObject(false);
+                }
+            }
+        }
     }
 
     /**
