@@ -409,7 +409,7 @@ public class Server implements Runnable {
      * Find the user with a matching id (username or email) and email
      * Set the {@link #currentUser} to the newly created User if success;
      * Send a TRUE boolean object to client if success;
-     * Send a FALSE boolean object to client if failed.
+     * Send a FALSE boolean object to client if failed (i.e. username/email/password is incorrect)
      * @param output the output stream to communicate with client
      * @param id username or email of the client
      * @param password password of the client
@@ -417,25 +417,39 @@ public class Server implements Runnable {
     private void logIn(ObjectOutputStream output, String id, String password) throws IOException {
         User user; // logging in user
 
-        // Passed in id can be email
+        // Email matched
         if ((user = users.get(id)) != null) {
+            // Don't allow multiple log in
+            if (user.isOnline()) {
+                output.writeObject(false);
+                output.flush();
+                return;
+            }
+
+            // Email and password matched
             if (user.getPassword().equals(password)) {
                 currentUser = user;
                 user.setOnline(true);
 
                 output.writeObject(true);
+                output.flush();
+                return;
             }
-
-            else {
-                output.writeObject(false);
-            }
-            output.flush();
         }
 
         // Passed in id can be username
         else {
             for(User u : users.values()) {
+                // Username matched
                 if (u.getUserName().equals(id)) {
+                    // Don't allow multiple log in
+                    if (u.isOnline()) {
+                        output.writeObject(false);
+                        output.flush();
+                        return;
+                    }
+
+                    // Username and password matched
                     if (u.getPassword().equals(password)) {
                         currentUser = u;
                         u.setOnline(true);
@@ -446,11 +460,11 @@ public class Server implements Runnable {
                     }
                 }
             }
-
-            // No matched username or email
-            output.writeObject(false);
-            output.flush();
         }
+
+        // No matched username or email or password is wrong
+        output.writeObject(false);
+        output.flush();
     }
 
     /**
