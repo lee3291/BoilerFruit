@@ -6,25 +6,25 @@ import java.util.ArrayList;
  */
 public class Store implements Serializable {
     private final String name; // name of the store
-    private final String sellerName; // the store's owner, We may need to change to object
+    private final String sellerEmail; // the store's owner
     private double totalRevenue; // total revenue of the store.
     private ArrayList<Product> currentProducts; // the current products listing
     private ArrayList<String> saleHistory; // the sale history: item name, quantity, revenue(price), customerName
     private ArrayList<String> customerEmails; // Customers who shopped at this store.
 
-    public Store(String name, String sellerName, double totalRevenue, ArrayList<Product> currentProducts,
+    public Store(String name, String sellerEmail, double totalRevenue, ArrayList<Product> currentProducts,
                  ArrayList<String> saleHistory, ArrayList<String> customerEmails) {
         this.name = name;
-        this.sellerName = sellerName;
+        this.sellerEmail = sellerEmail;
         this.totalRevenue = totalRevenue;
         this.currentProducts = currentProducts;
         this.saleHistory = saleHistory;
         this.customerEmails = customerEmails;
     }
 
-    public Store(String name, String sellerName) {
+    public Store(String name, String sellerEmail) {
         this.name = name;
-        this.sellerName = sellerName;
+        this.sellerEmail = sellerEmail;
         this.totalRevenue = 0;
         this.currentProducts = new ArrayList<>();
         this.saleHistory = new ArrayList<>();
@@ -51,8 +51,8 @@ public class Store implements Serializable {
         this.currentProducts = currentProducts;
     }
 
-    public String getSellerName() {
-        return sellerName;
+    public String getSellerEmail() {
+        return sellerEmail;
     }
 
     /**
@@ -167,6 +167,6 @@ public class Store implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%s's %s", sellerName, name);
+        return String.format("%s's %s", sellerEmail, name);
     }
 }
