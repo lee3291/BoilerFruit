@@ -18,11 +18,12 @@ public class ClientGUI implements Runnable {
     public void run() {
         createGUI();
 //        loginPage();
-//         signUpPage();
-         sellerPage();
-//          customerPage();
-        //editAccountPage();
-        // reviewHistoryPage();
+//        signUpPage();
+//        sellerPage();
+//        ArrayList<Product> products = new ArrayList<>();
+//        customerPage(products);
+//        editAccountPage();
+        reviewHistoryPage();
     }
 
     void createGUI() {
@@ -218,7 +219,7 @@ public class ClientGUI implements Runnable {
         frame.repaint();
     }
 
-    void customerPage() {
+    void customerPage(ArrayList<Product> products) { // this products will be allProducts, or sorted/searched products.
         resetFrame();
 
         JPanel jPanel = new JPanel();
@@ -229,6 +230,22 @@ public class ClientGUI implements Runnable {
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
         JTextField searchBar = new JTextField("Search for product name, store, or description", 10);
+        searchBar.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (searchBar.getText().equals("Search for product name, store, or description")) {
+                    searchBar.setText("");}
+                searchBar.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (searchBar.getText().isEmpty()) {
+                    searchBar.setForeground(Color.GRAY);
+                    searchBar.setText("Search for product name, store, or description");
+                }
+            }
+        });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
             String query = searchBar.getText();
@@ -298,7 +315,6 @@ public class ClientGUI implements Runnable {
 
         // Get products arraylist from server, loop and make a String[] of productInfo.
         // Below is an example. TODO: client-server implementation required
-        ArrayList<Product> products = new ArrayList<>(); // get from server
 
         // Example products
         Product product1 = new Product("Apple", "FruitStore1", "Some Apples", 2.00, 3);
@@ -419,6 +435,22 @@ public class ClientGUI implements Runnable {
         JLabel idLabel = new JLabel("ID: ");
         idLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField idTxt = new JTextField("Enter new user name", 10);
+        idTxt.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (idTxt.getText().equals("Enter new user name")) {
+                    idTxt.setText("");}
+                idTxt.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (idTxt.getText().isEmpty()) {
+                    idTxt.setForeground(Color.GRAY);
+                    idTxt.setText("Enter new user name");
+                }
+            }
+        });
         idTxt.setMaximumSize(new Dimension(200, 50));
         JButton idChangeButton = new JButton("Change ID");
 
@@ -436,6 +468,23 @@ public class ClientGUI implements Runnable {
         JLabel pwLabel = new JLabel("PW: ");
         pwLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField pwTxt = new JTextField("Enter new password", 10);
+        pwTxt.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (pwTxt.getText().equals("Enter new password")) {
+                    pwTxt.setText("");}
+                pwTxt.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (pwTxt.getText().isEmpty()) {
+                    pwTxt.setForeground(Color.GRAY);
+                    pwTxt.setText("Enter new password");
+                }
+            }
+        });
+
         pwTxt.setMaximumSize(new Dimension(200, 50));
         JButton pwChangeButton = new JButton("Change PW");
 
@@ -452,7 +501,10 @@ public class ClientGUI implements Runnable {
 
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setMaximumSize(new Dimension(200, 50));
-        goBackButton.addActionListener(e -> customerPage());
+        goBackButton.addActionListener(e -> {
+            // TODO: Get products ArrayList from server
+            // customerPage(allProducts);
+        });
 
         JButton deleteAccountButton = new JButton("Delete Account");
         deleteAccountButton.setMaximumSize(new Dimension(200, 50));
@@ -507,7 +559,10 @@ public class ClientGUI implements Runnable {
 
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setMaximumSize(new Dimension(200, 50));
-        goBackButton.addActionListener(e -> customerPage());
+        goBackButton.addActionListener(e -> {
+            // TODO: Get allProducts ArrayList from server
+            // customerPage(allProducts);
+        });
 
         JButton exportHistoryButton = new JButton("Export History");
         exportHistoryButton.setMaximumSize(new Dimension(200, 50));
@@ -531,7 +586,7 @@ public class ClientGUI implements Runnable {
         updateFrame();
     }
 
-    void sellerPage() {
+    void sellerPage(ArrayList<Store> stores) { // this products will be allStores
         resetFrame();
 
         JPanel jPanel = new JPanel();
@@ -570,7 +625,8 @@ public class ClientGUI implements Runnable {
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            sellerPage();
+            // TODO: Get stores ArrayList from server
+            // sellerPage(stores);
         });
 
         northPanel.add(searchBar);
@@ -655,7 +711,7 @@ public class ClientGUI implements Runnable {
         exampleStores.add(store2);
         exampleStores.add(store3);
 
-        ArrayList<Store> stores = exampleStores; // TODO: get from server
+        stores = exampleStores; // TODO: get from server
 
         // JList
         JList<Store> userStores = new JList<>();
@@ -755,7 +811,10 @@ public class ClientGUI implements Runnable {
         JButton backButton = new JButton("Go Back");
         backButton.setPreferredSize(new Dimension(120 ,50));
         backButton.setMaximumSize(backButton.getPreferredSize());
-        backButton.addActionListener(e -> sellerPage());
+        backButton.addActionListener(e -> {
+            // TODO: Get stores ArrayList from server.
+            // sellerPage(Stores);
+        });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(userType);

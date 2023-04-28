@@ -25,7 +25,10 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getPurchaseHistory(ObjectOutputStream output) throws IOException {
-
+        // @Ethan
+        // Assume this user must be customer
+        output.writeObject(((Customer) this.currentUser).getPurchaseHistory());
+        output.flush();
     }
 
     /**
@@ -51,9 +54,18 @@ public class Server implements Runnable {
      * @return an ArrayList of Store currently in the Marketplace
      */
     private ArrayList<Store> collectMarketStore() {
-        ArrayList<Store> result = new ArrayList<>();
+        // @Ethan
+        ArrayList<Store> allStores = new ArrayList<>();
+        for (User user : users.values()) {
+            if (user instanceof Seller) {
+                // Get a user's stores into an arraylist.
+                ArrayList<Store> userStores = new ArrayList<>(((Seller) user).getStores().values());
 
-        return result;
+                // Adds all the stores of a user to the collection of all the stores in the market.
+                allStores.addAll(userStores);
+            }
+        }
+        return allStores;
     }
 
     /**
@@ -61,11 +73,13 @@ public class Server implements Runnable {
      * @return an ArrayList of Product currently in the Marketplace
      */
     private ArrayList<Product> collectMarketProduct() {
-        ArrayList<Product> result = new ArrayList<>();
+        // @Ethan
+        ArrayList<Product> allProducts = new ArrayList<>();
         for (Store store : collectMarketStore()) {
-            // TODO
+            // add a store's products to all products
+            allProducts.addAll(store.getCurrentProducts());
         }
-        return result;
+        return allProducts;
     }
 
     /**
@@ -79,16 +93,25 @@ public class Server implements Runnable {
      * @param searchKey the key to search (i.e. the product name or description); '-1' if no search is needed
      */
     private void getMarketProduct(ObjectOutputStream output, String searchKey) throws IOException {
-        ArrayList<Product> allProduct = collectMarketProduct();
-
+        // @Ethan
+        ArrayList<Product> allProducts = collectMarketProduct();
         // No search
         if (searchKey.equals("-1")) {
-            output.writeObject(allProduct);
-        }
+            output.writeObject(allProducts);
+            output.flush();
 
-        // Searching
-        else {
-            // TODO
+        } else { // Searching
+            searchKey = searchKey.toLowerCase();
+            ArrayList<Product> matchingProducts = new ArrayList<>();
+            for (Product p : allProducts) {
+                if (p.getName().toLowerCase().contains(searchKey) || // <- searchKey is in name
+                        (p.getDescription().toLowerCase().contains(searchKey))) { // <- or searchKey is in description
+                    // add matching product to matchingProducts
+                    matchingProducts.add(p);
+                }
+            }
+            output.writeObject(matchingProducts);
+            output.flush();
         }
     }
 
@@ -98,7 +121,22 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void sortProductPrice(ObjectOutputStream output) throws IOException {
-        ArrayList<Product> allProduct = collectMarketProduct();
+        // @Ethan
+        // this method was in Store class, but it's relocated to Server class.
+        // Clone to protect original ArrayList
+        ArrayList<Product> sortedProducts = (ArrayList<Product>) collectMarketProduct().clone();
+        // Sorting in ascending order
+        for (int i = 1; i < sortedProducts.size(); i++) {
+            Product p = sortedProducts.get(i);
+            int j = i - 1;
+            while (j >= 0 && sortedProducts.get(j).getPrice() > p.getPrice()) {
+                sortedProducts.set(j + 1, sortedProducts.get(j));
+                j = j - 1;
+            }
+            sortedProducts.set(j + 1, p);
+        }
+        output.writeObject(sortedProducts);
+        output.flush();
     }
 
     /**
@@ -107,7 +145,22 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void sortProductQty(ObjectOutputStream output) throws IOException {
-        ArrayList<Product> allProduct = collectMarketProduct();
+        // @Ethan
+        // this method was in Store class, but it's relocated to Server class.
+        // Clone to protect original ArrayList
+        ArrayList<Product> sortedProducts = (ArrayList<Product>) collectMarketProduct().clone();
+        // Sorting in ascending order
+        for (int i = 1; i < sortedProducts.size(); i++) {
+            Product p = sortedProducts.get(i);
+            int j = i - 1;
+            while (j >= 0 && sortedProducts.get(j).getQuantity() > p.getQuantity()) {
+                sortedProducts.set(j + 1, sortedProducts.get(j));
+                j = j - 1;
+            }
+            sortedProducts.set(j + 1, p);
+        }
+        output.writeObject(sortedProducts);
+        output.flush();
     }
 
     /**
