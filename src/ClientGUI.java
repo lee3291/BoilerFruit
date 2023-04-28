@@ -10,6 +10,9 @@ import java.util.concurrent.Flow;
 public class ClientGUI implements Runnable {
 
     static JFrame frame;
+
+    public final int USERINFO_MAX_LENGTH = 15; // Max username/password length
+    public final int USERINFO_MIN_LENGTH = 5; // Min username/password/email length
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new ClientGUI());
     }
@@ -198,14 +201,28 @@ public class ClientGUI implements Runnable {
             String pw = pwTxtField.getText();
             String email = emailTxtField.getText();
 
+            // id, pw, email validity check
             if (id.isEmpty() || pw.isEmpty() || email.isEmpty()) {
                 JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
                         JOptionPane.ERROR_MESSAGE);
+            } else if ((id.length() < USERINFO_MIN_LENGTH) || (id.length() > USERINFO_MAX_LENGTH)) {
+                String idErrorMessage = String.format("Please enter a username that is between %d-%d characters!",
+                        USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
+                JOptionPane.showMessageDialog(frame, idErrorMessage, "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else if ((pw.length() < USERINFO_MIN_LENGTH) || (pw.length() > USERINFO_MAX_LENGTH)) {
+                String pwErrorMessage = String.format("Please enter a password that is between %d-%d characters!",
+                        USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
+                JOptionPane.showMessageDialog(frame, pwErrorMessage, "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else if ((email.length() < USERINFO_MIN_LENGTH) || (!((email.contains("@")) && (email.contains("."))))) {
+                String emailErrorMessage = String.format("Please enter an email in the correct format!\n" +
+                        "It must be minimum of %d characters and include '@' and '.'", USERINFO_MIN_LENGTH);
+                JOptionPane.showMessageDialog(frame, emailErrorMessage, "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
-
-            System.out.println(id+pw+email);
-
-            //TODO: Client-Server implementation
+            
+            //TODO: Client-Server implementation, send id and email to server and check if they already exist!
         });
         buttonPanel.add(Box.createRigidArea(new Dimension(172, 0)));
         buttonPanel.add(goBackButton);
