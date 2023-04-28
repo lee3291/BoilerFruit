@@ -318,7 +318,23 @@ public class Server implements Runnable {
      * @param searchKey the key to search (i.e. the store name); '-1' if no search is needed
      */
     private void getSellerStores(ObjectOutputStream output, String searchKey) throws IOException {
-
+        // @Ethan
+        // Assume currentUser is instanceof Seller
+        Seller currentSeller = (Seller) currentUser;
+        HashMap<String, Store> sellerStoresHM = currentSeller.getStores();
+        ArrayList<Store> sellerStoresAL = new ArrayList<>();
+        if (searchKey.equals("-1")) {
+            sellerStoresAL.addAll(sellerStoresHM.values());
+        } else {
+            // Find stores that the key String contains the searchKey String.
+            for (String storeName : sellerStoresHM.keySet()) {
+                if (storeName.contains(searchKey)) {
+                    sellerStoresAL.add(sellerStoresHM.get(storeName));
+                }
+            }
+        }
+        output.writeObject(sellerStoresAL);
+        output.flush();
     }
 
     /**
