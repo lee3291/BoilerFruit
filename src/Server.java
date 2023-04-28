@@ -292,7 +292,7 @@ public class Server implements Runnable {
     }
 
     /**
-     * Create an ArrayList contains the Product from the specified store
+     * Create an ArrayList contains the Products from the specified store
      * If searchKey is '-1', send an ArrayList of all Product in the Store to client
      * <p>
      * If searchKey IS NOT '-1',
@@ -304,7 +304,27 @@ public class Server implements Runnable {
      */
     private void getStoreProduct(ObjectOutputStream output, String sellerEmail,
                                  String storeName, String searchKey) throws IOException {
-
+        // @Ethan
+        // Find store with sellerEmail and storeName
+        Seller specifiedSeller = (Seller) users.get(sellerEmail); // Desired Seller
+        Store specifiedStore = specifiedSeller.getStores().get(storeName); // Desired Store of Seller
+        ArrayList<Product> specifiedProducts = specifiedStore.getCurrentProducts(); // Desired Products of Store
+        if (searchKey.equals("-1")) {
+            output.writeObject(specifiedProducts);
+            output.flush();
+        } else {
+            ArrayList<Product> matchingProducts = new ArrayList<>();
+            searchKey = searchKey.toLowerCase();
+            for (Product p : specifiedProducts) {
+                String productName = p.getName().toLowerCase();
+                String productDesc = p.getDescription().toLowerCase();
+                if (productName.contains(searchKey) || productDesc.contains(searchKey)) {
+                    matchingProducts.add(p);
+                }
+            }
+            output.writeObject(matchingProducts);
+            output.flush();
+        }
     }
 
     /**
