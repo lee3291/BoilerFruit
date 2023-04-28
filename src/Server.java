@@ -337,8 +337,8 @@ public class Server implements Runnable {
             output.flush();
         }
         // Get currentUser, user's stores.
-        Seller thisSeller = (Seller) currentUser;
-        HashMap<String, Store> storesOfCurrentUser = thisSeller.getStores();
+        Seller currentSeller = (Seller) currentUser;
+        HashMap<String, Store> storesOfCurrentUser = currentSeller.getStores();
 
         if (storesOfCurrentUser.remove(storeName) == null) { // remove store, if store does not exist, returns null.
             returnObject = Boolean.FALSE;
@@ -357,7 +357,20 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void createStore(ObjectOutputStream output, String storeName) throws IOException {
-
+        // @Ethan
+        // Assume that currentUser is instanceof Seller.
+        boolean returnObject;
+        Seller currentSeller = (Seller) currentUser;
+        HashMap<String, Store> sellerStores = currentSeller.getStores();
+        if (sellerStores.containsKey(storeName)) {
+            returnObject = false;
+        } else {
+            returnObject = true;
+            Store newStore = new Store(storeName, currentSeller.getUserName());
+            sellerStores.put(storeName, newStore);
+        }
+        output.writeObject(returnObject);
+        output.flush();
     }
 
     /**
