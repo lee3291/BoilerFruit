@@ -330,20 +330,14 @@ public class Server implements Runnable {
      */
     private void deleteStore(ObjectOutputStream output, String storeName) throws IOException {
         // @Ethan
-        Boolean returnObject; // Wrapper class Boolean in order to write boolean object.
-        if (!(currentUser instanceof Seller)) {
-            returnObject = Boolean.FALSE;
-            output.writeObject(returnObject);
-            output.flush();
-        }
-        // Get currentUser, user's stores.
+        // Assume currentUser is instanceof Seller
+        boolean returnObject;
         Seller currentSeller = (Seller) currentUser;
-        HashMap<String, Store> storesOfCurrentUser = currentSeller.getStores();
-
-        if (storesOfCurrentUser.remove(storeName) == null) { // remove store, if store does not exist, returns null.
-            returnObject = Boolean.FALSE;
+        HashMap<String, Store> sellerStores = currentSeller.getStores();
+        if (sellerStores.remove(storeName) == null) { // remove store, if store does not exist, returns null.
+            returnObject = false;
         } else { // if it successfully removed, returns the value of the object.
-            returnObject = Boolean.TRUE;
+            returnObject = true;
         }
         output.writeObject(returnObject);
         output.flush();
