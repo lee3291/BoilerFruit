@@ -3,29 +3,104 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Flow;
 
 public class ClientGUI implements Runnable {
 
-    static JFrame frame;
+    JFrame frame;
+    Socket socket;
+    ObjectInputStream ois;
+    ObjectOutputStream oos;
 
     public final int USERINFO_MAX_LENGTH = 15; // Max username/password length
     public final int USERINFO_MIN_LENGTH = 5; // Min username/password/email length
     public static void main(String[] args) {
+
+
         SwingUtilities.invokeLater(new ClientGUI());
+
     }
 
     @Override
     public void run() {
+
         createGUI();
+        ipAddressPage();
 //        loginPage();
 //        signUpPage();
-        sellerPage(new ArrayList<>());
+//        sellerPage(new ArrayList<>());
 //        customerPage(new ArrayList<>());
 //        editAccountPage();
 //        reviewHistoryPage();
+    }
+
+    void ipAddressPage() {
+        resetFrame();
+
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new GridLayout(5, 0));
+
+
+        JLabel welcomeMessage = new JLabel("Welcome to BoilerMarket");
+        welcomeMessage.setHorizontalAlignment(JLabel.CENTER);
+        welcomeMessage.setFont(new Font(null, Font.PLAIN, 30));
+
+        JLabel promptMessage = new JLabel("Enter Server IP Address");
+        promptMessage.setHorizontalAlignment(JLabel.CENTER);
+        promptMessage.setFont(new Font(null, Font.PLAIN, 20));
+
+
+        //-------------------------------
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.X_AXIS));
+
+        JTextField ipAddressTxt = new JTextField("localhost", 10);
+        ipAddressTxt.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (ipAddressTxt.getText().equals("localhost")) {
+                    ipAddressTxt.setText("");}
+                ipAddressTxt.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (ipAddressTxt.getText().isEmpty()) {
+                    ipAddressTxt.setForeground(Color.GRAY);
+                    ipAddressTxt.setText("localhost");
+                }
+            }
+        });
+        ipAddressTxt.setMaximumSize(new Dimension(200, 50));
+
+        JButton enterButton = new JButton("Enter");
+        enterButton.addActionListener(e -> {
+            String ipAddress = ipAddressTxt.getText();
+            if (ipAddress.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "IP Address must be filled in!", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                // TODO: Server connection
+            }
+        });
+        centerPanel.add(Box.createRigidArea(new Dimension(270, 0)));
+        centerPanel.add(ipAddressTxt);
+        centerPanel.add(enterButton);
+
+        //-------------------------------
+
+        jPanel.add(welcomeMessage);
+        jPanel.add(promptMessage);
+        jPanel.add(centerPanel);
+
+        frame.add(jPanel);
+
+        updateFrame();
     }
 
     void createGUI() {
@@ -1026,7 +1101,7 @@ public class ClientGUI implements Runnable {
      * @param store the store of the new product
      * @return a new query string that contain necessary information to send to server
      */
-    static String addProductPage(Store store) {
+    String addProductPage(Store store) {
 //        Product newProduct;
 //        // TODO: get user input
 //        return String.format("ADDPROD_%s_%s_%s_%.2f_%d",
@@ -1039,16 +1114,16 @@ public class ClientGUI implements Runnable {
      * Page for modify product
      * @param oldProduct the product to be modified
      */
-    static String modifyProductPage(Product oldProduct) {
+    String modifyProductPage(Product oldProduct) {
         return new String();
     }
 
-    static void updateFrame() {
+    void updateFrame() {
         frame.revalidate(); // Notifies layout manager that component has changed.
         frame.repaint(); // repaints the components
     }
 
-     static void resetFrame() {
+    void resetFrame() {
         frame.getContentPane().removeAll(); // Removes all components from frame.
         updateFrame();
     }
