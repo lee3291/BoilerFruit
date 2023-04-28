@@ -447,7 +447,7 @@ public class Server implements Runnable {
         if ((user = users.get(id)) != null) {
             // Don't allow multiple log in
             if (user.isOnline()) {
-                output.writeObject(0);
+                output.writeObject(-1);
                 output.flush();
                 return;
             }
@@ -474,7 +474,7 @@ public class Server implements Runnable {
                 if (u.getUserName().equals(id)) {
                     // Don't allow multiple log in
                     if (u.isOnline()) {
-                        output.writeObject(0);
+                        output.writeObject(-1);
                         output.flush();
                         return;
                     }
@@ -497,7 +497,7 @@ public class Server implements Runnable {
         }
 
         // No matched username or email or password is wrong
-        output.writeObject(0);
+        output.writeObject(-1);
         output.flush();
     }
 
