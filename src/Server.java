@@ -413,13 +413,23 @@ public class Server implements Runnable {
      * Send a TRUE boolean object to client if success;
      * Send a FALSE boolean object to client if failed (i.e. username is taken)
      * @param output the output stream to communicate with client
-     * @param email the user's email (not allow to be changed; used to search user)
-     * @param username the username of the new user
-     * @param password the password of the new user
+     * @param username the new username of the user
+     * @param password the new password of the user
      */
-    private void modifyAccount(ObjectOutputStream output, String email,
-                               String username, String password) throws IOException {
+    private void modifyAccount(ObjectOutputStream output, String username, String password) throws IOException {
+        // @Ethan
 
+        // valid username type is checked
+        boolean outputObject;
+        if (users.containsKey(username)) { // username already exists.
+            outputObject = false;
+        } else {
+            currentUser.setUserName(username);
+            currentUser.setPassword(password);
+            outputObject = true;
+        }
+        output.writeObject(outputObject);
+        output.flush();
     }
 
     /**
@@ -587,10 +597,10 @@ public class Server implements Runnable {
                 logOut();
             }
 
-            // Modifying account (Query: MODACC_email_username_password)
+            // Modifying account (Query: MODACC_username_password)
             case "MODACC" -> {
                 System.out.printf("Received Query: %s\n->Calling modifyAccount()\n", query);
-                modifyAccount(output, queryComponents[1], queryComponents[2], queryComponents[3]);
+                modifyAccount(output, queryComponents[1], queryComponents[2]);
             }
 
             // Deleting account (Query: DELACC_userEmail)
