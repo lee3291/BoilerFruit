@@ -45,8 +45,36 @@ public class Server implements Runnable {
      * @param productName the product's name
      * @param strPurchaseQty the quantity purchase
      */
-    private void buyItem(ObjectOutputStream output,
-                         String sellerEmail, String storeName, String productName, String strPurchaseQty) {
+    private void buyItem(ObjectOutputStream output, String sellerEmail, String storeName,
+                         String productName, String strPurchaseQty) throws IOException{
+        Seller productSeller = (Seller) users.get(sellerEmail);
+        Store productStore = productSeller.getStores().get(storeName);
+
+        synchronized (sentinel) { // TODO: checking concurrency
+            for (Product p : productStore.getCurrentProducts()) {
+                // Found the product
+                if (p.getName().equalsIgnoreCase(productName)) {
+                    int quantity = Integer.parseInt(strPurchaseQty);
+
+                    // Making sure product is not sold out
+                    if (quantity > p.getQuantity()) {
+                        output.writeObject(false);
+                        output.flush();
+                        return;
+                    }
+
+                    // Change data in appropriate location
+                    p.setQuantity(p.getQuantity() - quantity);
+                    productStore.setTotalRevenue(productStore.getTotalRevenue() + p.getPrice());
+                    productStore.addCustomerEmail(currentUser.getEmail());
+                    productStore.addToSaleHistory(productStore.makeSaleDetail(p, quantity, currentUser.getEmail()));
+                    ((Customer) currentUser).addToPurchaseHistory(p, quantity);
+
+                    output.writeObject(true);
+                    output.writeObject(false);
+                }
+            }
+        }
     }
 
     /**
@@ -174,7 +202,15 @@ public class Server implements Runnable {
      */
     private void deleteProduct(ObjectOutputStream output, String sellerEmail,
                                String storeName, String productName) throws IOException {
-
+        Seller seller = (Seller) users.get(sellerEmail);
+        Store store = seller.getStores().get(storeName);
+        if (store.removeProduct(productName)) {
+            output.writeObject(true);
+            output.flush();
+        } else {
+            output.writeObject(false);
+            output.flush();
+        }
     }
 
     /**
@@ -192,7 +228,7 @@ public class Server implements Runnable {
     private void modifyProduct(ObjectOutputStream output, String oldName, String newName, String storeName, String description,
                                String strPrice, String strQuantity) throws IOException {
         // Get the store
-        Store store = ((Seller) currentUser).getStores().get(storeName);
+        Store store = ((Seller) currentUser).getStores().get(storeName); // TODO: concurrency?
 
         // Make sure new name is unique;
         if (!oldName.equalsIgnoreCase(newName)) {
@@ -239,7 +275,7 @@ public class Server implements Runnable {
     private void addProduct(ObjectOutputStream output, String name, String storeName, String description,
                             String strPrice, String strQuantity) throws IOException {
         // Get the store
-        Store store = ((Seller) currentUser).getStores().get(storeName);
+        Store store = ((Seller) currentUser).getStores().get(storeName); // TODO: concurrency?
 
         // Add the product
         Product newProduct = new Product(name, storeName, description,
@@ -325,11 +361,17 @@ public class Server implements Runnable {
     }
 
     /**
-     * Send a string object containing the {@link #currentUser}'s username to the client
+     * Send a string object containing the {@link #currentUser}'s usertype (customer or seller) to the client
      * @param output the output stream to communicate with client
      */
     private void getUserType(ObjectOutputStream output) throws IOException {
-
+        if (currentUser instanceof Customer) {
+            output.writeObject("Customer");
+            output.flush();
+        } else {
+            output.writeObject("Seller");
+            output.flush();
+        }
     }
 
     /**
@@ -337,7 +379,8 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getUserEmail(ObjectOutputStream output) throws IOException {
-
+        output.writeObject(currentUser.getEmail());
+        output.flush();
     }
 
     /**
@@ -345,7 +388,8 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getUserName(ObjectOutputStream output) throws IOException {
-
+        output.writeObject(currentUser.getUserName());
+        output.flush();
     }
 
     /**
@@ -379,23 +423,82 @@ public class Server implements Runnable {
     }
 
     /**
-     * Close the socket
+     * Set user's online status to false and close the socket
      */
     private void logOut() throws IOException {
+        currentUser.setOnline(false);
         socket.close();
     }
 
     /**
      * Find the user with a matching id (username or email) and email
      * Set the {@link #currentUser} to the newly created User if success;
-     * Send a TRUE boolean object to client if success;
-     * Send a FALSE boolean object to client if failed.
+     * Send a  1 integer object to client if success and client is a SELLER;
+     * Send a  0 integer object to client if success and client is a CUSTOMER;
+     * Send a -1 integer object to client if failed (i.e. username/email/password is incorrect)
      * @param output the output stream to communicate with client
      * @param id username or email of the client
      * @param password password of the client
      */
     private void logIn(ObjectOutputStream output, String id, String password) throws IOException {
+        User user; // logging in user
 
+        // Email matched
+        if ((user = users.get(id)) != null) {
+            // Don't allow multiple log in
+            if (user.isOnline()) {
+                output.writeObject(0);
+                output.flush();
+                return;
+            }
+
+            // Email and password matched
+            if (user.getPassword().equals(password)) {
+                currentUser = user;
+                user.setOnline(true);
+
+                if (user instanceof Seller) {
+                    output.writeObject(1);
+                } else {
+                    output.writeObject(0);
+                }
+                output.flush();
+                return;
+            }
+        }
+
+        // Passed in id can be username
+        else {
+            for(User u : users.values()) {
+                // Username matched
+                if (u.getUserName().equals(id)) {
+                    // Don't allow multiple log in
+                    if (u.isOnline()) {
+                        output.writeObject(0);
+                        output.flush();
+                        return;
+                    }
+
+                    // Username and password matched
+                    if (u.getPassword().equals(password)) {
+                        currentUser = u;
+                        u.setOnline(true);
+
+                        if (u instanceof Seller) {
+                            output.writeObject(1);
+                        } else {
+                            output.writeObject(0);
+                        }
+                        output.flush();
+                        return;
+                    }
+                }
+            }
+        }
+
+        // No matched username or email or password is wrong
+        output.writeObject(0);
+        output.flush();
     }
 
     /**
@@ -404,12 +507,51 @@ public class Server implements Runnable {
      * Send a  0 integer object to client if email is taken
      * Send a -1 integer object to client if username is taken
      * @param output the output stream to communicate with client
+     * @param type the usertype (Customer or Seller)
      * @param username the username of the new user
      * @param email the email of the new user
      * @param password the password of the new user
      */
-    private void signUp(ObjectOutputStream output, String username, String email, String password) throws IOException {
+    private void signUp(ObjectOutputStream output,
+                        String type, String username, String email, String password) throws IOException {
+        // Validate email
+        User checker = users.get(email);
+        if (checker != null) {
+            output.writeObject(0);
+            output.flush();
+            return;
+        }
 
+        // Validate username
+        for (User user : users.values()) {
+            if (user.getUserName().equals(username)) {
+                output.writeObject(-1);
+                output.flush();
+                return;
+            }
+        }
+
+        // User is customer
+        if (type.equals("Customer")) {
+            Customer newCustomer = new Customer(username, email, password);
+            users.put(email, newCustomer);
+            currentUser = newCustomer;
+            currentUser.setOnline(true);
+
+            output.writeObject(1);
+            output.flush();
+        }
+
+        // User is seller
+        else if (type.equals("Seller")){
+            Seller newSeller = new Seller(username, email, password);
+            users.put(email, newSeller);
+            currentUser = newSeller;
+            currentUser.setOnline(true);
+
+            output.writeObject(1);
+            output.flush();
+        }
     }
 
     /**
@@ -430,7 +572,7 @@ public class Server implements Runnable {
             // Signing up (Query: SIGNUP_username_email_password)
             case "SIGNUP" -> {
                 System.out.printf("Received Query: %s\n->Calling signUp()\n", query);
-                signUp(output, queryComponents[1], queryComponents[2], queryComponents[3]);
+                signUp(output, queryComponents[1], queryComponents[2], queryComponents[3], queryComponents[4]);
             }
 
             // Logging in (Query: LOGIN_username/email_password)

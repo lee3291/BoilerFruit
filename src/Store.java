@@ -90,60 +90,19 @@ public class Store implements Serializable {
     }
 
     /**
-     * Remove quantity products from product listing
+     * Remove a product from the current product listing
      *
      * @param productName the product class product to be existed
-     * @param quantity    the quantity to be removed
+     * @return true if a product is removed; false if no product is removed (no matching productName)
      */
-    public boolean removeProduct(String productName, int quantity) {
+    public boolean removeProduct(String productName) {
         // Search currentListing for product
         int newQuantity;
         Product product;
         for (int i = 0; i < currentProducts.size(); i++) {
             product = currentProducts.get(i);
             if (product.getName().equalsIgnoreCase(productName)) {
-                // Reduce the product's quantity no below than 0.
-                newQuantity = Math.max(product.getQuantity() - quantity, 0);
-
-                // New quantity is 0; remove the product from the hash map
-                if (newQuantity == 0) {
-                    currentProducts.remove(product);
-                }
-                // New quantity is larger than 0; reduce the listing quantity to the new value
-                else {
-                    product.setQuantity(newQuantity);
-                }
-                return true;
-            }
-        }
-        // cannot remove because product does not exist
-        return false;
-    }
-
-    /**
-     * Remove quantity products from product listing
-     *
-     * @param productToRemove the product to be removed
-     * @param quantity        the quantity to be removed
-     */
-    public boolean removeProduct(Product productToRemove, int quantity) {
-        // Search currentListing for product
-        int newQuantity;
-        Product product;
-        for (int i = 0; i < currentProducts.size(); i++) {
-            product = currentProducts.get(i);
-            if (product.getName().equalsIgnoreCase(productToRemove.getName())) {
-                // Reduce the product's listing quantity to as much 0
-                newQuantity = Math.max(product.getQuantity() - quantity, 0);
-
-                // New quantity is 0; remove the product from the hash map
-                if (newQuantity == 0) {
-                    currentProducts.remove(product);
-                }
-                // New quantity is larger than 0; reduce the listing quantity to the new value
-                else {
-                    product.setQuantity(newQuantity);
-                }
+                currentProducts.remove(i);
                 return true;
             }
         }
@@ -168,6 +127,10 @@ public class Store implements Serializable {
         saleHistory.add(saleDetail);
     }
 
+    public void setSaleHistory(ArrayList<String> saleHistory) {
+        this.saleHistory = saleHistory;
+    }
+
     /**
      * Print the store saleHistory in the format: item name, saleQuantity, revenue(price), customerName
      *
@@ -188,84 +151,18 @@ public class Store implements Serializable {
         this.customerEmails = customerEmails;
     }
 
-    //TODO: FIX THIS
-
     /**
-     * Sort the input products by ascending or descending order by price
-     *
-     * @param products    the product ArrayList to be sorted
-     * @param isAscending whether to sort in ascending or descending
-     * @return the sorted ArrayList
+     * Add a new customer to the store's email list IFF the customer is new
+     * @param customerEmail the potential new customer email
      */
-    public static ArrayList<Product> sortByPrice(ArrayList<Product> products, boolean isAscending) {
-        ArrayList<Product> sorted = (ArrayList<Product>) products.clone();
-
-        // Insertion sort ascending
-        if (isAscending) {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getPrice() > curr.getPrice()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
-            }
-        } else {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getPrice() < curr.getPrice()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
+    public void addCustomerEmail(String customerEmail) {
+        for (String email : customerEmails) {
+            if (email.equals(customerEmail)) {
+                return;
             }
         }
 
-        return sorted;
-    }
-
-
-    //TODO: Fix this
-
-    /**
-     * Sort the input products by ascending or descending order by quantity
-     *
-     * @param products    the product ArrayList to be sorted
-     * @param isAscending whether to sort in ascending or descending
-     * @return the sorted ArrayList
-     */
-    public static ArrayList<Product> sortByQuantity(ArrayList<Product> products, boolean isAscending) {
-        ArrayList<Product> sorted = (ArrayList<Product>) products.clone();
-
-        // Insertion sort ascending
-        if (isAscending) {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getQuantity() > curr.getQuantity()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
-            }
-        } else {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getQuantity() < curr.getQuantity()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
-            }
-        }
-        return sorted;
+        customerEmails.add(customerEmail);
     }
 
     @Override
