@@ -90,60 +90,19 @@ public class Store implements Serializable {
     }
 
     /**
-     * Remove quantity products from product listing
+     * Remove a product from the current product listing
      *
      * @param productName the product class product to be existed
-     * @param quantity    the quantity to be removed
+     * @return true if a product is removed; false if no product is removed (no matching productName)
      */
-    public boolean removeProduct(String productName, int quantity) {
+    public boolean removeProduct(String productName) {
         // Search currentListing for product
         int newQuantity;
         Product product;
         for (int i = 0; i < currentProducts.size(); i++) {
             product = currentProducts.get(i);
             if (product.getName().equalsIgnoreCase(productName)) {
-                // Reduce the product's quantity no below than 0.
-                newQuantity = Math.max(product.getQuantity() - quantity, 0);
-
-                // New quantity is 0; remove the product from the hash map
-                if (newQuantity == 0) {
-                    currentProducts.remove(product);
-                }
-                // New quantity is larger than 0; reduce the listing quantity to the new value
-                else {
-                    product.setQuantity(newQuantity);
-                }
-                return true;
-            }
-        }
-        // cannot remove because product does not exist
-        return false;
-    }
-
-    /**
-     * Remove quantity products from product listing
-     *
-     * @param productToRemove the product to be removed
-     * @param quantity        the quantity to be removed
-     */
-    public boolean removeProduct(Product productToRemove, int quantity) {
-        // Search currentListing for product
-        int newQuantity;
-        Product product;
-        for (int i = 0; i < currentProducts.size(); i++) {
-            product = currentProducts.get(i);
-            if (product.getName().equalsIgnoreCase(productToRemove.getName())) {
-                // Reduce the product's listing quantity to as much 0
-                newQuantity = Math.max(product.getQuantity() - quantity, 0);
-
-                // New quantity is 0; remove the product from the hash map
-                if (newQuantity == 0) {
-                    currentProducts.remove(product);
-                }
-                // New quantity is larger than 0; reduce the listing quantity to the new value
-                else {
-                    product.setQuantity(newQuantity);
-                }
+                currentProducts.remove(i);
                 return true;
             }
         }
