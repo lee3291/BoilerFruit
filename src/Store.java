@@ -168,6 +168,10 @@ public class Store implements Serializable {
         saleHistory.add(saleDetail);
     }
 
+    public void setSaleHistory(ArrayList<String> saleHistory) {
+        this.saleHistory = saleHistory;
+    }
+
     /**
      * Print the store saleHistory in the format: item name, saleQuantity, revenue(price), customerName
      *
@@ -188,84 +192,18 @@ public class Store implements Serializable {
         this.customerEmails = customerEmails;
     }
 
-    //TODO: FIX THIS
-
     /**
-     * Sort the input products by ascending or descending order by price
-     *
-     * @param products    the product ArrayList to be sorted
-     * @param isAscending whether to sort in ascending or descending
-     * @return the sorted ArrayList
+     * Add a new customer to the store's email list IFF the customer is new
+     * @param customerEmail the potential new customer email
      */
-    public static ArrayList<Product> sortByPrice(ArrayList<Product> products, boolean isAscending) {
-        ArrayList<Product> sorted = (ArrayList<Product>) products.clone();
-
-        // Insertion sort ascending
-        if (isAscending) {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getPrice() > curr.getPrice()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
-            }
-        } else {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getPrice() < curr.getPrice()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
+    public void addCustomerEmail(String customerEmail) {
+        for (String email : customerEmails) {
+            if (email.equals(customerEmail)) {
+                return;
             }
         }
 
-        return sorted;
-    }
-
-
-    //TODO: Fix this
-
-    /**
-     * Sort the input products by ascending or descending order by quantity
-     *
-     * @param products    the product ArrayList to be sorted
-     * @param isAscending whether to sort in ascending or descending
-     * @return the sorted ArrayList
-     */
-    public static ArrayList<Product> sortByQuantity(ArrayList<Product> products, boolean isAscending) {
-        ArrayList<Product> sorted = (ArrayList<Product>) products.clone();
-
-        // Insertion sort ascending
-        if (isAscending) {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getQuantity() > curr.getQuantity()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
-            }
-        } else {
-            for (int i = 1; i < sorted.size(); i++) {
-                Product curr = sorted.get(i);
-                int j = i - 1;
-
-                while (j >= 0 && sorted.get(j).getQuantity() < curr.getQuantity()) {
-                    sorted.set(j + 1, sorted.get(j));
-                    j = j - 1;
-                }
-                sorted.set(j + 1, curr);
-            }
-        }
-        return sorted;
+        customerEmails.add(customerEmail);
     }
 
     @Override
