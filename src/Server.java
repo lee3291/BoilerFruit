@@ -50,7 +50,7 @@ public class Server implements Runnable {
         Seller productSeller = (Seller) users.get(sellerEmail);
         Store productStore = productSeller.getStores().get(storeName);
 
-        synchronized (sentinel) {
+        synchronized (sentinel) { // TODO: checking concurrency
             for (Product p : productStore.getCurrentProducts()) {
                 // Found the product
                 if (p.getName().equalsIgnoreCase(productName)) {
@@ -228,7 +228,7 @@ public class Server implements Runnable {
     private void modifyProduct(ObjectOutputStream output, String oldName, String newName, String storeName, String description,
                                String strPrice, String strQuantity) throws IOException {
         // Get the store
-        Store store = ((Seller) currentUser).getStores().get(storeName);
+        Store store = ((Seller) currentUser).getStores().get(storeName); // TODO: concurrency?
 
         // Make sure new name is unique;
         if (!oldName.equalsIgnoreCase(newName)) {
@@ -275,7 +275,7 @@ public class Server implements Runnable {
     private void addProduct(ObjectOutputStream output, String name, String storeName, String description,
                             String strPrice, String strQuantity) throws IOException {
         // Get the store
-        Store store = ((Seller) currentUser).getStores().get(storeName);
+        Store store = ((Seller) currentUser).getStores().get(storeName); // TODO: concurrency?
 
         // Add the product
         Product newProduct = new Product(name, storeName, description,
@@ -398,9 +398,10 @@ public class Server implements Runnable {
     }
 
     /**
-     * Close the socket
+     * Set user's online status to false and close the socket
      */
     private void logOut() throws IOException {
+        currentUser.setOnline(false);
         socket.close();
     }
 
@@ -414,7 +415,42 @@ public class Server implements Runnable {
      * @param password password of the client
      */
     private void logIn(ObjectOutputStream output, String id, String password) throws IOException {
+        User user; // logging in user
 
+        // Passed in id can be email
+        if ((user = users.get(id)) != null) {
+            if (user.getPassword().equals(password)) {
+                currentUser = user;
+                user.setOnline(true);
+
+                output.writeObject(true);
+            }
+
+            else {
+                output.writeObject(false);
+            }
+            output.flush();
+        }
+
+        // Passed in id can be username
+        else {
+            for(User u : users.values()) {
+                if (u.getUserName().equals(id)) {
+                    if (u.getPassword().equals(password)) {
+                        currentUser = u;
+                        u.setOnline(true);
+
+                        output.writeObject(true);
+                        output.flush();
+                        return;
+                    }
+                }
+            }
+
+            // No matched username or email
+            output.writeObject(false);
+            output.flush();
+        }
     }
 
     /**
@@ -451,6 +487,8 @@ public class Server implements Runnable {
         if (type.equals("Customer")) {
             Customer newCustomer = new Customer(username, email, password);
             users.put(email, newCustomer);
+            currentUser = newCustomer;
+            currentUser.setOnline(true);
 
             output.writeObject(1);
             output.flush();
@@ -460,6 +498,8 @@ public class Server implements Runnable {
         else if (type.equals("Seller")){
             Seller newSeller = new Seller(username, email, password);
             users.put(email, newSeller);
+            currentUser = newSeller;
+            currentUser.setOnline(true);
 
             output.writeObject(1);
             output.flush();
