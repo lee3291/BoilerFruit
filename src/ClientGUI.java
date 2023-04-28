@@ -19,11 +19,11 @@ public class ClientGUI implements Runnable {
         createGUI();
 //        loginPage();
 //        signUpPage();
-//        sellerPage();
+        sellerPage(new ArrayList<>());
 //        ArrayList<Product> products = new ArrayList<>();
 //        customerPage(products);
 //        editAccountPage();
-        reviewHistoryPage();
+//        reviewHistoryPage();
     }
 
     void createGUI() {
@@ -645,12 +645,15 @@ public class ClientGUI implements Runnable {
         JButton editAccountButton = new JButton("Edit Account");
         editAccountButton.setPreferredSize(new Dimension(100, 50));
         editAccountButton.setMaximumSize(editAccountButton.getPreferredSize());
-         editAccountButton.addActionListener(e -> editAccountPage());
+        editAccountButton.addActionListener(e -> editAccountPage());
 
         JButton logOutButton = new JButton("Log Out");
         logOutButton.setPreferredSize(new Dimension(100 ,50));
         logOutButton.setMaximumSize(logOutButton.getPreferredSize());
-        logOutButton.addActionListener(e -> loginPage());
+        logOutButton.addActionListener(e -> {
+            // TODO: send Log out message to server
+            loginPage();
+        });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(userType);
@@ -671,16 +674,56 @@ public class ClientGUI implements Runnable {
         createStoreButton.setPreferredSize(new Dimension(100, 50));
         createStoreButton.setMaximumSize(createStoreButton.getPreferredSize());
         createStoreButton.addActionListener(e -> {
-            // TODO: call to server to create new store
-            updateFrame();
+            // Getting Create store name
+            String storeName = JOptionPane.showInputDialog(null, "Enter a New Store Name:",
+                    "Create Store", JOptionPane.QUESTION_MESSAGE);
+
+            // User close the GUI; terminal the program; do nothing
+            if (storeName == null) {
+                return;
+            }
+
+            // Store name is empty
+            else if (storeName.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Store name cannot be empty!",
+                        "ERROR - Create Store", JOptionPane.ERROR_MESSAGE);
+            }
+
+            // Make query and send to server
+            else {
+                String serverQuery = String.format("CRTSTR_%s", storeName);
+
+                ArrayList<Store> newStores = new ArrayList<>(); // TODO: send query & receive newStores from server
+                sellerPage(newStores);
+            }
         });
 
         JButton deleteStoreButton = new JButton("Delete Store");
         deleteStoreButton.setPreferredSize(new Dimension(100, 50));
         deleteStoreButton.setMaximumSize(deleteStoreButton.getPreferredSize());
         deleteStoreButton.addActionListener(e -> {
-            // TODO: call to server to delete store
-            updateFrame();
+            // Getting Delete store name
+            String storeName = JOptionPane.showInputDialog(null,
+                    "Enter a Store Name to be deleted:", "Delete Store", JOptionPane.QUESTION_MESSAGE);
+
+            // User close the GUI; terminal the program; do nothing
+            if (storeName == null) {
+                return;
+            }
+
+            // Input is empty
+            else if (storeName.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Store name cannot be empty!",
+                        "ERROR - Delete Store", JOptionPane.ERROR_MESSAGE);
+            }
+
+            // Make query and send to server
+            else {
+                String serverQuery = String.format("DELSTR_%s", storeName);
+
+                ArrayList<Store> newStores = new ArrayList<>(); // TODO: send query & receive newStores from server
+                sellerPage(newStores);
+            }
         });
 
         southPanel.add(createStoreButton);
@@ -727,7 +770,7 @@ public class ClientGUI implements Runnable {
         storeList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 Store store = userStores.getSelectedValue();
-                storePage(store);
+                storePage(store, store.getCurrentProducts());
             }
         });
 
@@ -741,9 +784,9 @@ public class ClientGUI implements Runnable {
         updateFrame();
     }
 
-    void storePage(Store store) {
+    void storePage(Store store, ArrayList<Product> products) {
+        // Setting up store page frame
         resetFrame();
-
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new BorderLayout());
 
@@ -781,7 +824,7 @@ public class ClientGUI implements Runnable {
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            storePage(store);
+            storePage(store, products); //TODO: call to server for new store?
         });
 
         northPanel.add(searchBar);
@@ -804,8 +847,10 @@ public class ClientGUI implements Runnable {
         addProductButton.setPreferredSize(new Dimension(120, 50));
         addProductButton.setMaximumSize(addProductButton.getPreferredSize());
         addProductButton.addActionListener(e -> {
-            // TODO: get client's product detail and send to server
-            updateFrame();
+            // TODO: send query and read from server
+            String query = addProductPage(store);
+            ArrayList<Product> newProductList = new ArrayList<>();
+            storePage(store, products);
         });
 
         JButton backButton = new JButton("Go Back");
@@ -813,7 +858,9 @@ public class ClientGUI implements Runnable {
         backButton.setMaximumSize(backButton.getPreferredSize());
         backButton.addActionListener(e -> {
             // TODO: Get stores ArrayList from server.
-            // sellerPage(Stores);
+            String query = "GETSELLSTR_-1";
+            ArrayList<Store> updateStores = new ArrayList<>();
+            sellerPage(updateStores);
         });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
@@ -890,15 +937,36 @@ public class ClientGUI implements Runnable {
         modifyButton.setPreferredSize(new Dimension(100 ,50));
         modifyButton.setMaximumSize(modifyButton.getPreferredSize());
         modifyButton.addActionListener(e -> {
+            Product selectedProduct = currentProducts.getSelectedValue();
+            if (selectedProduct == null) {
+                JOptionPane.showMessageDialog(null, "Need to select a product first!",
+                        "ERROR - Modify Product", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+
             // TODO: get product's new info and send to server
-            updateFrame();
+            String query = modifyProductPage(selectedProduct);
+            ArrayList<Product> newProductList = new ArrayList<>();
+            storePage(store, products);
         });
 
         JButton deleteButton = new JButton("Delete");
         deleteButton.setPreferredSize(new Dimension(100 ,50));
         deleteButton.setMaximumSize(deleteButton.getPreferredSize());
         deleteButton.addActionListener(e -> {
+            Product selectedProduct = currentProducts.getSelectedValue();
+            if (selectedProduct == null) {
+                JOptionPane.showMessageDialog(null, "Need to select a product first!",
+                        "ERROR - Delete Product", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             // TODO: delete the selected product from server
+            String query = String.format("DELPROD_%s_%s_%s",
+                    store.getSellerName(), selectedProduct.getStore(), selectedProduct.getName());
+            ArrayList<Product> newProductList = new ArrayList<>();
+            storePage(store, products);
             updateFrame();
         });
 
@@ -916,6 +984,28 @@ public class ClientGUI implements Runnable {
 
         frame.add(jPanel);
         updateFrame();
+    }
+
+    /**
+     * Page for adding new product
+     * @param store the store of the new product
+     * @return a new query string that contain necessary information to send to server
+     */
+    static String addProductPage(Store store) {
+//        Product newProduct;
+//        // TODO: get user input
+//        return String.format("ADDPROD_%s_%s_%s_%.2f_%d",
+//                newProduct.getName(), newProduct.getStore(), newProduct.getDescription(), newProduct.getPrice(),
+//                newProduct.getQuantity());
+        return new String();
+    }
+
+    /**
+     * Page for modify product
+     * @param oldProduct the product to be modified
+     */
+    static String modifyProductPage(Product oldProduct) {
+        return new String();
     }
 
     static void updateFrame() {
