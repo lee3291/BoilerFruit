@@ -429,11 +429,11 @@ public class Server implements Runnable {
                         queryComponents[4], queryComponents[5]);
             }
 
-            // Modifying a store's product (Query: MODPROD_productName_storeName_description_price_quantity)
+            // Modifying a store's product (Query: MODPROD_productOldName_productNewName_storeName_description_price_quantity)
             case "MODPROD" -> {
                 System.out.printf("Received Query: %s\n->Calling modifyProduct()\n", query);
                 modifyProduct(output, queryComponents[1], queryComponents[2], queryComponents[3],
-                        queryComponents[4], queryComponents[5]);
+                        queryComponents[4], queryComponents[5], queryComponents[6]);
 
             }
 
