@@ -8,6 +8,22 @@ public class Seller implements Serializable {
     private ArrayList<String> inbox;
     private ArrayList<Store> stores;
 
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public Seller(String userName, String email, String password, ArrayList<String> inbox, ArrayList<Store> stores) {
         this.userName = userName;
         this.email = email;

@@ -60,16 +60,16 @@ public class Store implements Serializable {
      *
      * @param newProduct the product to be added
      */
-    public void addProduct(Product newProduct) {
+    public boolean addProduct(Product newProduct) {
         // Check if product already exist; increase the existing product quantity if it existed
         for (Product product : currentProducts) {
             if (product.getName().equalsIgnoreCase(newProduct.getName())) {
-                product.setQuantity(newProduct.getQuantity() + product.getQuantity());
-                return;
+                return false;
             }
         }
         // Add new product to listing if the product is new
         currentProducts.add(newProduct);
+        return true;
     }
 
     /**
@@ -77,11 +77,16 @@ public class Store implements Serializable {
      * increase the quantity by the product's quantity
      *
      * @param products the array list of products to be added
+     * @return the number of new products that are added
      */
-    public void addMultipleProducts(ArrayList<Product> products) {
+    public int addMultipleProducts(ArrayList<Product> products) {
+        int result = 0;
         for (Product product : products) {
-            addProduct(product);
+            if (addProduct(product)) {
+                result++;
+            }
         }
+        return result;
     }
 
     /**
