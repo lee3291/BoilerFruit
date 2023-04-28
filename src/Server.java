@@ -423,12 +423,47 @@ public class Server implements Runnable {
      * Send a  0 integer object to client if email is taken
      * Send a -1 integer object to client if username is taken
      * @param output the output stream to communicate with client
+     * @param type the usertype (Customer or Seller)
      * @param username the username of the new user
      * @param email the email of the new user
      * @param password the password of the new user
      */
-    private void signUp(ObjectOutputStream output, String username, String email, String password) throws IOException {
+    private void signUp(ObjectOutputStream output,
+                        String type, String username, String email, String password) throws IOException {
+        // Validate email
+        User checker = users.get(email);
+        if (checker != null) {
+            output.writeObject(0);
+            output.flush();
+            return;
+        }
 
+        // Validate username
+        for (User user : users.values()) {
+            if (user.getUserName().equals(username)) {
+                output.writeObject(-1);
+                output.flush();
+                return;
+            }
+        }
+
+        // User is customer
+        if (type.equals("Customer")) {
+            Customer newCustomer = new Customer(username, email, password);
+            users.put(email, newCustomer);
+
+            output.writeObject(1);
+            output.flush();
+        }
+
+        // User is seller
+        else if (type.equals("Seller")){
+            Seller newSeller = new Seller(username, email, password);
+            users.put(email, newSeller);
+
+            output.writeObject(1);
+            output.flush();
+        }
     }
 
     /**
@@ -449,7 +484,7 @@ public class Server implements Runnable {
             // Signing up (Query: SIGNUP_username_email_password)
             case "SIGNUP" -> {
                 System.out.printf("Received Query: %s\n->Calling signUp()\n", query);
-                signUp(output, queryComponents[1], queryComponents[2], queryComponents[3]);
+                signUp(output, queryComponents[1], queryComponents[2], queryComponents[3], queryComponents[4]);
             }
 
             // Logging in (Query: LOGIN_username/email_password)
