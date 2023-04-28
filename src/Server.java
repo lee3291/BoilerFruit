@@ -202,7 +202,15 @@ public class Server implements Runnable {
      */
     private void deleteProduct(ObjectOutputStream output, String sellerEmail,
                                String storeName, String productName) throws IOException {
-
+        Seller seller = (Seller) users.get(sellerEmail);
+        Store store = seller.getStores().get(storeName);
+        if (store.removeProduct(productName)) {
+            output.writeObject(true);
+            output.flush();
+        } else {
+            output.writeObject(false);
+            output.flush();
+        }
     }
 
     /**
@@ -336,11 +344,17 @@ public class Server implements Runnable {
     }
 
     /**
-     * Send a string object containing the {@link #currentUser}'s username to the client
+     * Send a string object containing the {@link #currentUser}'s usertype (customer or seller) to the client
      * @param output the output stream to communicate with client
      */
     private void getUserType(ObjectOutputStream output) throws IOException {
-
+        if (currentUser instanceof Customer) {
+            output.writeObject("Customer");
+            output.flush();
+        } else {
+            output.writeObject("Seller");
+            output.flush();
+        }
     }
 
     /**
@@ -348,7 +362,8 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getUserEmail(ObjectOutputStream output) throws IOException {
-
+        output.writeObject(currentUser.getEmail());
+        output.flush();
     }
 
     /**
@@ -356,7 +371,8 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getUserName(ObjectOutputStream output) throws IOException {
-
+        output.writeObject(currentUser.getUserName());
+        output.flush();
     }
 
     /**
