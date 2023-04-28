@@ -22,11 +22,12 @@ public class ClientGUI implements Runnable {
         createGUI();
 //        loginPage();
 //        signUpPage();
-//        sellerPage();
+//        ArrayList<Store> stores = new ArrayList<>();
+//        sellerPage(stores);
 //        ArrayList<Product> products = new ArrayList<>();
 //        customerPage(products);
 //        editAccountPage();
-        reviewHistoryPage();
+//        reviewHistoryPage();
     }
 
     void createGUI() {
@@ -221,7 +222,7 @@ public class ClientGUI implements Runnable {
                 JOptionPane.showMessageDialog(frame, emailErrorMessage, "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
-            
+
             //TODO: Client-Server implementation, send id and email to server and check if they already exist!
         });
         buttonPanel.add(Box.createRigidArea(new Dimension(172, 0)));
@@ -470,6 +471,15 @@ public class ClientGUI implements Runnable {
         });
         idTxt.setMaximumSize(new Dimension(200, 50));
         JButton idChangeButton = new JButton("Change ID");
+        idChangeButton.addActionListener(e -> {
+            String newId = idTxt.getText();
+            if ((newId.length() < USERINFO_MIN_LENGTH) || (newId.length() > USERINFO_MAX_LENGTH)) {
+                String idErrorMessage = String.format("Username must be %d-%d characters!", USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
+                JOptionPane.showMessageDialog(frame, idErrorMessage, "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+            //TODO: send to server to check if it already exists and change field
+        });
 
         secondPanel.add(Box.createRigidArea(new Dimension(250, 0)));
         secondPanel.add(idLabel);
@@ -504,6 +514,16 @@ public class ClientGUI implements Runnable {
 
         pwTxt.setMaximumSize(new Dimension(200, 50));
         JButton pwChangeButton = new JButton("Change PW");
+        pwChangeButton.addActionListener(e -> {
+            String newPw = pwTxt.getText();
+            if ((newPw.length() < USERINFO_MIN_LENGTH) || (newPw.length() > USERINFO_MAX_LENGTH)) {
+                String pwErrorMessage = String.format("Password must be %d-%d characters!",
+                        USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
+                JOptionPane.showMessageDialog(frame, pwErrorMessage, "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+            //TODO: send to server and change field
+        });
 
         thirdPanel.add(Box.createRigidArea(new Dimension(240, 0)));
         thirdPanel.add(pwLabel);
