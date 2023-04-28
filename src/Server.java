@@ -329,7 +329,24 @@ public class Server implements Runnable {
      * @param storeName the name of the store to be deleted
      */
     private void deleteStore(ObjectOutputStream output, String storeName) throws IOException {
+        // @Ethan
+        Boolean returnObject; // Wrapper class Boolean in order to write boolean object.
+        if (!(currentUser instanceof Seller)) {
+            returnObject = Boolean.FALSE;
+            output.writeObject(returnObject);
+            output.flush();
+        }
+        // Get currentUser, user's stores.
+        Seller thisSeller = (Seller) currentUser;
+        HashMap<String, Store> storesOfCurrentUser = thisSeller.getStores();
 
+        if (storesOfCurrentUser.remove(storeName) == null) { // remove store, if store does not exist, returns null.
+            returnObject = Boolean.FALSE;
+        } else { // if it successfully removed, returns the value of the object.
+            returnObject = Boolean.TRUE;
+        }
+        output.writeObject(returnObject);
+        output.flush();
     }
 
     /**
@@ -377,10 +394,18 @@ public class Server implements Runnable {
 
     /**
      * Delete the user in {@link #users} associate with the given email
+     * ----------------------------------------------
+     *
+     * In addition, end socket and thread?
+     * The client side should automatically send the user to logInPage.
+     *
+     * ----------------------------------------------
      * @param email the email of the account to be deleted
      */
-    private void deleteAccount(String email) {
-
+    private void deleteAccount(String email) throws IOException {
+        // @Ethan
+        users.remove(email);
+        logOut();
     }
 
     /**
