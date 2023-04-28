@@ -405,7 +405,7 @@ public class Server implements Runnable {
     private void deleteAccount(String email) throws IOException {
         // @Ethan
         users.remove(email);
-        logOut();
+        logOut(); // client side should send the user to logInPage
     }
 
     /**
@@ -426,8 +426,8 @@ public class Server implements Runnable {
      * Set user's online status to false and close the socket
      */
     private void logOut() throws IOException {
-        currentUser.setOnline(false);
-        socket.close();
+        currentUser.setOnline(false); // set user to offline
+        currentUser = null; // set current user to null, in case a different user logs in before the socket is lost
     }
 
     /**
