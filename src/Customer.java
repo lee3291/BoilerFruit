@@ -1,9 +1,10 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * Customer class that extends User, contains shoppingCart field and itemsPurchased field.
  */
-public class Customer extends User {
+public class Customer extends User implements Serializable {
     private ArrayList<String> purchaseHistory; // Each string will contain information about one purchase.
     // item name, quantity, price, store,
 
