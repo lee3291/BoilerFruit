@@ -3,9 +3,11 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Flow;
@@ -85,7 +87,19 @@ public class ClientGUI implements Runnable {
                 JOptionPane.showMessageDialog(frame, "IP Address must be filled in!", "Error",
                         JOptionPane.ERROR_MESSAGE);
             } else {
-                // TODO: Server connection
+                try {
+                    socket = new Socket(ipAddress, 8080);
+                    ois = new ObjectInputStream(socket.getInputStream());
+                    oos = new ObjectOutputStream(socket.getOutputStream());
+                    oos.flush();
+                    loginPage();
+                } catch (UnknownHostException ex) {
+                    JOptionPane.showMessageDialog(frame, "Unknown Host! Please Try Again!", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(frame, "Failed to connect to Server!", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
         centerPanel.add(Box.createRigidArea(new Dimension(270, 0)));
