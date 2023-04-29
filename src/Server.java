@@ -589,8 +589,17 @@ public class Server implements Runnable {
             Customer newCustomer = new Customer(username, email, password);
             users.put(email, newCustomer);
             currentUser = newCustomer;
-            currentUser.setOnline(true);
 
+            // TODO: delete after debug
+            System.out.printf("Customer|%s|%s|%s\n", username, email, password);
+            for (User u : users.values()) {
+                System.out.println("User: ");
+                System.out.println(u.getUserName());
+                System.out.println(u.getEmail());
+                System.out.println(u.getPassword());
+                System.out.println(u.isOnline());
+                System.out.println("-----");
+            }
             output.writeObject(1);
             output.flush();
         }
@@ -600,8 +609,17 @@ public class Server implements Runnable {
             Seller newSeller = new Seller(username, email, password);
             users.put(email, newSeller);
             currentUser = newSeller;
-            currentUser.setOnline(true);
 
+            // TODO: delete after debug
+            System.out.printf("Seller|%s|%s|%s\n", username, email, password);
+            for (User u : users.values()) {
+                System.out.println("User: ");
+                System.out.println(u.getUserName());
+                System.out.println(u.getEmail());
+                System.out.println(u.getPassword());
+                System.out.println(u.isOnline());
+                System.out.println("-----");
+            }
             output.writeObject(1);
             output.flush();
         }

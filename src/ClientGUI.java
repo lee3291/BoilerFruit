@@ -4,12 +4,10 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ClientGUI implements Runnable {
 
@@ -245,15 +243,9 @@ public class ClientGUI implements Runnable {
         JPanel secondRowPanel = new JPanel();
         secondRowPanel.setLayout(new BoxLayout(secondRowPanel, BoxLayout.Y_AXIS));
         String[] userType = {"Customer", "Seller"};
-        AtomicReference<String> userTypeStr = new AtomicReference<>();
         JComboBox jcomboBox = new JComboBox(userType);
         jcomboBox.setPreferredSize(new Dimension(200, 30));
         jcomboBox.setMaximumSize(jcomboBox.getPreferredSize());
-        jcomboBox.addActionListener(e -> {
-            if (e.getSource() == jcomboBox) {
-                userTypeStr.set((String) jcomboBox.getSelectedItem());
-            }
-        });
         secondRowPanel.add(jcomboBox);
         topPanel.add(secondRowPanel);
         jPanel.add(topPanel);
@@ -327,34 +319,31 @@ public class ClientGUI implements Runnable {
             } else if (id.contains("_") || pw.contains("_") || email.contains("_")) {
                 JOptionPane.showMessageDialog(frame, "Do not include '_' in the fields!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
-            }
-
-            // Send query to server
-            Object obj;
-            String signUpQuery = String.format("SIGNUP_%s_%s_%s_%s", userTypeStr.get(), id, email, pw);
-            try {
-                System.out.println(signUpQuery);
-                printWriter.println(signUpQuery);
-                printWriter.flush();
-                obj = ois.readObject();
-                int response = (Integer) obj;
-                if (response == 1) {
-                    JOptionPane.showMessageDialog(frame, "Please Log-In", "Sign Up Complete",
-                            JOptionPane.PLAIN_MESSAGE);
-                    loginPage();
-                } else if (response == -1) {
-                    JOptionPane.showMessageDialog(frame, "Username already exists!", "ERROR",
-                            JOptionPane.ERROR_MESSAGE);
-                } else if (response == 0) {
-                    JOptionPane.showMessageDialog(frame, "Email already exists!", "ERROR",
+            } else {
+                // Send query to server
+                String signUpQuery = String.format("SIGNUP_%s_%s_%s_%s", jcomboBox.getSelectedItem(), id, email, pw);
+                try {
+                    printWriter.println(signUpQuery);
+                    printWriter.flush();
+                    int response = (Integer) ois.readObject();;
+                    if (response == 1) {
+                        JOptionPane.showMessageDialog(frame,
+                                "Sign Up Complete. Please Log-In Again!",
+                                "SUCCESS", JOptionPane.PLAIN_MESSAGE);
+                        loginPage();
+                    } else if (response == -1) {
+                        JOptionPane.showMessageDialog(frame, "Username already exists!", "ERROR",
+                                JOptionPane.ERROR_MESSAGE);
+                    } else if (response == 0) {
+                        JOptionPane.showMessageDialog(frame, "Email already exists!", "ERROR",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
                             JOptionPane.ERROR_MESSAGE);
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
-                        JOptionPane.ERROR_MESSAGE);
             }
-
         });
         buttonPanel.add(Box.createRigidArea(new Dimension(172, 0)));
         buttonPanel.add(goBackButton);
@@ -432,7 +421,11 @@ public class ClientGUI implements Runnable {
         JButton logOutButton = new JButton("Log Out");
         logOutButton.setPreferredSize(new Dimension(100 ,50));
         logOutButton.setMaximumSize(logOutButton.getPreferredSize());
-        logOutButton.addActionListener(e -> loginPage());
+        logOutButton.addActionListener(e -> {
+            printWriter.println("LOGOUT");
+            printWriter.flush();
+            loginPage();
+        });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(userType);
