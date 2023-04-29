@@ -22,15 +22,11 @@ public class ClientGUI implements Runnable {
     public final int USERINFO_MAX_LENGTH = 15; // Max username/password length
     public final int USERINFO_MIN_LENGTH = 5; // Min username/password/email length
     public static void main(String[] args) {
-
-
         SwingUtilities.invokeLater(new ClientGUI());
-
     }
 
     @Override
     public void run() {
-
         createGUI();
         ipAddressPage();
 //        loginPage();
@@ -47,7 +43,6 @@ public class ClientGUI implements Runnable {
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new GridLayout(5, 0));
 
-
         JLabel welcomeMessage = new JLabel("Welcome to BoilerMarket");
         welcomeMessage.setHorizontalAlignment(JLabel.CENTER);
         welcomeMessage.setFont(new Font(null, Font.PLAIN, 30));
@@ -55,7 +50,6 @@ public class ClientGUI implements Runnable {
         JLabel promptMessage = new JLabel("Enter Server IP Address");
         promptMessage.setHorizontalAlignment(JLabel.CENTER);
         promptMessage.setFont(new Font(null, Font.PLAIN, 20));
-
 
         //-------------------------------
         JPanel centerPanel = new JPanel();
@@ -130,7 +124,6 @@ public class ClientGUI implements Runnable {
     void loginPage() {
         resetFrame();
 
-        //TODO: Add action listeners, error message for invalid input
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new GridLayout(5, 0));
 
@@ -186,9 +179,45 @@ public class ClientGUI implements Runnable {
                 JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
+            String query = String.format("LOGIN_%s/email_%s", id, pw);
+            try {
+                Object obj;
 
-            // TODO: Sign in info is valid, send user to customer page or seller page
-            // TODO: Client-Server implementation comes here. Wrong ID & Pw error message with JOptionPane
+                oos.writeObject(query); // query for login
+                oos.flush();
+
+                obj = ois.readObject();
+                int response = ((Integer) obj).intValue();
+
+                if (response == -1) {
+                    JOptionPane.showMessageDialog(frame, "Incorrect Account Information!", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                } else if (response == 0) {
+                    // CustomerPage, get products from server.
+                    oos.writeObject("GETMRKPROD_-1"); // get all products query.
+                    oos.flush();
+                    obj = ois.readObject();
+                    ArrayList<Product> allProducts = (ArrayList<Product>) obj;
+                    customerPage(allProducts);
+                } else if (response == 1) {
+                    // SellerPage, get stores query
+                    // Get user email query, since log in is successful, "currentUser" in server is this user.
+                    oos.writeObject("EMAIL");
+                    oos.flush();
+                    obj = ois.readObject();
+                    String userEmail = (String) obj;
+
+                    // get stores query
+                    oos.writeObject("GETSELLSTR_-1");
+                    oos.flush();
+                    obj = ois.readObject();
+                    ArrayList<Store> userStores = (ArrayList<Store>) obj;
+                    sellerPage(userStores);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton signUpButton = new JButton("Sign Up");

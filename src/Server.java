@@ -760,7 +760,6 @@ public class Server implements Runnable {
                 output.flush();
                 while (input.hasNextLine()) {
                     String command = input.nextLine();
-                    System.out.printf("Received command: %s", command);
                     processCommand(command, output);
                 }
             }
