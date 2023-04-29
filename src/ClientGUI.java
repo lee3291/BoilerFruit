@@ -2,11 +2,22 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.net.NoRouteToHostException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.Flow;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ClientGUI implements Runnable {
-    static JFrame frame;
+
+    JFrame frame;
+    Socket socket;
+    ObjectInputStream ois;
+    ObjectOutputStream oos;
     public final int USERINFO_MAX_LENGTH = 15; // Max username/password length
     public final int USERINFO_MIN_LENGTH = 5; // Min username/password/email length
     public static void main(String[] args) {
@@ -16,14 +27,84 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
+        ipAddressPage();
 //        loginPage();
 //        signUpPage();
-//        addProductPage(new Store("abc", "xzy"));
-//        modifyProductPage(new Store("abc", "xzy"));
-        sellerPage(new ArrayList<>());
+//        sellerPage(new ArrayList<>());
 //        customerPage(new ArrayList<>());
 //        editAccountPage();
 //        reviewHistoryPage();
+    }
+
+    void ipAddressPage() {
+        resetFrame();
+
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new GridLayout(5, 0));
+
+        JLabel welcomeMessage = new JLabel("Welcome to BoilerMarket");
+        welcomeMessage.setHorizontalAlignment(JLabel.CENTER);
+        welcomeMessage.setFont(new Font(null, Font.PLAIN, 30));
+
+        JLabel promptMessage = new JLabel("Enter Server IP Address");
+        promptMessage.setHorizontalAlignment(JLabel.CENTER);
+        promptMessage.setFont(new Font(null, Font.PLAIN, 20));
+
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.X_AXIS));
+
+        JTextField ipAddressTxt = new JTextField("localhost", 10);
+        ipAddressTxt.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (ipAddressTxt.getText().equals("localhost")) {
+                    ipAddressTxt.setText("");}
+                ipAddressTxt.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (ipAddressTxt.getText().isEmpty()) {
+                    ipAddressTxt.setForeground(Color.GRAY);
+                    ipAddressTxt.setText("localhost");
+                }
+            }
+        });
+        ipAddressTxt.setMaximumSize(new Dimension(200, 50));
+
+        JButton enterButton = new JButton("Enter");
+        enterButton.addActionListener(e -> {
+            String ipAddress = ipAddressTxt.getText();
+            if (ipAddress.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "IP Address must be filled in!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                try {
+                    socket = new Socket(ipAddress, 8080);
+                    ois = new ObjectInputStream(socket.getInputStream());
+                    oos = new ObjectOutputStream(socket.getOutputStream());
+                    oos.flush();
+                    loginPage();
+                } catch (UnknownHostException ex) {
+                    JOptionPane.showMessageDialog(frame, "Unknown Host! Please Try Again!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(frame, "Failed to connect to Server!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        centerPanel.add(Box.createRigidArea(new Dimension(270, 0)));
+        centerPanel.add(ipAddressTxt);
+        centerPanel.add(enterButton);
+
+        jPanel.add(welcomeMessage);
+        jPanel.add(promptMessage);
+        jPanel.add(centerPanel);
+
+        frame.add(jPanel);
+
+        updateFrame();
     }
 
     void createGUI() {
@@ -39,7 +120,6 @@ public class ClientGUI implements Runnable {
     void loginPage() {
         resetFrame();
 
-        //TODO: Add action listeners, error message for invalid input
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new GridLayout(5, 0));
 
@@ -91,12 +171,49 @@ public class ClientGUI implements Runnable {
             String pw = pwTxt.getText();
 
             if (id.isEmpty() || pw.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
+            String query = String.format("LOGIN_%s/email_%s", id, pw);
+            try {
+                Object obj;
 
-            // TODO: Sign in info is valid, send user to customer page or seller page
-            // TODO: Client-Server implementation comes here. Wrong ID & Pw error message with JOptionPane
+                oos.writeObject(query); // query for login
+                oos.flush();
+
+                obj = ois.readObject();
+                int response = ((Integer) obj).intValue();
+
+                if (response == -1) {
+                    JOptionPane.showMessageDialog(frame, "Incorrect Account Information!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                } else if (response == 0) {
+                    // CustomerPage, get products from server.
+                    oos.writeObject("GETMRKPROD_-1"); // get all products query.
+                    oos.flush();
+                    obj = ois.readObject();
+                    ArrayList<Product> allProducts = (ArrayList<Product>) obj;
+                    customerPage(allProducts);
+                } else if (response == 1) {
+                    // SellerPage, get stores query
+                    // Get user email query, since log in is successful, "currentUser" in server is this user.
+                    oos.writeObject("EMAIL");
+                    oos.flush();
+                    obj = ois.readObject();
+                    String userEmail = (String) obj;
+
+                    // get stores query
+                    oos.writeObject("GETSELLSTR_-1");
+                    oos.flush();
+                    obj = ois.readObject();
+                    ArrayList<Store> userStores = (ArrayList<Store>) obj;
+                    sellerPage(userStores);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton signUpButton = new JButton("Sign Up");
@@ -115,7 +232,6 @@ public class ClientGUI implements Runnable {
     }
 
     void signUpPage() {
-        //TODO: Modify sizes, and add the remaining components.
         resetFrame();
 
         JPanel jPanel = new JPanel();
@@ -135,20 +251,18 @@ public class ClientGUI implements Runnable {
         JPanel secondRowPanel = new JPanel();
         secondRowPanel.setLayout(new BoxLayout(secondRowPanel, BoxLayout.Y_AXIS));
         String[] userType = {"Customer", "Seller"};
+        AtomicReference<String> userTypeStr = new AtomicReference<>();
         JComboBox jcomboBox = new JComboBox(userType);
         jcomboBox.setPreferredSize(new Dimension(200, 30));
         jcomboBox.setMaximumSize(jcomboBox.getPreferredSize());
         jcomboBox.addActionListener(e -> {
             if (e.getSource() == jcomboBox) {
-                String userTypeStr = (String) jcomboBox.getSelectedItem();
-                //TODO: Client-Server implementation here
+                userTypeStr.set((String) jcomboBox.getSelectedItem());
             }
         });
         secondRowPanel.add(jcomboBox);
         topPanel.add(secondRowPanel);
         jPanel.add(topPanel);
-
-
 
         // mid panel, for ID, PW, email labels and text fields
         JPanel midPanel = new JPanel();
@@ -199,7 +313,7 @@ public class ClientGUI implements Runnable {
 
             // id, pw, email validity check
             if (id.isEmpty() || pw.isEmpty() || email.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             } else if ((id.length() < USERINFO_MIN_LENGTH) || (id.length() > USERINFO_MAX_LENGTH)) {
                 String idErrorMessage = String.format("Please enter a username that is between %d-%d characters!",
@@ -216,9 +330,36 @@ public class ClientGUI implements Runnable {
                         "It must be minimum of %d characters and include '@' and '.'", USERINFO_MIN_LENGTH);
                 JOptionPane.showMessageDialog(frame, emailErrorMessage, "Error",
                         JOptionPane.ERROR_MESSAGE);
+            } else if (id.contains("_") || pw.contains("_") || email.contains("_")) {
+                JOptionPane.showMessageDialog(frame, "Do not include '_' in the fields!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
             }
 
-            //TODO: Client-Server implementation, send id and email to server and check if they already exist!
+            // Send query to server
+            Object obj;
+            String signUpQuery = String.format("SIGNUP_%s_%s_%s_%s", userTypeStr.get(), id, email, pw);
+            try {
+                oos.writeObject(signUpQuery);
+                oos.flush();
+                obj = ois.readObject();
+                int response = ((Integer) obj).intValue();
+                if (response == 1) {
+                    JOptionPane.showMessageDialog(frame, "Please Log-In", "Sign Up Complete",
+                            JOptionPane.PLAIN_MESSAGE);
+                    loginPage();
+                } else if (response == -1) {
+                    JOptionPane.showMessageDialog(frame, "Username already exists!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                } else if (response == 0) {
+                    JOptionPane.showMessageDialog(frame, "Email already exists!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+
         });
         buttonPanel.add(Box.createRigidArea(new Dimension(172, 0)));
         buttonPanel.add(goBackButton);
@@ -263,7 +404,7 @@ public class ClientGUI implements Runnable {
         searchButton.addActionListener(e -> {
             String query = searchBar.getText();
             if (query.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
             //TODO: Client-Server implementation, send query to server
@@ -470,7 +611,10 @@ public class ClientGUI implements Runnable {
             String newId = idTxt.getText();
             if ((newId.length() < USERINFO_MIN_LENGTH) || (newId.length() > USERINFO_MAX_LENGTH)) {
                 String idErrorMessage = String.format("Username must be %d-%d characters!", USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
-                JOptionPane.showMessageDialog(frame, idErrorMessage, "Error",
+                JOptionPane.showMessageDialog(frame, idErrorMessage, "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            } else if (newId.contains("_")) {
+                JOptionPane.showMessageDialog(frame, "Do not include '_' in the fields!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
             //TODO: send to server to check if it already exists and change field
@@ -514,7 +658,10 @@ public class ClientGUI implements Runnable {
             if ((newPw.length() < USERINFO_MIN_LENGTH) || (newPw.length() > USERINFO_MAX_LENGTH)) {
                 String pwErrorMessage = String.format("Password must be %d-%d characters!",
                         USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
-                JOptionPane.showMessageDialog(frame, pwErrorMessage, "Error",
+                JOptionPane.showMessageDialog(frame, pwErrorMessage, "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            } else if (newPw.contains("_")) {
+                JOptionPane.showMessageDialog(frame, "Do not include '_' in the fields!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
             //TODO: send to server and change field
@@ -602,7 +749,7 @@ public class ClientGUI implements Runnable {
             String filePath = JOptionPane.showInputDialog(frame, "Enter file path for export: ",
                     "Export Purchase History", JOptionPane.PLAIN_MESSAGE);
             if (filePath == null || filePath.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please give valid file path!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please give valid file path!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
             // TODO: server, export purchase history
@@ -647,9 +794,10 @@ public class ClientGUI implements Runnable {
         });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
-            if (searchBar.getText().equals("Search for store")) {
-                JOptionPane.showMessageDialog(null, "Please fill in blank field!",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+            String query = searchBar.getText();
+            if (query.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Please fill in blank field!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             String query = String.format("GETSELLSTR_%s", searchBar.getText());
@@ -853,8 +1001,9 @@ public class ClientGUI implements Runnable {
         });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
-            if (searchBar.getText().equals("Search for product name or description")) {
-                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
+            String query = searchBar.getText();
+            if (query.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -1485,12 +1634,12 @@ public class ClientGUI implements Runnable {
         updateFrame();
     }
 
-    static void updateFrame() {
+    void updateFrame() {
         frame.revalidate(); // Notifies layout manager that component has changed.
         frame.repaint(); // repaints the components
     }
 
-     static void resetFrame() {
+    void resetFrame() {
         frame.getContentPane().removeAll(); // Removes all components from frame.
         updateFrame();
     }
