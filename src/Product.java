@@ -3,7 +3,7 @@ import java.io.Serializable;
 public class Product implements Serializable {
     private String name;
     private final String storeName; // unique storeName
-    private final String sellerEmail;
+    private final String sellerEmail; // the seller's email of the product
     private String description;
     private double price;
     private int quantity; // available products in store OR item purchased
@@ -68,12 +68,13 @@ public class Product implements Serializable {
      * @return the String[] with the product's fields
      */
     public String[] productDetails() {
-        String[] productDetail = new String[5];
+        String[] productDetail = new String[6];
         productDetail[0] = name;
         productDetail[1] = storeName;
-        productDetail[2] = description;
-        productDetail[3] = String.valueOf(price);
-        productDetail[4] = String.valueOf(quantity);
+        productDetail[2] = sellerEmail;
+        productDetail[3] = description;
+        productDetail[4] = String.valueOf(price);
+        productDetail[5] = String.valueOf(quantity);
         return productDetail;
     }
 }

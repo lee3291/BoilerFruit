@@ -26,11 +26,11 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
-//        ipAddressPage();
+        ipAddressPage();
 //        loginPage();
 //        signUpPage();
 //        sellerPage(new ArrayList<>());
-        customerPage(new ArrayList<>());
+//        customerPage(new ArrayList<>());
 //        editAccountPage();
 //        reviewHistoryPage();
     }
@@ -195,10 +195,7 @@ public class ClientGUI implements Runnable {
                     // SellerPage, get stores query
                     // Get user email query, since log in is successful, "currentUser" in server is this user.
                     // get stores query
-                    printWriter.println("GETSELLSTR_-1");
-                    printWriter.flush();
-                    ArrayList<Store> userStores = (ArrayList<Store>) ois.readObject();
-                    sellerPage(userStores);
+                    sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -628,9 +625,10 @@ public class ClientGUI implements Runnable {
      * Query server for desired object.
      * @param query is the query convention in {@link Server}, processCommand method
      * @return the expected object
-     * @throws Exception
+     * @throws Exception IO and ClassNotFound exceptions
      */
     Object queryServer(String query) throws Exception {
+        System.out.println(query); // TODO: delete after debug
         printWriter.println(query); // get all products query.
         printWriter.flush();
         return ois.readObject();
@@ -829,11 +827,7 @@ public class ClientGUI implements Runnable {
                     // Get user email query, since log in is successful, "currentUser" in server is this user.
                     // get stores query
                     try {
-                        printWriter.println("GETSELLSTR_-1");
-                        printWriter.flush();
-                        obj1 = ois.readObject();
-                        ArrayList<Store> userStores = (ArrayList<Store>) obj1;
-                        sellerPage(userStores);
+                        sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
@@ -934,6 +928,10 @@ public class ClientGUI implements Runnable {
         updateFrame();
     }
 
+    /**
+     * The Page for Seller users
+     * @param stores the user's stores; used to make the page's component
+     */
     void sellerPage(ArrayList<Store> stores) { // this products will be allStores
         resetFrame();
 
@@ -974,15 +972,17 @@ public class ClientGUI implements Runnable {
 
             String query = String.format("GETSELLSTR_%s", searchBar.getText());
             //TODO: Client-Server implementation, send query to server
-            System.out.println(query);
         });
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            String query = "GETSELLSTR_-1";
-            // TODO: Get stores ArrayList from server
-            System.out.println(query);
-            // sellerPage(stores);
+            try {
+                sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         northPanel.add(searchBar);
@@ -995,7 +995,15 @@ public class ClientGUI implements Runnable {
         westPanel.setLayout(new BoxLayout(westPanel, BoxLayout.Y_AXIS));
 
         JLabel userType = new JLabel("  Seller"); // Space for alignment with buttons
-        String userNameStr = "  UserName123"; //TODO: Get from server
+        String userNameStr = "  Unknown User";
+        // Getting username from server
+        try {
+            userNameStr = "  " + queryServer("NAME");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                    "ERROR", JOptionPane.ERROR_MESSAGE);
+        }
         JLabel userNameLabel = new JLabel(userNameStr);
 
         JButton editAccountButton = new JButton("Edit Account");
@@ -1044,12 +1052,23 @@ public class ClientGUI implements Runnable {
             if (storeName.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Store name cannot be empty!",
                         "ERROR - Create Store", JOptionPane.ERROR_MESSAGE);
-            } else { // Make query and send to server
-                String serverQuery = String.format("CRTSTR_%s", storeName);
-                System.out.println(serverQuery);
+            } else {
+                try {
+                    // Make query and send to server
+                    String query = String.format("CRTSTR_%s", storeName);
+                    if (!((Boolean) queryServer(query))) {
+                        JOptionPane.showMessageDialog(null, "Store name is taken!",
+                                "ERROR - Create Store", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
 
-                ArrayList<Store> newStores = new ArrayList<>(); // TODO: send query & receive newStores from server
-                sellerPage(newStores);
+                    // Refresh stores
+                    sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                            "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -1070,12 +1089,24 @@ public class ClientGUI implements Runnable {
             if (storeName.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Store name cannot be empty!",
                         "ERROR - Delete Store", JOptionPane.ERROR_MESSAGE);
-            } else { // Make query and send to server
-                String serverQuery = String.format("DELSTR_%s", storeName);
-                System.out.println(serverQuery);
+            } else {
+                try {
+                    // Make query and send to server
+                    String query = String.format("DELSTR_%s", storeName);
+                    if (!((Boolean) queryServer(query))) {
+                        JOptionPane.showMessageDialog(null,
+                                "No store matches the name provided!",
+                                "ERROR - Delete Store", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
 
-                ArrayList<Store> newStores = new ArrayList<>(); // TODO: send query & receive newStores from server
-                sellerPage(newStores);
+                    // Refresh stores
+                    sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                            "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -1084,7 +1115,6 @@ public class ClientGUI implements Runnable {
         jPanel.add(southPanel, BorderLayout.SOUTH);
 
         // Center, combo-box in box layout
-        // TODO: client-server implementation required
 
         // JList
         JList<Store> userStores = new JList<>();
@@ -1151,19 +1181,28 @@ public class ClientGUI implements Runnable {
                 return;
             }
 
-            //TODO: Client-Server implementation, send query to server
+            // Making query and send to server
             String query = String.format("GETSTRPROD_%s_%s_%s",
                     store.getSellerEmail(), store.getStoreName(), searchBar.getText());
-            System.out.println(query);
+            try {
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            //TODO: call to server for new Product
-            String query = String.format("GETSTRPROD_%s_%s_%d",
-                    store.getSellerEmail(), store.getStoreName(), -1);
-            System.out.println(query);
-            storePage(store, products);
+            String query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+            try {
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         northPanel.add(searchBar);
@@ -1191,10 +1230,13 @@ public class ClientGUI implements Runnable {
         backButton.setPreferredSize(new Dimension(120, 50));
         backButton.setMaximumSize(backButton.getPreferredSize());
         backButton.addActionListener(e -> {
-            // TODO: Get stores ArrayList from server.
-            String query = "GETSELLSTR_-1";
-            ArrayList<Store> updateStores = new ArrayList<>();
-            sellerPage(updateStores);
+            try {
+                sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
@@ -1240,20 +1282,38 @@ public class ClientGUI implements Runnable {
                     return;
                 }
 
-                // Add products
-                for (Product p : importedProduct) {
-                    String serverQuery = String.format(String.format("ADDPROD_%s_%s_%s_%.2f_%d",
-                            p.getName(), store.getStoreName(), p.getDescription(), p.getPrice(), p.getQuantity()));
-                    // TODO: send query to add product to server
-                    System.out.println(serverQuery);
-                }
+                // Add Product and Return
+                try {
+                    // Add products
+                    int total = importedProduct.size();
+                    for (Product p : importedProduct) {
+                        String query = String.format(String.format("ADDPROD_%s_%s_%s_%.2f_%d",
+                                p.getName(), store.getStoreName(), p.getDescription(), p.getPrice(), p.getQuantity()));
+                        if (!((Boolean) queryServer(query))) { // Ignore error messages from server
+                            total--;
+                        }
+                    }
 
-                // Refresh
-                //TODO: call to server for new Product
-                String query = String.format("GETSTRPROD_%s_%s_%d",
-                        store.getSellerEmail(), store.getStoreName(), -1);
-                System.out.println(query);
-                storePage(store, products);
+                    // Announcement to user
+                    if (total != 0) {
+                        JOptionPane.showMessageDialog(null,
+                                total + "/" + importedProduct.size() + " products are imported!",
+                                "SUCCESS - Import Product", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(null,
+                                total + "/" + importedProduct.size() + " products are imported!",
+                                "ERROR - Import Product", JOptionPane.ERROR_MESSAGE);
+                    }
+
+
+                    // Refresh
+                    String query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+                    storePage(store, (ArrayList<Product>) queryServer(query));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                            "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -1352,14 +1412,24 @@ public class ClientGUI implements Runnable {
                         "ERROR - Delete Product", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            // Delete product from server
+            // Refresh
+            try {
+                String query = String.format("DELPROD_%s_%s_%s",
+                        store.getSellerEmail(), selectedProduct.getStoreName(), selectedProduct.getName());
+                if (!((Boolean) queryServer(query))) {
+                    JOptionPane.showMessageDialog(null, "No product matched the name provided!",
+                            "ERROR - Delete Product", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
-            // TODO: delete the selected product from server
-            String query = String.format("DELPROD_%s_%s_%s",
-                    store.getSellerEmail(), selectedProduct.getStoreName(), selectedProduct.getName());
-            System.out.println(query);
-            ArrayList<Product> newProductList = new ArrayList<>();
-            storePage(store, products);
-            updateFrame();
+                query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         detailProductPanel.add(detailLabel, BorderLayout.NORTH);
@@ -1478,11 +1548,14 @@ public class ClientGUI implements Runnable {
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setPreferredSize(new Dimension(120, 50));
         goBackButton.addActionListener(e -> {
-            String query = String.format("GETSELLSTR_%s_%d", store.getStoreName(), -1);
-
-            // TODO: send and get from server
-            System.out.println(query);
-            storePage(store, new ArrayList<>());
+            String query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+            try {
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton confirmButton = new JButton("Add");
@@ -1515,13 +1588,25 @@ public class ClientGUI implements Runnable {
                 return;
             }
 
-            // Making query and send to server
-            String query = String.format("ADDPROD_%s_%s_%s_%.2f_%d",
-                    inputName, store.getStoreName(), inputDescription, price, quantity);
+            try {
+                // Making query and send to server
+                String query = String.format("ADDPROD_%s_%s_%s_%.2f_%d",
+                        inputName, store.getStoreName(), inputDescription, price, quantity);
+                if (!((Boolean) queryServer(query))) {
+                    JOptionPane.showMessageDialog(null,
+                            "Product name is taken!",
+                            "ERROR-Add Product", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
-            // TODO: send query and get from server
-            System.out.println(query);
-            storePage(store, new ArrayList<>());
+                // Refresh
+                query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         bottomPanel.add(goBackButton);
@@ -1708,11 +1793,14 @@ public class ClientGUI implements Runnable {
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setPreferredSize(new Dimension(120, 50));
         goBackButton.addActionListener(e -> {
-            String query = String.format("GETSELLSTR_%s_%d", store.getStoreName(), -1);
-
-            // TODO: send and get from server
-            System.out.println(query);
-            storePage(store, new ArrayList<>());
+            try {
+                String query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton confirmButton = new JButton("Modify");
@@ -1750,7 +1838,7 @@ public class ClientGUI implements Runnable {
                 } catch (NumberFormatException en) {
                     JOptionPane.showMessageDialog(null,
                             "Price is in an incorrect format",
-                            "ERROR-Add Product", JOptionPane.ERROR_MESSAGE);
+                            "ERROR-Modify Product", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }
@@ -1765,18 +1853,32 @@ public class ClientGUI implements Runnable {
                 } catch (NumberFormatException en) {
                     JOptionPane.showMessageDialog(null,
                             "Quantity is in an incorrect format",
-                            "ERROR-Add Product", JOptionPane.ERROR_MESSAGE);
+                            "ERROR-Modify Product", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }
 
-            // Making query and send to server
+            // Send query
             String query = String.format("MODPROD_%s_%s_%s_%s_%.2f_%d",
                     oldProduct.getName(), adjustName, store.getStoreName(), adjustDescription, adjustPrice, adjustQty);
+            printWriter.println(query);
+            printWriter.flush();
 
-            // TODO: send query and get from server
-            System.out.println(query);
-            storePage(store, new ArrayList<>());
+            try {
+                // If something went wrong
+                if (!((Boolean) ois.readObject())) {
+                    JOptionPane.showMessageDialog(null,
+                            "The new product name is taken!",
+                            "ERROR-Modify Product", JOptionPane.ERROR_MESSAGE);
+                } else { // go back to store page
+                    query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+                    storePage(store, (ArrayList<Product>) queryServer(query));
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         bottomPanel.add(goBackButton);

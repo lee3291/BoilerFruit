@@ -125,6 +125,7 @@ public class FileIO {
                 Product curr = new Product(
                         row[0], // product name
                         row[1], // store's name
+                        row[2], // seller's email
                         row[2], // description
                         Double.parseDouble(row[4]), // price
                         Integer.parseInt(row[5]) // quanity

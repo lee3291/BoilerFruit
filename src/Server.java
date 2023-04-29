@@ -303,10 +303,11 @@ public class Server implements Runnable {
 
         // Add the product
         Product newProduct = new Product(name, storeName, description,
-                Double.parseDouble(strPrice), Integer.parseInt(strQuantity));
+                currentUser.getEmail(), Double.parseDouble(strPrice), Integer.parseInt(strQuantity));
 
         // Add to store
         if (store.addProduct(newProduct)) {
+            System.out.println("Successfully added " + newProduct.getName());
             output.writeObject(true);
             output.flush();
         } else {
@@ -424,7 +425,7 @@ public class Server implements Runnable {
             returnObject = false;
         } else {
             returnObject = true;
-            Store newStore = new Store(storeName, currentSeller.getUserName());
+            Store newStore = new Store(storeName, currentSeller.getEmail());
             sellerStores.put(storeName, newStore);
         }
         output.writeObject(returnObject);
