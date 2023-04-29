@@ -1,15 +1,25 @@
 import javax.swing.*;
-import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Flow;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ClientGUI implements Runnable {
 
-    static JFrame frame;
+    JFrame frame;
+    Socket socket;
+    ObjectInputStream ois;
+    ObjectOutputStream oos;
+    public final int USERINFO_MAX_LENGTH = 15; // Max username/password length
+    public final int USERINFO_MIN_LENGTH = 5; // Min username/password/email length
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new ClientGUI());
     }
@@ -17,13 +27,84 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
+        ipAddressPage();
 //        loginPage();
 //        signUpPage();
-//        sellerPage();
-//        ArrayList<Product> products = new ArrayList<>();
-//        customerPage(products);
+//        sellerPage(new ArrayList<>());
+//        customerPage(new ArrayList<>());
 //        editAccountPage();
-        reviewHistoryPage();
+//        reviewHistoryPage();
+    }
+
+    void ipAddressPage() {
+        resetFrame();
+
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new GridLayout(5, 0));
+
+        JLabel welcomeMessage = new JLabel("Welcome to BoilerMarket");
+        welcomeMessage.setHorizontalAlignment(JLabel.CENTER);
+        welcomeMessage.setFont(new Font(null, Font.PLAIN, 30));
+
+        JLabel promptMessage = new JLabel("Enter Server IP Address");
+        promptMessage.setHorizontalAlignment(JLabel.CENTER);
+        promptMessage.setFont(new Font(null, Font.PLAIN, 20));
+
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.X_AXIS));
+
+        JTextField ipAddressTxt = new JTextField("localhost", 10);
+        ipAddressTxt.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (ipAddressTxt.getText().equals("localhost")) {
+                    ipAddressTxt.setText("");}
+                ipAddressTxt.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (ipAddressTxt.getText().isEmpty()) {
+                    ipAddressTxt.setForeground(Color.GRAY);
+                    ipAddressTxt.setText("localhost");
+                }
+            }
+        });
+        ipAddressTxt.setMaximumSize(new Dimension(200, 50));
+
+        JButton enterButton = new JButton("Enter");
+        enterButton.addActionListener(e -> {
+            String ipAddress = ipAddressTxt.getText();
+            if (ipAddress.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "IP Address must be filled in!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                try {
+                    socket = new Socket(ipAddress, 8080);
+                    ois = new ObjectInputStream(socket.getInputStream());
+                    oos = new ObjectOutputStream(socket.getOutputStream());
+                    oos.flush();
+                    loginPage();
+                } catch (UnknownHostException ex) {
+                    JOptionPane.showMessageDialog(frame, "Unknown Host! Please Try Again!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(frame, "Failed to connect to Server!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        centerPanel.add(Box.createRigidArea(new Dimension(270, 0)));
+        centerPanel.add(ipAddressTxt);
+        centerPanel.add(enterButton);
+
+        jPanel.add(welcomeMessage);
+        jPanel.add(promptMessage);
+        jPanel.add(centerPanel);
+
+        frame.add(jPanel);
+
+        updateFrame();
     }
 
     void createGUI() {
@@ -39,7 +120,6 @@ public class ClientGUI implements Runnable {
     void loginPage() {
         resetFrame();
 
-        //TODO: Add action listeners, error message for invalid input
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new GridLayout(5, 0));
 
@@ -48,8 +128,7 @@ public class ClientGUI implements Runnable {
         JLabel firstLabel = new JLabel("Welcome to Boiler Fruits");
         firstLabel.setHorizontalAlignment(JLabel.CENTER);
         firstLabel.setFont(new Font(null, Font.PLAIN, 20));
-        jPanel.add(firstLabel);
-
+        jPanel.add(firstLabel, BorderLayout.NORTH);
 
         // Second Row
         JPanel secondPanel = new JPanel();
@@ -92,12 +171,44 @@ public class ClientGUI implements Runnable {
             String pw = pwTxt.getText();
 
             if (id.isEmpty() || pw.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
+            String query = String.format("LOGIN_%s_%s", id, pw);
+            try {
+                Object obj;
 
-            // TODO: Sign in info is valid, send user to customer page or seller page
-            // TODO: Client-Server implementation comes here. Wrong ID & Pw error message with JOptionPane
+                oos.writeObject(query); // query for login
+                oos.flush();
+
+                obj = ois.readObject();
+                int response = ((Integer) obj).intValue();
+
+                if (response == -1) {
+                    JOptionPane.showMessageDialog(frame, "Incorrect Account Information!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                } else if (response == 0) {
+                    // CustomerPage, get products from server.
+                    oos.writeObject("GETMRKPROD_-1"); // get all products query.
+                    oos.flush();
+                    obj = ois.readObject();
+                    ArrayList<Product> allProducts = (ArrayList<Product>) obj;
+                    customerPage(allProducts);
+                } else if (response == 1) {
+                    // SellerPage, get stores query
+                    // Get user email query, since log in is successful, "currentUser" in server is this user.
+                    // get stores query
+                    oos.writeObject("GETSELLSTR_-1");
+                    oos.flush();
+                    obj = ois.readObject();
+                    ArrayList<Store> userStores = (ArrayList<Store>) obj;
+                    sellerPage(userStores);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton signUpButton = new JButton("Sign Up");
@@ -116,7 +227,6 @@ public class ClientGUI implements Runnable {
     }
 
     void signUpPage() {
-        //TODO: Modify sizes, and add the remaining components.
         resetFrame();
 
         JPanel jPanel = new JPanel();
@@ -136,20 +246,18 @@ public class ClientGUI implements Runnable {
         JPanel secondRowPanel = new JPanel();
         secondRowPanel.setLayout(new BoxLayout(secondRowPanel, BoxLayout.Y_AXIS));
         String[] userType = {"Customer", "Seller"};
+        AtomicReference<String> userTypeStr = new AtomicReference<>();
         JComboBox jcomboBox = new JComboBox(userType);
         jcomboBox.setPreferredSize(new Dimension(200, 30));
         jcomboBox.setMaximumSize(jcomboBox.getPreferredSize());
         jcomboBox.addActionListener(e -> {
             if (e.getSource() == jcomboBox) {
-                String userTypeStr = (String) jcomboBox.getSelectedItem();
-                //TODO: Client-Server implementation here
+                userTypeStr.set((String) jcomboBox.getSelectedItem());
             }
         });
         secondRowPanel.add(jcomboBox);
         topPanel.add(secondRowPanel);
         jPanel.add(topPanel);
-
-
 
         // mid panel, for ID, PW, email labels and text fields
         JPanel midPanel = new JPanel();
@@ -198,21 +306,62 @@ public class ClientGUI implements Runnable {
             String pw = pwTxtField.getText();
             String email = emailTxtField.getText();
 
+            // id, pw, email validity check
             if (id.isEmpty() || pw.isEmpty() || email.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            } else if ((id.length() < USERINFO_MIN_LENGTH) || (id.length() > USERINFO_MAX_LENGTH)) {
+                String idErrorMessage = String.format("Please enter a username that is between %d-%d characters!",
+                        USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
+                JOptionPane.showMessageDialog(frame, idErrorMessage, "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else if ((pw.length() < USERINFO_MIN_LENGTH) || (pw.length() > USERINFO_MAX_LENGTH)) {
+                String pwErrorMessage = String.format("Please enter a password that is between %d-%d characters!",
+                        USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
+                JOptionPane.showMessageDialog(frame, pwErrorMessage, "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else if ((email.length() < USERINFO_MIN_LENGTH) || (!((email.contains("@")) && (email.contains("."))))) {
+                String emailErrorMessage = String.format("Please enter an email in the correct format!\n" +
+                        "It must be minimum of %d characters and include '@' and '.'", USERINFO_MIN_LENGTH);
+                JOptionPane.showMessageDialog(frame, emailErrorMessage, "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else if (id.contains("_") || pw.contains("_") || email.contains("_")) {
+                JOptionPane.showMessageDialog(frame, "Do not include '_' in the fields!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
 
-            System.out.println(id+pw+email);
+            // Send query to server
+            Object obj;
+            String signUpQuery = String.format("SIGNUP_%s_%s_%s_%s", userTypeStr.get(), id, email, pw);
+            try {
+                oos.writeObject(signUpQuery);
+                oos.flush();
+                obj = ois.readObject();
+                int response = ((Integer) obj).intValue();
+                if (response == 1) {
+                    JOptionPane.showMessageDialog(frame, "Please Log-In", "Sign Up Complete",
+                            JOptionPane.PLAIN_MESSAGE);
+                    loginPage();
+                } else if (response == -1) {
+                    JOptionPane.showMessageDialog(frame, "Username already exists!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                } else if (response == 0) {
+                    JOptionPane.showMessageDialog(frame, "Email already exists!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            }
 
-            //TODO: Client-Server implementation
         });
         buttonPanel.add(Box.createRigidArea(new Dimension(172, 0)));
         buttonPanel.add(goBackButton);
         buttonPanel.add(Box.createRigidArea(new Dimension(50, 0)));
         buttonPanel.add(signUpButton);
 
-        jPanel.add(buttonPanel);
+        jPanel.add(buttonPanel, BorderLayout.CENTER);
 
         frame.add(jPanel);
         frame.revalidate();
@@ -250,7 +399,7 @@ public class ClientGUI implements Runnable {
         searchButton.addActionListener(e -> {
             String query = searchBar.getText();
             if (query.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
             //TODO: Client-Server implementation, send query to server
@@ -453,6 +602,18 @@ public class ClientGUI implements Runnable {
         });
         idTxt.setMaximumSize(new Dimension(200, 50));
         JButton idChangeButton = new JButton("Change ID");
+        idChangeButton.addActionListener(e -> {
+            String newId = idTxt.getText();
+            if ((newId.length() < USERINFO_MIN_LENGTH) || (newId.length() > USERINFO_MAX_LENGTH)) {
+                String idErrorMessage = String.format("Username must be %d-%d characters!", USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
+                JOptionPane.showMessageDialog(frame, idErrorMessage, "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            } else if (newId.contains("_")) {
+                JOptionPane.showMessageDialog(frame, "Do not include '_' in the fields!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+            //TODO: send to server to check if it already exists and change field
+        });
 
         secondPanel.add(Box.createRigidArea(new Dimension(250, 0)));
         secondPanel.add(idLabel);
@@ -487,6 +648,19 @@ public class ClientGUI implements Runnable {
 
         pwTxt.setMaximumSize(new Dimension(200, 50));
         JButton pwChangeButton = new JButton("Change PW");
+        pwChangeButton.addActionListener(e -> {
+            String newPw = pwTxt.getText();
+            if ((newPw.length() < USERINFO_MIN_LENGTH) || (newPw.length() > USERINFO_MAX_LENGTH)) {
+                String pwErrorMessage = String.format("Password must be %d-%d characters!",
+                        USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
+                JOptionPane.showMessageDialog(frame, pwErrorMessage, "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            } else if (newPw.contains("_")) {
+                JOptionPane.showMessageDialog(frame, "Do not include '_' in the fields!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+            //TODO: send to server and change field
+        });
 
         thirdPanel.add(Box.createRigidArea(new Dimension(240, 0)));
         thirdPanel.add(pwLabel);
@@ -570,7 +744,7 @@ public class ClientGUI implements Runnable {
             String filePath = JOptionPane.showInputDialog(frame, "Enter file path for export: ",
                     "Export Purchase History", JOptionPane.PLAIN_MESSAGE);
             if (filePath == null || filePath.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please give valid file path!", "Error",
+                JOptionPane.showMessageDialog(frame, "Please give valid file path!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
             // TODO: server, export purchase history
@@ -615,17 +789,22 @@ public class ClientGUI implements Runnable {
         });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
-            String query = searchBar.getText();
-            if (query.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Please fill in blank field!", "Error",
+            if (searchBar.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
+                return;
             }
+
+            String query = String.format("GETSELLSTR_%s", searchBar.getText());
             //TODO: Client-Server implementation, send query to server
+            System.out.println(query);
         });
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
+            String query = "GETSELLSTR_-1";
             // TODO: Get stores ArrayList from server
+            System.out.println(query);
             // sellerPage(stores);
         });
 
@@ -645,12 +824,15 @@ public class ClientGUI implements Runnable {
         JButton editAccountButton = new JButton("Edit Account");
         editAccountButton.setPreferredSize(new Dimension(100, 50));
         editAccountButton.setMaximumSize(editAccountButton.getPreferredSize());
-         editAccountButton.addActionListener(e -> editAccountPage());
+        editAccountButton.addActionListener(e -> editAccountPage());
 
         JButton logOutButton = new JButton("Log Out");
         logOutButton.setPreferredSize(new Dimension(100 ,50));
         logOutButton.setMaximumSize(logOutButton.getPreferredSize());
-        logOutButton.addActionListener(e -> loginPage());
+        logOutButton.addActionListener(e -> {
+            // TODO: send Log out message to server
+            loginPage();
+        });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(userType);
@@ -671,16 +853,58 @@ public class ClientGUI implements Runnable {
         createStoreButton.setPreferredSize(new Dimension(100, 50));
         createStoreButton.setMaximumSize(createStoreButton.getPreferredSize());
         createStoreButton.addActionListener(e -> {
-            // TODO: call to server to create new store
-            updateFrame();
+            // Getting Create store name
+            String storeName = JOptionPane.showInputDialog(null, "Enter a New Store Name:",
+                    "Create Store", JOptionPane.QUESTION_MESSAGE);
+
+            // User close the GUI; terminate the program; do nothing
+            if (storeName == null) {
+                return;
+            }
+
+            // Store name is empty
+            else if (storeName.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Store name cannot be empty!",
+                        "ERROR - Create Store", JOptionPane.ERROR_MESSAGE);
+            }
+
+            // Make query and send to server
+            else {
+                String serverQuery = String.format("CRTSTR_%s", storeName);
+                System.out.println(serverQuery);
+
+                ArrayList<Store> newStores = new ArrayList<>(); // TODO: send query & receive newStores from server
+                sellerPage(newStores);
+            }
         });
 
         JButton deleteStoreButton = new JButton("Delete Store");
         deleteStoreButton.setPreferredSize(new Dimension(100, 50));
         deleteStoreButton.setMaximumSize(deleteStoreButton.getPreferredSize());
         deleteStoreButton.addActionListener(e -> {
-            // TODO: call to server to delete store
-            updateFrame();
+            // Getting Delete store name
+            String storeName = JOptionPane.showInputDialog(null,
+                    "Enter a Store Name to be deleted:", "Delete Store", JOptionPane.QUESTION_MESSAGE);
+
+            // User close the GUI; terminal the program; do nothing
+            if (storeName == null) {
+                return;
+            }
+
+            // Input is empty
+            else if (storeName.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Store name cannot be empty!",
+                        "ERROR - Delete Store", JOptionPane.ERROR_MESSAGE);
+            }
+
+            // Make query and send to server
+            else {
+                String serverQuery = String.format("DELSTR_%s", storeName);
+                System.out.println(serverQuery);
+
+                ArrayList<Store> newStores = new ArrayList<>(); // TODO: send query & receive newStores from server
+                sellerPage(newStores);
+            }
         });
 
         southPanel.add(createStoreButton);
@@ -702,10 +926,10 @@ public class ClientGUI implements Runnable {
         exampleProducts.add(product2);
         exampleProducts.add(product3);
 
-        Store store1 = new Store("Amazon", "Bezos", 0, exampleProducts, new ArrayList<>(),
+        Store store1 = new Store("Amazon", "@Bezos.1", 0, exampleProducts, new ArrayList<>(),
                 new ArrayList<>());
-        Store store2 = new Store("Tiki", "Bezos");
-        Store store3 = new Store("Lazada", "Bezos");
+        Store store2 = new Store("Tiki", "@Bezos.1");
+        Store store3 = new Store("Lazada", "@Bezos.1");
         ArrayList<Store> exampleStores = new ArrayList<>();
         exampleStores.add(store1);
         exampleStores.add(store2);
@@ -727,7 +951,7 @@ public class ClientGUI implements Runnable {
         storeList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 Store store = userStores.getSelectedValue();
-                storePage(store);
+                storePage(store, store.getCurrentProducts());
             }
         });
 
@@ -741,9 +965,9 @@ public class ClientGUI implements Runnable {
         updateFrame();
     }
 
-    void storePage(Store store) {
+    void storePage(Store store, ArrayList<Product> products) {
+        // Setting up store page frame
         resetFrame();
-
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new BorderLayout());
 
@@ -752,6 +976,7 @@ public class ClientGUI implements Runnable {
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
         JTextField searchBar = new JTextField("Search for product name or description", 10);
+        searchBar.setForeground(Color.GRAY);
         searchBar.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -771,17 +996,25 @@ public class ClientGUI implements Runnable {
         });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
-            String query = searchBar.getText();
-            if (query.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
+            if (searchBar.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
+                return;
             }
+
             //TODO: Client-Server implementation, send query to server
+            String query = String.format("GETSTRPROD_%s_%s_%s",
+                    store.getSellerEmail(), store.getStoreName(), searchBar.getText());
+            System.out.println(query);
         });
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            storePage(store);
+            //TODO: call to server for new Product
+            String query = String.format("GETSTRPROD_%s_%s_%d",
+                    store.getSellerEmail(), store.getStoreName(), -1);
+            System.out.println(query);
+            storePage(store, products);
         });
 
         northPanel.add(searchBar);
@@ -803,17 +1036,16 @@ public class ClientGUI implements Runnable {
         JButton addProductButton = new JButton("Add Product");
         addProductButton.setPreferredSize(new Dimension(120, 50));
         addProductButton.setMaximumSize(addProductButton.getPreferredSize());
-        addProductButton.addActionListener(e -> {
-            // TODO: get client's product detail and send to server
-            updateFrame();
-        });
+        addProductButton.addActionListener(e -> addProductPage(store));
 
         JButton backButton = new JButton("Go Back");
         backButton.setPreferredSize(new Dimension(120 ,50));
         backButton.setMaximumSize(backButton.getPreferredSize());
         backButton.addActionListener(e -> {
             // TODO: Get stores ArrayList from server.
-            // sellerPage(Stores);
+            String query = "GETSELLSTR_-1";
+            ArrayList<Store> updateStores = new ArrayList<>();
+            sellerPage(updateStores);
         });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
@@ -830,20 +1062,75 @@ public class ClientGUI implements Runnable {
         // South, review Purchase History button. use box layout for size
         JPanel southPanel = new JPanel();
         southPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 0));
+        FileIO fileIO = new FileIO();
 
         JButton importProductButton = new JButton("Import Products");
         importProductButton.setPreferredSize(new Dimension(120, 50));
         importProductButton.setMaximumSize(importProductButton.getPreferredSize());
         importProductButton.addActionListener(e -> {
-            // TODO: get client's arraylist and send to server???
-            updateFrame();
+            // Getting input path
+            String inputPath = JOptionPane.showInputDialog(null, "Enter a CSV file path: ",
+                    "Import Product", JOptionPane.QUESTION_MESSAGE);
+
+            // User close the GUI; terminate the program; do nothing
+            if (inputPath == null) {
+                return;
+            } else if (inputPath.isEmpty()) { // File path is empty
+                JOptionPane.showMessageDialog(null, "Path cannot be empty!",
+                        "ERROR - Import Product", JOptionPane.ERROR_MESSAGE);
+            } else {
+                // Import product
+                ArrayList<Product> importedProduct = fileIO.importCSV(inputPath);
+                if (importedProduct == null) {
+                    JOptionPane.showMessageDialog(null,
+                            "Either path or the file format is incorrect",
+                            "ERROR - Import Product", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Add products
+                for (Product p : importedProduct) {
+                    String serverQuery = String.format(String.format("ADDPROD_%s_%s_%s_%.2f_%d",
+                            p.getName(), store.getStoreName(), p.getDescription(), p.getPrice(), p.getQuantity()));
+                    // TODO: send query to add product to server
+                    System.out.println(serverQuery);
+                }
+
+                // Refresh
+                //TODO: call to server for new Product
+                String query = String.format("GETSTRPROD_%s_%s_%d",
+                        store.getSellerEmail(), store.getStoreName(), -1);
+                System.out.println(query);
+                storePage(store, products);
+            }
         });
 
         JButton exportProductButton = new JButton("Export Products");
         exportProductButton.setPreferredSize(new Dimension(120, 50));
         exportProductButton.setMaximumSize(exportProductButton.getPreferredSize());
         exportProductButton.addActionListener(e -> {
-            // TODO: get client's path and ArrayList from server?
+            // Getting output path
+            String outputPath = JOptionPane.showInputDialog(null, "Enter a path for output: ",
+                    "Export Product", JOptionPane.QUESTION_MESSAGE);
+
+            // User close the GUI; terminate the program; do nothing
+            if (outputPath == null) {
+                return;
+            } else if (outputPath.isEmpty()) { // File path is empty
+                JOptionPane.showMessageDialog(null, "Path cannot be empty!",
+                        "ERROR - Export Product", JOptionPane.ERROR_MESSAGE);
+            } else { // Exporting
+                ArrayList<Product> exportProducts = store.getCurrentProducts();
+                if (fileIO.exportCSV(outputPath, exportProducts)) {
+                    JOptionPane.showMessageDialog(null,
+                            "Product is written into " + outputPath,
+                            "SUCCESS - Export Product", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null,
+                            "Something went wrong. Please try again later!",
+                            "ERROR - Export Product", JOptionPane.ERROR_MESSAGE);
+                }
+            }
         });
 
         southPanel.add(importProductButton);
@@ -890,15 +1177,33 @@ public class ClientGUI implements Runnable {
         modifyButton.setPreferredSize(new Dimension(100 ,50));
         modifyButton.setMaximumSize(modifyButton.getPreferredSize());
         modifyButton.addActionListener(e -> {
-            // TODO: get product's new info and send to server
-            updateFrame();
+            Product selectedProduct = currentProducts.getSelectedValue();
+            if (selectedProduct == null) {
+                JOptionPane.showMessageDialog(null, "Need to select a product first!",
+                        "ERROR - Modify Product", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            modifyProductPage(store, selectedProduct);
         });
 
         JButton deleteButton = new JButton("Delete");
         deleteButton.setPreferredSize(new Dimension(100 ,50));
         deleteButton.setMaximumSize(deleteButton.getPreferredSize());
         deleteButton.addActionListener(e -> {
+            Product selectedProduct = currentProducts.getSelectedValue();
+            if (selectedProduct == null) {
+                JOptionPane.showMessageDialog(null, "Need to select a product first!",
+                        "ERROR - Delete Product", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             // TODO: delete the selected product from server
+            String query = String.format("DELPROD_%s_%s_%s",
+                    store.getSellerEmail(), selectedProduct.getStore(), selectedProduct.getName());
+            System.out.println(query);
+            ArrayList<Product> newProductList = new ArrayList<>();
+            storePage(store, products);
             updateFrame();
         });
 
@@ -918,12 +1223,417 @@ public class ClientGUI implements Runnable {
         updateFrame();
     }
 
-    static void updateFrame() {
+    /**
+     * Page for adding new product
+     * @param store the store of the new product
+     */
+    void addProductPage(Store store) {
+        resetFrame();
+
+        JPanel jPanel = new JPanel(new BorderLayout());
+
+        // Title
+        JLabel titleLabel = new JLabel("Add Product");
+        titleLabel.setHorizontalAlignment(JLabel.CENTER);
+        titleLabel.setFont(new Font(null, Font.PLAIN, 20));
+        titleLabel.setPreferredSize(new Dimension(200, 100));
+        jPanel.add(titleLabel, BorderLayout.NORTH);
+
+        // Center
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        JLabel nameLabel = new JLabel("Enter a Product Name: ");
+        nameLabel.setPreferredSize(new Dimension(200, 50));
+        nameLabel.setMinimumSize(nameLabel.getPreferredSize());
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        centerPanel.add(nameLabel, gbc);
+
+        JTextField productName = new JTextField();
+        productName.setPreferredSize(new Dimension(380, 50));
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        centerPanel.add(productName, gbc);
+
+        JLabel descriptionLabel = new JLabel("Enter a Product Description: ");
+        descriptionLabel.setPreferredSize(new Dimension(200, 200));
+        descriptionLabel.setMinimumSize(descriptionLabel.getPreferredSize());
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        centerPanel.add(descriptionLabel, gbc);
+
+        JTextPane productDescription = new JTextPane();
+        productDescription.setPreferredSize(new Dimension(380, 180));
+        productDescription.setMinimumSize(productDescription.getPreferredSize());
+        gbc.gridx = 2;
+        gbc.gridy = 2;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        centerPanel.add(productDescription, gbc);
+
+        JLabel priceLabel = new JLabel("Enter a Product Price: ");
+        priceLabel.setPreferredSize(new Dimension(200, 50));
+        priceLabel.setMinimumSize(priceLabel.getPreferredSize());
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        centerPanel.add(priceLabel, gbc);
+
+        JTextField productPrice = new JTextField();
+        productPrice.setPreferredSize(new Dimension(380, 50));
+        productPrice.setMinimumSize(productPrice.getPreferredSize());
+        gbc.gridx = 2;
+        gbc.gridy = 4;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        centerPanel.add(productPrice, gbc);
+
+        JLabel quantityLabel = new JLabel("Enter a Product Quantity: ");
+        quantityLabel.setPreferredSize(new Dimension(200, 50));
+        quantityLabel.setMinimumSize(quantityLabel.getPreferredSize());
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        centerPanel.add(quantityLabel, gbc);
+
+        JTextField productQuantity = new JTextField();
+        productQuantity.setPreferredSize(new Dimension(380, 50));
+        productQuantity.setMinimumSize(productQuantity.getPreferredSize());
+        gbc.gridx = 2;
+        gbc.gridy = 6;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        centerPanel.add(productQuantity, gbc);
+
+        jPanel.add(centerPanel, BorderLayout.CENTER);
+
+        // Bottom
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 0));
+
+        JButton goBackButton = new JButton("Go Back");
+        goBackButton.setPreferredSize(new Dimension(120, 50));
+        goBackButton.addActionListener(e -> {
+            String query = String.format("GETSELLSTR_%s_%d", store.getStoreName(), -1);
+
+            // TODO: send and get from server
+            System.out.println(query);
+            storePage(store, new ArrayList<>());
+        });
+
+        JButton confirmButton = new JButton("Add");
+        confirmButton.setPreferredSize(new Dimension(120, 50));
+        confirmButton.addActionListener(e -> {
+            // Get inputs
+            String inputName = productName.getText();
+            String inputDescription = productDescription.getText();
+            String inputPrice = productPrice.getText();
+            String inputQty = productQuantity.getText();
+
+            // Make sure inputs are not empty
+            if (inputName.isEmpty() || inputDescription.isEmpty() ||
+                    inputPrice.isEmpty() || inputQty.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "None of the fields can be empty!",
+                        "ERROR-Add Product", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Make sure price is double and quantity is integer
+            int quantity;
+            double price;
+            try {
+                price = Double.parseDouble(inputPrice);
+                quantity = Integer.parseInt(inputQty);
+            } catch (NumberFormatException en) {
+                JOptionPane.showMessageDialog(null,
+                        "Price or Quantity is in an incorrect format",
+                        "ERROR-Add Product", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Making query and send to server
+            String query = String.format("ADDPROD_%s_%s_%s_%.2f_%d",
+                    inputName, store.getStoreName(), inputDescription, price, quantity);
+
+            // TODO: send query and get from server
+            System.out.println(query);
+            storePage(store, new ArrayList<>());
+        });
+
+        bottomPanel.add(goBackButton);
+        bottomPanel.add(confirmButton);
+        jPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        // Add to frame and update
+        frame.add(jPanel);
+        updateFrame();
+    }
+
+    /**
+     * Page for modify product
+     * @param oldProduct the product to be modified
+     */
+    void modifyProductPage(Store store, Product oldProduct) {
+        resetFrame();
+
+        JPanel jPanel = new JPanel(new BorderLayout());
+
+        // Title
+        JLabel titleLabel = new JLabel("Modify Product");
+        titleLabel.setHorizontalAlignment(JLabel.CENTER);
+        titleLabel.setFont(new Font(null, Font.PLAIN, 20));
+        titleLabel.setPreferredSize(new Dimension(200, 100));
+        jPanel.add(titleLabel, BorderLayout.NORTH);
+
+        // Center
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        JLabel nameLabel = new JLabel("Enter a New Name: ");
+        nameLabel.setPreferredSize(new Dimension(200, 50));
+        nameLabel.setMinimumSize(nameLabel.getPreferredSize());
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        centerPanel.add(nameLabel, gbc);
+
+        JTextField productName = new JTextField("Enter a new product name; Leave blank for old value!");
+        productName.setForeground(Color.GRAY);
+        productName.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (productName.getText().equals("Enter a new product name; Leave blank for old value!")) {
+                    productName.setText("");}
+                productName.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (productName.getText().isEmpty()) {
+                    productName.setForeground(Color.GRAY);
+                    productName.setText("Enter a new product name; Leave blank for old value!");
+                }
+            }
+        });
+        productName.setPreferredSize(new Dimension(380, 50));
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        centerPanel.add(productName, gbc);
+
+        JLabel descriptionLabel = new JLabel("Enter a New Description: ");
+        descriptionLabel.setPreferredSize(new Dimension(200, 200));
+        descriptionLabel.setMinimumSize(descriptionLabel.getPreferredSize());
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        centerPanel.add(descriptionLabel, gbc);
+
+        JTextPane productDescription = new JTextPane();
+        productDescription.setText("Enter a new product description; Leave blank for old value!");
+        productDescription.setForeground(Color.GRAY);
+        productDescription.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (productDescription.getText().equals("Enter a new product description; " +
+                        "Leave blank for old value!")) {
+                    productDescription.setForeground(Color.BLACK);
+                    productDescription.setText("");
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (productDescription.getText().isEmpty()) {
+                    productDescription.setForeground(Color.GRAY);
+                    productDescription.setText("Enter a new product description; Leave blank for old value!");
+                }
+            }
+        });
+        productDescription.setPreferredSize(new Dimension(380, 180));
+        productDescription.setMinimumSize(productDescription.getPreferredSize());
+        gbc.gridx = 2;
+        gbc.gridy = 2;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        centerPanel.add(productDescription, gbc);
+
+        JLabel priceLabel = new JLabel("Enter a New Price: ");
+        priceLabel.setPreferredSize(new Dimension(200, 50));
+        priceLabel.setMinimumSize(priceLabel.getPreferredSize());
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        centerPanel.add(priceLabel, gbc);
+
+        JTextField productPrice = new JTextField("Enter a new product price; Leave blank for old value!");
+        productPrice.setForeground(Color.GRAY);
+        productPrice.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (productPrice.getText().equals("Enter a new product price; Leave blank for old value!")) {
+                    productPrice.setText("");}
+                productPrice.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (productPrice.getText().isEmpty()) {
+                    productPrice.setForeground(Color.GRAY);
+                    productPrice.setText("Enter a new product price; Leave blank for old value!");
+                }
+            }
+        });
+        productPrice.setPreferredSize(new Dimension(380, 50));
+        productPrice.setMinimumSize(productPrice.getPreferredSize());
+        gbc.gridx = 2;
+        gbc.gridy = 4;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        centerPanel.add(productPrice, gbc);
+
+        JLabel quantityLabel = new JLabel("Enter a New Quantity: ");
+        quantityLabel.setPreferredSize(new Dimension(200, 50));
+        quantityLabel.setMinimumSize(quantityLabel.getPreferredSize());
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        centerPanel.add(quantityLabel, gbc);
+
+        JTextField productQuantity = new JTextField("Enter a new product quantity; Leave blank for old value!");
+        productQuantity.setForeground(Color.GRAY);
+        productQuantity.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (productQuantity.getText().equals("Enter a new product quantity; Leave blank for old value!")) {
+                    productQuantity.setText("");}
+                productQuantity.setForeground(Color.BLACK);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (productQuantity.getText().isEmpty()) {
+                    productQuantity.setForeground(Color.GRAY);
+                    productQuantity.setText("Enter a new product quantity; Leave blank for old value!");
+                }
+            }
+        });
+        productQuantity.setPreferredSize(new Dimension(380, 50));
+        productQuantity.setMinimumSize(productQuantity.getPreferredSize());
+        gbc.gridx = 2;
+        gbc.gridy = 6;
+        gbc.weightx = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        centerPanel.add(productQuantity, gbc);
+
+        jPanel.add(centerPanel, BorderLayout.CENTER);
+
+        // Bottom
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 0));
+
+        JButton goBackButton = new JButton("Go Back");
+        goBackButton.setPreferredSize(new Dimension(120, 50));
+        goBackButton.addActionListener(e -> {
+            String query = String.format("GETSELLSTR_%s_%d", store.getStoreName(), -1);
+
+            // TODO: send and get from server
+            System.out.println(query);
+            storePage(store, new ArrayList<>());
+        });
+
+        JButton confirmButton = new JButton("Modify");
+        confirmButton.setPreferredSize(new Dimension(120, 50));
+        confirmButton.addActionListener(e -> {
+            // Adjust fields of the selected product
+            String adjustName;
+            String adjustDescription;
+            double adjustPrice;
+            int adjustQty;
+
+            // Input name
+            String inputName = productName.getText();
+            if (inputName.equals("Enter a new product name; Leave blank for old value!")) {
+                adjustName = oldProduct.getName();
+            } else {
+                adjustName = inputName;
+            }
+
+            // Input description
+            String inputDescription = productDescription.getText();
+            if (inputDescription.equals("Enter a new product description; Leave blank for old value!")) {
+                adjustDescription = oldProduct.getDescription();
+            } else {
+                adjustDescription = inputDescription;
+            }
+
+            // Input price
+            String inputPrice = productPrice.getText();
+            if (inputPrice.equals("Enter a new product price; Leave blank for old value!")) {
+                adjustPrice = oldProduct.getPrice();
+            } else {
+                try {
+                    adjustPrice = Double.parseDouble(inputPrice);
+                } catch (NumberFormatException en) {
+                    JOptionPane.showMessageDialog(null,
+                            "Price is in an incorrect format",
+                            "ERROR-Add Product", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+
+            // Input quantity
+            String inputQty = productQuantity.getText();
+            if (inputPrice.equals("Enter a new product quantity; Leave blank for old value!")) {
+                adjustQty = oldProduct.getQuantity();
+            } else {
+                try {
+                    adjustQty = Integer.parseInt(inputQty);
+                } catch (NumberFormatException en) {
+                    JOptionPane.showMessageDialog(null,
+                            "Quantity is in an incorrect format",
+                            "ERROR-Add Product", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+
+            // Making query and send to server
+            String query = String.format("MODPROD_%s_%s_%s_%s_%.2f_%d",
+                    oldProduct.getName(), adjustName, store.getStoreName(), adjustDescription, adjustPrice, adjustQty);
+
+            // TODO: send query and get from server
+            System.out.println(query);
+            storePage(store, new ArrayList<>());
+        });
+
+        bottomPanel.add(goBackButton);
+        bottomPanel.add(confirmButton);
+        jPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        // Add to frame and update
+        frame.add(jPanel);
+        updateFrame();
+    }
+
+    void updateFrame() {
         frame.revalidate(); // Notifies layout manager that component has changed.
         frame.repaint(); // repaints the components
     }
 
-     static void resetFrame() {
+    void resetFrame() {
         frame.getContentPane().removeAll(); // Removes all components from frame.
         updateFrame();
     }

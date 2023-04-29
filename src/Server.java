@@ -40,13 +40,41 @@ public class Server implements Runnable {
      * Send a TRUE boolean if success
      * Send a FALSE boolean if failed (i.e. product is sold out)
      * @param output the output stream to communicate with client
-     * @param sellerEmail the store's sellerName (used for quicker searching)
+     * @param sellerEmail the store's sellerEmail (used for quicker searching)
      * @param storeName the product's storeName
      * @param productName the product's name
      * @param strPurchaseQty the quantity purchase
      */
-    private void buyItem(ObjectOutputStream output,
-                         String sellerEmail, String storeName, String productName, String strPurchaseQty) {
+    private void buyItem(ObjectOutputStream output, String sellerEmail, String storeName,
+                         String productName, String strPurchaseQty) throws IOException{
+        Seller productSeller = (Seller) users.get(sellerEmail);
+        Store productStore = productSeller.getStores().get(storeName);
+
+        synchronized (sentinel) { // TODO: checking concurrency
+            for (Product p : productStore.getCurrentProducts()) {
+                // Found the product
+                if (p.getName().equalsIgnoreCase(productName)) {
+                    int quantity = Integer.parseInt(strPurchaseQty);
+
+                    // Making sure product is not sold out
+                    if (quantity > p.getQuantity()) {
+                        output.writeObject(false);
+                        output.flush();
+                        return;
+                    }
+
+                    // Change data in appropriate location
+                    p.setQuantity(p.getQuantity() - quantity);
+                    productStore.setTotalRevenue(productStore.getTotalRevenue() + p.getPrice());
+                    productStore.addCustomerEmail(currentUser.getEmail());
+                    productStore.addToSaleHistory(productStore.makeSaleDetail(p, quantity, currentUser.getEmail()));
+                    ((Customer) currentUser).addToPurchaseHistory(p, quantity);
+
+                    output.writeObject(true);
+                    output.writeObject(false);
+                }
+            }
+        }
     }
 
     /**
@@ -168,13 +196,21 @@ public class Server implements Runnable {
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. the product does not exist in the specified store)
      * @param output output the output stream to communicate with client
-     * @param sellerEmail the store's sellerName (used for quicker searching)
+     * @param sellerEmail the store's sellerEmail (used for quicker searching)
      * @param storeName the name of the Store that contain the product
      * @param productName the name of the product
      */
     private void deleteProduct(ObjectOutputStream output, String sellerEmail,
                                String storeName, String productName) throws IOException {
-
+        Seller seller = (Seller) users.get(sellerEmail);
+        Store store = seller.getStores().get(storeName);
+        if (store.removeProduct(productName)) {
+            output.writeObject(true);
+            output.flush();
+        } else {
+            output.writeObject(false);
+            output.flush();
+        }
     }
 
     /**
@@ -192,7 +228,7 @@ public class Server implements Runnable {
     private void modifyProduct(ObjectOutputStream output, String oldName, String newName, String storeName, String description,
                                String strPrice, String strQuantity) throws IOException {
         // Get the store
-        Store store = ((Seller) currentUser).getStores().get(storeName);
+        Store store = ((Seller) currentUser).getStores().get(storeName); // TODO: concurrency?
 
         // Make sure new name is unique;
         if (!oldName.equalsIgnoreCase(newName)) {
@@ -239,7 +275,7 @@ public class Server implements Runnable {
     private void addProduct(ObjectOutputStream output, String name, String storeName, String description,
                             String strPrice, String strQuantity) throws IOException {
         // Get the store
-        Store store = ((Seller) currentUser).getStores().get(storeName);
+        Store store = ((Seller) currentUser).getStores().get(storeName); // TODO: concurrency?
 
         // Add the product
         Product newProduct = new Product(name, storeName, description,
@@ -256,19 +292,39 @@ public class Server implements Runnable {
     }
 
     /**
-     * Create an ArrayList contains the Product from the specified store
+     * Create an ArrayList contains the Products from the specified store
      * If searchKey is '-1', send an ArrayList of all Product in the Store to client
      * <p>
      * If searchKey IS NOT '-1',
      * send an ArrayList of Products that contain the searchKey in their name or description to client
      * ArrayList is empty if there is no matching Product
      * @param output the output stream to communicate with client
-     * @param sellerEmail the store's sellerName (used for quicker searching)
+     * @param sellerEmail the store's sellerEmail (used for quicker searching)
      * @param searchKey the key to search (i.e. the product name or description); '-1' if no search is needed
      */
     private void getStoreProduct(ObjectOutputStream output, String sellerEmail,
                                  String storeName, String searchKey) throws IOException {
-
+        // @Ethan
+        // Find store with sellerEmail and storeName
+        Seller specifiedSeller = (Seller) users.get(sellerEmail); // Desired Seller
+        Store specifiedStore = specifiedSeller.getStores().get(storeName); // Desired Store of Seller
+        ArrayList<Product> specifiedProducts = specifiedStore.getCurrentProducts(); // Desired Products of Store
+        if (searchKey.equals("-1")) {
+            output.writeObject(specifiedProducts);
+            output.flush();
+        } else {
+            ArrayList<Product> matchingProducts = new ArrayList<>();
+            searchKey = searchKey.toLowerCase();
+            for (Product p : specifiedProducts) {
+                String productName = p.getName().toLowerCase();
+                String productDesc = p.getDescription().toLowerCase();
+                if (productName.contains(searchKey) || productDesc.contains(searchKey)) {
+                    matchingProducts.add(p);
+                }
+            }
+            output.writeObject(matchingProducts);
+            output.flush();
+        }
     }
 
     /**
@@ -282,7 +338,23 @@ public class Server implements Runnable {
      * @param searchKey the key to search (i.e. the store name); '-1' if no search is needed
      */
     private void getSellerStores(ObjectOutputStream output, String searchKey) throws IOException {
-
+        // @Ethan
+        // Assume currentUser is instanceof Seller
+        Seller currentSeller = (Seller) currentUser;
+        HashMap<String, Store> sellerStoresHM = currentSeller.getStores();
+        ArrayList<Store> sellerStoresAL = new ArrayList<>();
+        if (searchKey.equals("-1")) {
+            sellerStoresAL.addAll(sellerStoresHM.values());
+        } else {
+            // Find stores that the key String contains the searchKey String.
+            for (String storeName : sellerStoresHM.keySet()) {
+                if (storeName.contains(searchKey)) {
+                    sellerStoresAL.add(sellerStoresHM.get(storeName));
+                }
+            }
+        }
+        output.writeObject(sellerStoresAL);
+        output.flush();
     }
 
     /**
@@ -293,7 +365,18 @@ public class Server implements Runnable {
      * @param storeName the name of the store to be deleted
      */
     private void deleteStore(ObjectOutputStream output, String storeName) throws IOException {
-
+        // @Ethan
+        // Assume currentUser is instanceof Seller
+        boolean returnObject;
+        Seller currentSeller = (Seller) currentUser;
+        HashMap<String, Store> sellerStores = currentSeller.getStores();
+        if (sellerStores.remove(storeName) == null) { // remove store, if store does not exist, returns null.
+            returnObject = false;
+        } else { // if it successfully removed, returns the value of the object.
+            returnObject = true;
+        }
+        output.writeObject(returnObject);
+        output.flush();
     }
 
     /**
@@ -304,15 +387,34 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void createStore(ObjectOutputStream output, String storeName) throws IOException {
-
+        // @Ethan
+        // Assume that currentUser is instanceof Seller.
+        boolean returnObject;
+        Seller currentSeller = (Seller) currentUser;
+        HashMap<String, Store> sellerStores = currentSeller.getStores();
+        if (sellerStores.containsKey(storeName)) {
+            returnObject = false;
+        } else {
+            returnObject = true;
+            Store newStore = new Store(storeName, currentSeller.getUserName());
+            sellerStores.put(storeName, newStore);
+        }
+        output.writeObject(returnObject);
+        output.flush();
     }
 
     /**
-     * Send a string object containing the {@link #currentUser}'s username to the client
+     * Send a string object containing the {@link #currentUser}'s usertype (customer or seller) to the client
      * @param output the output stream to communicate with client
      */
     private void getUserType(ObjectOutputStream output) throws IOException {
-
+        if (currentUser instanceof Customer) {
+            output.writeObject("Customer");
+            output.flush();
+        } else {
+            output.writeObject("Seller");
+            output.flush();
+        }
     }
 
     /**
@@ -320,7 +422,8 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getUserEmail(ObjectOutputStream output) throws IOException {
-
+        output.writeObject(currentUser.getEmail());
+        output.flush();
     }
 
     /**
@@ -328,15 +431,24 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getUserName(ObjectOutputStream output) throws IOException {
-
+        output.writeObject(currentUser.getUserName());
+        output.flush();
     }
 
     /**
      * Delete the user in {@link #users} associate with the given email
+     * ----------------------------------------------
+     *
+     * In addition, end socket and thread?
+     * The client side should automatically send the user to logInPage.
+     *
+     * ----------------------------------------------
      * @param email the email of the account to be deleted
      */
-    private void deleteAccount(String email) {
-
+    private void deleteAccount(String email) throws IOException {
+        // @Ethan
+        users.remove(email);
+        logOut(); // client side should send the user to logInPage
     }
 
     /**
@@ -344,33 +456,102 @@ public class Server implements Runnable {
      * Send a TRUE boolean object to client if success;
      * Send a FALSE boolean object to client if failed (i.e. username is taken)
      * @param output the output stream to communicate with client
-     * @param email the user's email (not allow to be changed; used to search user)
-     * @param username the username of the new user
-     * @param password the password of the new user
+     * @param username the new username of the user
+     * @param password the new password of the user
      */
-    private void modifyAccount(ObjectOutputStream output, String email,
-                               String username, String password) throws IOException {
+    private void modifyAccount(ObjectOutputStream output, String username, String password) throws IOException {
+        // @Ethan
 
+        // valid username type is checked
+        boolean outputObject;
+        if (users.containsKey(username)) { // username already exists.
+            outputObject = false;
+        } else {
+            currentUser.setUserName(username);
+            currentUser.setPassword(password);
+            outputObject = true;
+        }
+        output.writeObject(outputObject);
+        output.flush();
     }
 
     /**
-     * Close the socket
+     * Set user's online status to false and close the socket
      */
     private void logOut() throws IOException {
-        socket.close();
+        currentUser.setOnline(false); // set user to offline
+        currentUser = null; // set current user to null, in case a different user logs in before the socket is lost
     }
 
     /**
      * Find the user with a matching id (username or email) and email
      * Set the {@link #currentUser} to the newly created User if success;
-     * Send a TRUE boolean object to client if success;
-     * Send a FALSE boolean object to client if failed.
+     * Send a  1 integer object to client if success and client is a SELLER;
+     * Send a  0 integer object to client if success and client is a CUSTOMER;
+     * Send a -1 integer object to client if failed (i.e. username/email/password is incorrect)
      * @param output the output stream to communicate with client
      * @param id username or email of the client
      * @param password password of the client
      */
     private void logIn(ObjectOutputStream output, String id, String password) throws IOException {
+        User user; // logging in user
 
+        // Email matched
+        if ((user = users.get(id)) != null) {
+            // Don't allow multiple log in
+            if (user.isOnline()) {
+                output.writeObject(-1);
+                output.flush();
+                return;
+            }
+
+            // Email and password matched
+            if (user.getPassword().equals(password)) {
+                currentUser = user;
+                user.setOnline(true);
+
+                if (user instanceof Seller) {
+                    output.writeObject(1);
+                } else {
+                    output.writeObject(0);
+                }
+                output.flush();
+                return;
+            }
+        }
+
+        // Passed in id can be username
+        else {
+            for(User u : users.values()) {
+                // Username matched
+                if (u.getUserName().equals(id)) {
+                    // Don't allow multiple log in
+                    if (u.isOnline()) {
+                        output.writeObject(-1);
+                        output.flush();
+                        return;
+                    }
+
+                    // Username and password matched
+                    if (u.getPassword().equals(password)) {
+                        currentUser = u;
+                        u.setOnline(true);
+
+                        if (u instanceof Seller) {
+                            output.writeObject(1);
+                        } else {
+                            output.writeObject(0);
+                        }
+                        output.flush();
+                        return;
+                    }
+                }
+            }
+        }
+
+        // No matched username or email or password is wrong
+        output.writeObject(-1);
+        output.flush();
     }
 
     /**
@@ -379,12 +560,51 @@ public class Server implements Runnable {
      * Send a  0 integer object to client if email is taken
      * Send a -1 integer object to client if username is taken
      * @param output the output stream to communicate with client
+     * @param type the usertype (Customer or Seller)
      * @param username the username of the new user
      * @param email the email of the new user
      * @param password the password of the new user
      */
-    private void signUp(ObjectOutputStream output, String username, String email, String password) throws IOException {
+    private void signUp(ObjectOutputStream output,
+                        String type, String username, String email, String password) throws IOException {
+        // Validate email
+        User checker = users.get(email);
+        if (checker != null) {
+            output.writeObject(0);
+            output.flush();
+            return;
+        }
 
+        // Validate username
+        for (User user : users.values()) {
+            if (user.getUserName().equals(username)) {
+                output.writeObject(-1);
+                output.flush();
+                return;
+            }
+        }
+
+        // User is customer
+        if (type.equals("Customer")) {
+            Customer newCustomer = new Customer(username, email, password);
+            users.put(email, newCustomer);
+            currentUser = newCustomer;
+            currentUser.setOnline(true);
+
+            output.writeObject(1);
+            output.flush();
+        }
+
+        // User is seller
+        else if (type.equals("Seller")){
+            Seller newSeller = new Seller(username, email, password);
+            users.put(email, newSeller);
+            currentUser = newSeller;
+            currentUser.setOnline(true);
+
+            output.writeObject(1);
+            output.flush();
+        }
     }
 
     /**
@@ -402,10 +622,10 @@ public class Server implements Runnable {
 
         String command = queryComponents[0];
         switch (command) {
-            // Signing up (Query: SIGNUP_username_email_password)
+            // Signing up (Query: SIGNUP_usertype_username_email_password)
             case "SIGNUP" -> {
                 System.out.printf("Received Query: %s\n->Calling signUp()\n", query);
-                signUp(output, queryComponents[1], queryComponents[2], queryComponents[3]);
+                signUp(output, queryComponents[1], queryComponents[2], queryComponents[3], queryComponents[4]);
             }
 
             // Logging in (Query: LOGIN_username/email_password)
@@ -420,10 +640,10 @@ public class Server implements Runnable {
                 logOut();
             }
 
-            // Modifying account (Query: MODACC_email_username_password)
+            // Modifying account (Query: MODACC_username_password)
             case "MODACC" -> {
                 System.out.printf("Received Query: %s\n->Calling modifyAccount()\n", query);
-                modifyAccount(output, queryComponents[1], queryComponents[2], queryComponents[3]);
+                modifyAccount(output, queryComponents[1], queryComponents[2]);
             }
 
             // Deleting account (Query: DELACC_userEmail)
@@ -482,7 +702,8 @@ public class Server implements Runnable {
                         queryComponents[4], queryComponents[5]);
             }
 
-            // Modifying a store's product (Query: MODPROD_productOldName_productNewName_storeName_description_price_quantity)
+            // Modifying a store's product
+            // (Query: MODPROD_productOldName_productNewName_storeName_description_price_quantity)
             case "MODPROD" -> {
                 System.out.printf("Received Query: %s\n->Calling modifyProduct()\n", query);
                 modifyProduct(output, queryComponents[1], queryComponents[2], queryComponents[3],
@@ -540,7 +761,6 @@ public class Server implements Runnable {
                 output.flush();
                 while (input.hasNextLine()) {
                     String command = input.nextLine();
-                    System.out.printf("Received command: %s", command);
                     processCommand(command, output);
                 }
             }

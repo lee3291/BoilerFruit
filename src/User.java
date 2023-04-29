@@ -5,13 +5,11 @@ import java.io.Serializable;
  */
 public abstract class User implements Serializable {
     // For different user instance
+    private boolean onlineStatus; // whether the user is online
     private String userName; // unique value per user
     private final String email; // unique value per user; Hashmap key for user
     private String password;
-    public final int USERNAME_MAX_LENGTH = 8; // Max username length
-    public final int PASSWORD_MIN_LENGTH = 5; // Min password length
-    public final int PASSWORD_MAX_LENGTH = 15; // Max password length
-
+    private boolean online;
 
     /**
      * Constructors have been overloaded for different situation.
@@ -25,6 +23,7 @@ public abstract class User implements Serializable {
         this.userName = userName;
         this.email = email;
         this.password = password;
+        this.online = false;
     }
 
     /**
@@ -52,5 +51,13 @@ public abstract class User implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isOnline() {
+        return online;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
     }
 }
