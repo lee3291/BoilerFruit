@@ -120,7 +120,6 @@ public class ClientGUI implements Runnable {
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new GridLayout(5, 0));
 
-
         // First Row
         JLabel firstLabel = new JLabel("Welcome to Boiler Fruits");
         firstLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -177,13 +176,10 @@ public class ClientGUI implements Runnable {
             // Fields are filled
             String query = String.format("LOGIN_%s_%s", id, pw);
             try {
-                Object obj;
-
                 printWriter.println(query); // query for login
                 printWriter.flush();
 
-                obj = ois.readObject();
-                int response = ((Integer) obj).intValue();
+                int response = (Integer) ois.readObject();
 
                 if (response == -1) {
                     JOptionPane.showMessageDialog(frame, "Incorrect Account Information!", "ERROR",
@@ -192,8 +188,7 @@ public class ClientGUI implements Runnable {
                     // CustomerPage, get products from server.
                     printWriter.println("GETMRKPROD_-1"); // get all products query.
                     printWriter.flush();
-                    obj = ois.readObject();
-                    ArrayList<Product> allProducts = (ArrayList<Product>) obj;
+                    ArrayList<Product> allProducts = (ArrayList<Product>) ois.readObject();
                     customerPage(allProducts);
                 } else if (response == 1) {
                     // SellerPage, get stores query
@@ -201,8 +196,7 @@ public class ClientGUI implements Runnable {
                     // get stores query
                     printWriter.println("GETSELLSTR_-1");
                     printWriter.flush();
-                    obj = ois.readObject();
-                    ArrayList<Store> userStores = (ArrayList<Store>) obj;
+                    ArrayList<Store> userStores = (ArrayList<Store>) ois.readObject();
                     sellerPage(userStores);
                 }
             } catch (Exception ex) {
@@ -290,9 +284,7 @@ public class ClientGUI implements Runnable {
 
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setMaximumSize(new Dimension(200, 50));
-        goBackButton.addActionListener(e -> {
-            loginPage();
-        });
+        goBackButton.addActionListener(e -> loginPage());
 
         JButton signUpButton = new JButton("Sign Up");
         signUpButton.setMaximumSize(new Dimension(200, 50));
@@ -329,7 +321,7 @@ public class ClientGUI implements Runnable {
                 try {
                     printWriter.println(signUpQuery);
                     printWriter.flush();
-                    int response = (Integer) ois.readObject();;
+                    int response = (Integer) ois.readObject();
                     if (response == 1) {
                         JOptionPane.showMessageDialog(frame,
                                 "Sign Up Complete. Please Log-In Again!",
@@ -860,13 +852,10 @@ public class ClientGUI implements Runnable {
             }
 
             // Store name is empty
-            else if (storeName.isEmpty()) {
+            if (storeName.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Store name cannot be empty!",
                         "ERROR - Create Store", JOptionPane.ERROR_MESSAGE);
-            }
-
-            // Make query and send to server
-            else {
+            } else { // Make query and send to server
                 String serverQuery = String.format("CRTSTR_%s", storeName);
                 System.out.println(serverQuery);
 
@@ -889,13 +878,10 @@ public class ClientGUI implements Runnable {
             }
 
             // Input is empty
-            else if (storeName.isEmpty()) {
+            if (storeName.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Store name cannot be empty!",
                         "ERROR - Delete Store", JOptionPane.ERROR_MESSAGE);
-            }
-
-            // Make query and send to server
-            else {
+            } else { // Make query and send to server
                 String serverQuery = String.format("DELSTR_%s", storeName);
                 System.out.println(serverQuery);
 
@@ -1072,7 +1058,10 @@ public class ClientGUI implements Runnable {
             // User close the GUI; terminate the program; do nothing
             if (inputPath == null) {
                 return;
-            } else if (inputPath.isEmpty()) { // File path is empty
+            }
+
+            // File path is empty
+            if (inputPath.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Path cannot be empty!",
                         "ERROR - Import Product", JOptionPane.ERROR_MESSAGE);
             } else {
@@ -1113,7 +1102,10 @@ public class ClientGUI implements Runnable {
             // User close the GUI; terminate the program; do nothing
             if (outputPath == null) {
                 return;
-            } else if (outputPath.isEmpty()) { // File path is empty
+            }
+
+            // File path is empty
+            if (outputPath.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Path cannot be empty!",
                         "ERROR - Export Product", JOptionPane.ERROR_MESSAGE);
             } else { // Exporting
