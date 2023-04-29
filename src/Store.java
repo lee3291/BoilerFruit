@@ -153,6 +153,7 @@ public class Store implements Serializable {
 
     /**
      * Add a new customer to the store's email list IFF the customer is new
+     *
      * @param customerEmail the potential new customer email
      */
     public void addCustomerEmail(String customerEmail) {

@@ -23,6 +23,7 @@ public class FileIO {
 
     /**
      * Write all user objects in users into a file (path: ./data/users.ser)
+     *
      * @param users a hashmap of all users
      * @return true if success, false otherwise
      */
@@ -46,6 +47,7 @@ public class FileIO {
 
     /**
      * Read all user object from data file (path: ./data/users.ser)
+     *
      * @return the HashMap<String, User> if success, null otherwise
      */
     public HashMap<String, User> readUsers() {
@@ -57,10 +59,7 @@ public class FileIO {
                 // User is a seller
                 if (curr instanceof Seller newSeller) {
                     users.put(curr.getUserName(), newSeller);
-                }
-
-                // User is a customer
-                else if (curr instanceof Customer newCustomer) {
+                } else if (curr instanceof Customer newCustomer) { // User is a customer
                     users.put(curr.getUserName(), newCustomer);
                 }
 
@@ -80,7 +79,7 @@ public class FileIO {
     /**
      * Export purchase history into a CSV file at filePath
      *
-     * @param filePath the path to the file to be created
+     * @param filePath        the path to the file to be created
      * @param purchaseHistory the purchase history
      */
     public boolean exportPurchaseHistory(String filePath, ArrayList<Product> purchaseHistory) {
@@ -147,7 +146,7 @@ public class FileIO {
     /**
      * Export the currentProducts to the specified filePath
      *
-     * @param filePath the filePath to the CSV file for exporting product
+     * @param filePath        the filePath to the CSV file for exporting product
      * @param currentProducts the current product
      * @return true if success; false otherwise
      */
