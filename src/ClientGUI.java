@@ -1686,7 +1686,7 @@ public class ClientGUI implements Runnable {
                 } catch (NumberFormatException en) {
                     JOptionPane.showMessageDialog(null,
                             "Price is in an incorrect format",
-                            "ERROR-Add Product", JOptionPane.ERROR_MESSAGE);
+                            "ERROR-Modify Product", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }
@@ -1701,18 +1701,40 @@ public class ClientGUI implements Runnable {
                 } catch (NumberFormatException en) {
                     JOptionPane.showMessageDialog(null,
                             "Quantity is in an incorrect format",
-                            "ERROR-Add Product", JOptionPane.ERROR_MESSAGE);
+                            "ERROR-Modify Product", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }
 
-            // Making query and send to server
+            // Send query
             String query = String.format("MODPROD_%s_%s_%s_%s_%.2f_%d",
                     oldProduct.getName(), adjustName, store.getStoreName(), adjustDescription, adjustPrice, adjustQty);
-
-            // TODO: send query and get from server
             System.out.println(query);
-            storePage(store, new ArrayList<>());
+            printWriter.println(query);
+            printWriter.flush();
+
+            try {
+                // Check if modification success
+                if (!((Boolean) ois.readObject())) {
+                    JOptionPane.showMessageDialog(null,
+                            "The new product name is taken!",
+                            "ERROR-Modify Product", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    // Get seller email
+                    printWriter.println("EMAIL");
+                    printWriter.flush();
+                    String sellerEmail = (String) ois.readObject();
+
+                    // Go back, update Store Product
+                    query = String.format("GETSTRPROD_%s_%s_%d",
+                            sellerEmail, store.getStoreName(), -1);
+                    printWriter.println(query);
+                    printWriter.flush();
+                    storePage(store, (ArrayList<Product>) ois.readObject());
+                }
+            } catch (Exception ei) {
+                ei.printStackTrace();
+            }
         });
 
         bottomPanel.add(goBackButton);
