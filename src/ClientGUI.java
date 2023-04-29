@@ -4,12 +4,10 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ClientGUI implements Runnable {
 
@@ -19,6 +17,7 @@ public class ClientGUI implements Runnable {
     PrintWriter printWriter;
     public final int USERINFO_MAX_LENGTH = 15; // Max username/password length
     public final int USERINFO_MIN_LENGTH = 5; // Min username/password/email length
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new ClientGUI());
     }
@@ -53,12 +52,14 @@ public class ClientGUI implements Runnable {
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.X_AXIS));
 
         JTextField ipAddressTxt = new JTextField("localhost", 10);
+        ipAddressTxt.setForeground(Color.GRAY);
         ipAddressTxt.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (ipAddressTxt.getText().equals("localhost")) {
-                    ipAddressTxt.setText("");}
                     ipAddressTxt.setForeground(Color.BLACK);
+                    ipAddressTxt.setText("");
+                }
             }
 
             @Override
@@ -122,7 +123,6 @@ public class ClientGUI implements Runnable {
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new GridLayout(5, 0));
 
-
         // First Row
         JLabel firstLabel = new JLabel("Welcome to Boiler Fruits");
         firstLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -135,7 +135,7 @@ public class ClientGUI implements Runnable {
 
         JLabel idLabel = new JLabel("ID: ");
         idLabel.setFont(new Font(null, Font.PLAIN, 20));
-        JTextField idTxt = new JTextField( 10);
+        JTextField idTxt = new JTextField(10);
         idTxt.setMaximumSize(new Dimension(200, 50));
 
         secondPanel.add(Box.createRigidArea(new Dimension(255, 0)));
@@ -150,7 +150,7 @@ public class ClientGUI implements Runnable {
 
         JLabel pwLabel = new JLabel("PW: ");
         pwLabel.setFont(new Font(null, Font.PLAIN, 20));
-        JTextField pwTxt = new JTextField( 10);
+        JTextField pwTxt = new JTextField(10);
         pwTxt.setMaximumSize(new Dimension(200, 50));
 
         thirdPanel.add(Box.createRigidArea(new Dimension(250, 0)));
@@ -169,19 +169,20 @@ public class ClientGUI implements Runnable {
             String id = idTxt.getText();
             String pw = pwTxt.getText();
 
+            // Empty fields
             if (id.isEmpty() || pw.isEmpty()) {
                 JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
+                return;
             }
+
+            // Fields are filled
             String query = String.format("LOGIN_%s_%s", id, pw);
             try {
-                Object obj;
-
                 printWriter.println(query); // query for login
                 printWriter.flush();
 
-                obj = ois.readObject();
-                int response = ((Integer) obj).intValue();
+                int response = (Integer) ois.readObject();
 
                 if (response == -1) {
                     JOptionPane.showMessageDialog(frame, "Incorrect Account Information!", "ERROR",
@@ -190,8 +191,7 @@ public class ClientGUI implements Runnable {
                     // CustomerPage, get products from server.
                     printWriter.println("GETMRKPROD_-1"); // get all products query.
                     printWriter.flush();
-                    obj = ois.readObject();
-                    ArrayList<Product> allProducts = (ArrayList<Product>) obj;
+                    ArrayList<Product> allProducts = (ArrayList<Product>) ois.readObject();
                     customerPage(allProducts);
                 } else if (response == 1) {
                     // SellerPage, get stores query
@@ -199,8 +199,7 @@ public class ClientGUI implements Runnable {
                     // get stores query
                     printWriter.println("GETSELLSTR_-1");
                     printWriter.flush();
-                    obj = ois.readObject();
-                    ArrayList<Store> userStores = (ArrayList<Store>) obj;
+                    ArrayList<Store> userStores = (ArrayList<Store>) ois.readObject();
                     sellerPage(userStores);
                 }
             } catch (Exception ex) {
@@ -245,15 +244,9 @@ public class ClientGUI implements Runnable {
         JPanel secondRowPanel = new JPanel();
         secondRowPanel.setLayout(new BoxLayout(secondRowPanel, BoxLayout.Y_AXIS));
         String[] userType = {"Customer", "Seller"};
-        AtomicReference<String> userTypeStr = new AtomicReference<>();
         JComboBox jcomboBox = new JComboBox(userType);
         jcomboBox.setPreferredSize(new Dimension(200, 30));
         jcomboBox.setMaximumSize(jcomboBox.getPreferredSize());
-        jcomboBox.addActionListener(e -> {
-            if (e.getSource() == jcomboBox) {
-                userTypeStr.set((String) jcomboBox.getSelectedItem());
-            }
-        });
         secondRowPanel.add(jcomboBox);
         topPanel.add(secondRowPanel);
         jPanel.add(topPanel);
@@ -294,9 +287,7 @@ public class ClientGUI implements Runnable {
 
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setMaximumSize(new Dimension(200, 50));
-        goBackButton.addActionListener(e -> {
-            loginPage();
-        });
+        goBackButton.addActionListener(e -> loginPage());
 
         JButton signUpButton = new JButton("Sign Up");
         signUpButton.setMaximumSize(new Dimension(200, 50));
@@ -327,34 +318,31 @@ public class ClientGUI implements Runnable {
             } else if (id.contains("_") || pw.contains("_") || email.contains("_")) {
                 JOptionPane.showMessageDialog(frame, "Do not include '_' in the fields!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
-            }
-
-            // Send query to server
-            Object obj;
-            String signUpQuery = String.format("SIGNUP_%s_%s_%s_%s", userTypeStr.get(), id, email, pw);
-            try {
-                System.out.println(signUpQuery);
-                printWriter.println(signUpQuery);
-                printWriter.flush();
-                obj = ois.readObject();
-                int response = (Integer) obj;
-                if (response == 1) {
-                    JOptionPane.showMessageDialog(frame, "Please Log-In", "Sign Up Complete",
-                            JOptionPane.PLAIN_MESSAGE);
-                    loginPage();
-                } else if (response == -1) {
-                    JOptionPane.showMessageDialog(frame, "Username already exists!", "ERROR",
-                            JOptionPane.ERROR_MESSAGE);
-                } else if (response == 0) {
-                    JOptionPane.showMessageDialog(frame, "Email already exists!", "ERROR",
+            } else {
+                // Send query to server
+                String signUpQuery = String.format("SIGNUP_%s_%s_%s_%s", jcomboBox.getSelectedItem(), id, email, pw);
+                try {
+                    printWriter.println(signUpQuery);
+                    printWriter.flush();
+                    int response = (Integer) ois.readObject();
+                    if (response == 1) {
+                        JOptionPane.showMessageDialog(frame,
+                                "Sign Up Complete. Please Log-In Again!",
+                                "SUCCESS", JOptionPane.PLAIN_MESSAGE);
+                        loginPage();
+                    } else if (response == -1) {
+                        JOptionPane.showMessageDialog(frame, "Username already exists!", "ERROR",
+                                JOptionPane.ERROR_MESSAGE);
+                    } else if (response == 0) {
+                        JOptionPane.showMessageDialog(frame, "Email already exists!", "ERROR",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
                             JOptionPane.ERROR_MESSAGE);
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
-                        JOptionPane.ERROR_MESSAGE);
             }
-
         });
         buttonPanel.add(Box.createRigidArea(new Dimension(172, 0)));
         buttonPanel.add(goBackButton);
@@ -379,12 +367,14 @@ public class ClientGUI implements Runnable {
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
         JTextField searchBar = new JTextField("Search for product name, store, or description", 10);
+        searchBar.setForeground(Color.GRAY);
         searchBar.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (searchBar.getText().equals("Search for product name, store, or description")) {
-                    searchBar.setText("");}
-                searchBar.setForeground(Color.BLACK);
+                    searchBar.setForeground(Color.BLACK);
+                    searchBar.setText("");
+                }
             }
 
             @Override
@@ -430,9 +420,13 @@ public class ClientGUI implements Runnable {
         editAccountButton.addActionListener(e -> editAccountPage());
 
         JButton logOutButton = new JButton("Log Out");
-        logOutButton.setPreferredSize(new Dimension(100 ,50));
+        logOutButton.setPreferredSize(new Dimension(100, 50));
         logOutButton.setMaximumSize(logOutButton.getPreferredSize());
-        logOutButton.addActionListener(e -> loginPage());
+        logOutButton.addActionListener(e -> {
+            printWriter.println("LOGOUT");
+            printWriter.flush();
+            loginPage();
+        });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(userType);
@@ -495,7 +489,7 @@ public class ClientGUI implements Runnable {
 
         productListing.getSelectionModel().addListSelectionListener(e -> {
             Product p = productListing.getSelectedValue();
-            pDescTxtPane.setText(p.toString()+ '\n' + p.getDescription());
+            pDescTxtPane.setText(p.toString() + '\n' + p.getDescription());
         });
 
         JButton sortByPriceButton = new JButton("Sort By Price");
@@ -546,7 +540,6 @@ public class ClientGUI implements Runnable {
 
         jPanel.add(splitPane, BorderLayout.CENTER);
 
-
         frame.add(jPanel);
         frame.revalidate();
         frame.repaint();
@@ -595,12 +588,14 @@ public class ClientGUI implements Runnable {
         JLabel idLabel = new JLabel("ID: ");
         idLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField idTxt = new JTextField("Enter new user name", 10);
+        idTxt.setForeground(Color.GRAY);
         idTxt.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (idTxt.getText().equals("Enter new user name")) {
-                    idTxt.setText("");}
-                idTxt.setForeground(Color.BLACK);
+                    idTxt.setForeground(Color.BLACK);
+                    idTxt.setText("");
+                }
             }
 
             @Override
@@ -616,7 +611,8 @@ public class ClientGUI implements Runnable {
         idChangeButton.addActionListener(e -> {
             String newId = idTxt.getText();
             if ((newId.length() < USERINFO_MIN_LENGTH) || (newId.length() > USERINFO_MAX_LENGTH)) {
-                String idErrorMessage = String.format("Username must be %d-%d characters!", USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
+                String idErrorMessage = String.format("Username must be %d-%d characters!",
+                        USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
                 JOptionPane.showMessageDialog(frame, idErrorMessage, "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             } else if (newId.contains("_")) {
@@ -660,12 +656,14 @@ public class ClientGUI implements Runnable {
         JLabel pwLabel = new JLabel("PW: ");
         pwLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField pwTxt = new JTextField("Enter new password", 10);
+        pwTxt.setForeground(Color.GRAY);
         pwTxt.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (pwTxt.getText().equals("Enter new password")) {
-                    pwTxt.setText("");}
-                pwTxt.setForeground(Color.BLACK);
+                    pwTxt.setForeground(Color.BLACK);
+                    pwTxt.setText("");
+                }
             }
 
             @Override
@@ -860,12 +858,14 @@ public class ClientGUI implements Runnable {
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
         JTextField searchBar = new JTextField("Search for store", 10);
+        searchBar.setForeground(Color.GRAY);
         searchBar.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (searchBar.getText().equals("Search for store")) {
-                    searchBar.setText("");}
                     searchBar.setForeground(Color.BLACK);
+                    searchBar.setText("");
+                }
             }
 
             @Override
@@ -879,8 +879,9 @@ public class ClientGUI implements Runnable {
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
             if (searchBar.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Please fill in blank field!", "ERROR",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null,
+                        "Please fill in blank field!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -916,10 +917,11 @@ public class ClientGUI implements Runnable {
         editAccountButton.addActionListener(e -> editAccountPage());
 
         JButton logOutButton = new JButton("Log Out");
-        logOutButton.setPreferredSize(new Dimension(100 ,50));
+        logOutButton.setPreferredSize(new Dimension(100, 50));
         logOutButton.setMaximumSize(logOutButton.getPreferredSize());
         logOutButton.addActionListener(e -> {
-            // TODO: send Log out message to server
+            printWriter.println("LOGOUT");
+            printWriter.flush();
             loginPage();
         });
 
@@ -952,13 +954,10 @@ public class ClientGUI implements Runnable {
             }
 
             // Store name is empty
-            else if (storeName.isEmpty()) {
+            if (storeName.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Store name cannot be empty!",
                         "ERROR - Create Store", JOptionPane.ERROR_MESSAGE);
-            }
-
-            // Make query and send to server
-            else {
+            } else { // Make query and send to server
                 String serverQuery = String.format("CRTSTR_%s", storeName);
                 System.out.println(serverQuery);
 
@@ -981,13 +980,10 @@ public class ClientGUI implements Runnable {
             }
 
             // Input is empty
-            else if (storeName.isEmpty()) {
+            if (storeName.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Store name cannot be empty!",
                         "ERROR - Delete Store", JOptionPane.ERROR_MESSAGE);
-            }
-
-            // Make query and send to server
-            else {
+            } else { // Make query and send to server
                 String serverQuery = String.format("DELSTR_%s", storeName);
                 System.out.println(serverQuery);
 
@@ -1128,7 +1124,7 @@ public class ClientGUI implements Runnable {
         addProductButton.addActionListener(e -> addProductPage(store));
 
         JButton backButton = new JButton("Go Back");
-        backButton.setPreferredSize(new Dimension(120 ,50));
+        backButton.setPreferredSize(new Dimension(120, 50));
         backButton.setMaximumSize(backButton.getPreferredSize());
         backButton.addActionListener(e -> {
             // TODO: Get stores ArrayList from server.
@@ -1164,7 +1160,10 @@ public class ClientGUI implements Runnable {
             // User close the GUI; terminate the program; do nothing
             if (inputPath == null) {
                 return;
-            } else if (inputPath.isEmpty()) { // File path is empty
+            }
+
+            // File path is empty
+            if (inputPath.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Path cannot be empty!",
                         "ERROR - Import Product", JOptionPane.ERROR_MESSAGE);
             } else {
@@ -1205,7 +1204,10 @@ public class ClientGUI implements Runnable {
             // User close the GUI; terminate the program; do nothing
             if (outputPath == null) {
                 return;
-            } else if (outputPath.isEmpty()) { // File path is empty
+            }
+
+            // File path is empty
+            if (outputPath.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Path cannot be empty!",
                         "ERROR - Export Product", JOptionPane.ERROR_MESSAGE);
             } else { // Exporting
@@ -1263,7 +1265,7 @@ public class ClientGUI implements Runnable {
         });
 
         JButton modifyButton = new JButton("Modify");
-        modifyButton.setPreferredSize(new Dimension(100 ,50));
+        modifyButton.setPreferredSize(new Dimension(100, 50));
         modifyButton.setMaximumSize(modifyButton.getPreferredSize());
         modifyButton.addActionListener(e -> {
             Product selectedProduct = currentProducts.getSelectedValue();
@@ -1277,7 +1279,7 @@ public class ClientGUI implements Runnable {
         });
 
         JButton deleteButton = new JButton("Delete");
-        deleteButton.setPreferredSize(new Dimension(100 ,50));
+        deleteButton.setPreferredSize(new Dimension(100, 50));
         deleteButton.setMaximumSize(deleteButton.getPreferredSize());
         deleteButton.addActionListener(e -> {
             Product selectedProduct = currentProducts.getSelectedValue();
@@ -1314,6 +1316,7 @@ public class ClientGUI implements Runnable {
 
     /**
      * Page for adding new product
+     *
      * @param store the store of the new product
      */
     void addProductPage(Store store) {
@@ -1468,6 +1471,7 @@ public class ClientGUI implements Runnable {
 
     /**
      * Page for modify product
+     *
      * @param oldProduct the product to be modified
      */
     void modifyProductPage(Store store, Product oldProduct) {
@@ -1502,8 +1506,9 @@ public class ClientGUI implements Runnable {
             @Override
             public void focusGained(FocusEvent e) {
                 if (productName.getText().equals("Enter a new product name; Leave blank for old value!")) {
-                    productName.setText("");}
-                productName.setForeground(Color.BLACK);
+                    productName.setForeground(Color.BLACK);
+                    productName.setText("");
+                }
             }
 
             @Override
@@ -1574,8 +1579,9 @@ public class ClientGUI implements Runnable {
             @Override
             public void focusGained(FocusEvent e) {
                 if (productPrice.getText().equals("Enter a new product price; Leave blank for old value!")) {
-                    productPrice.setText("");}
-                productPrice.setForeground(Color.BLACK);
+                    productPrice.setForeground(Color.BLACK);
+                    productPrice.setText("");
+                }
             }
 
             @Override
@@ -1609,8 +1615,9 @@ public class ClientGUI implements Runnable {
             @Override
             public void focusGained(FocusEvent e) {
                 if (productQuantity.getText().equals("Enter a new product quantity; Leave blank for old value!")) {
-                    productQuantity.setText("");}
-                productQuantity.setForeground(Color.BLACK);
+                    productQuantity.setForeground(Color.BLACK);
+                    productQuantity.setText("");
+                }
             }
 
             @Override
