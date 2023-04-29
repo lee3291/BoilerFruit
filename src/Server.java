@@ -74,9 +74,10 @@ public class Server implements Runnable {
                     ((Customer) currentUser).addToPurchaseHistory(p, quantity);
 
                     output.writeObject(true);
-                    output.writeObject(false);
+                    return;
                 }
             }
+            output.writeObject(false);
         }
     }
 
