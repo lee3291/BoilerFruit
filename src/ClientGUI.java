@@ -197,10 +197,7 @@ public class ClientGUI implements Runnable {
                     // SellerPage, get stores query
                     // Get user email query, since log in is successful, "currentUser" in server is this user.
                     // get stores query
-                    printWriter.println("GETSELLSTR_-1");
-                    printWriter.flush();
-                    ArrayList<Store> userStores = (ArrayList<Store>) ois.readObject();
-                    sellerPage(userStores);
+                    sellerPage(fetchSellerStore());
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -742,11 +739,7 @@ public class ClientGUI implements Runnable {
                     // Get user email query, since log in is successful, "currentUser" in server is this user.
                     // get stores query
                     try {
-                        printWriter.println("GETSELLSTR_-1");
-                        printWriter.flush();
-                        obj1 = ois.readObject();
-                        ArrayList<Store> userStores = (ArrayList<Store>) obj1;
-                        sellerPage(userStores);
+                        sellerPage(fetchSellerStore());
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
@@ -892,10 +885,7 @@ public class ClientGUI implements Runnable {
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            String query = "GETSELLSTR_-1";
-            // TODO: Get stores ArrayList from server
-            System.out.println(query);
-            // sellerPage(stores);
+             sellerPage(fetchSellerStore());
         });
 
         northPanel.add(searchBar);
@@ -1095,11 +1085,7 @@ public class ClientGUI implements Runnable {
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            //TODO: call to server for new Product
-            String query = String.format("GETSTRPROD_%s_%s_%d",
-                    store.getSellerEmail(), store.getStoreName(), -1);
-            System.out.println(query);
-            storePage(store, products);
+            storePage(store, fetchStoreProduct(store));
         });
 
         northPanel.add(searchBar);
@@ -1127,10 +1113,7 @@ public class ClientGUI implements Runnable {
         backButton.setPreferredSize(new Dimension(120, 50));
         backButton.setMaximumSize(backButton.getPreferredSize());
         backButton.addActionListener(e -> {
-            // TODO: Get stores ArrayList from server.
-            String query = "GETSELLSTR_-1";
-            ArrayList<Store> updateStores = new ArrayList<>();
-            sellerPage(updateStores);
+            sellerPage(fetchSellerStore());
         });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
@@ -1185,11 +1168,7 @@ public class ClientGUI implements Runnable {
                 }
 
                 // Refresh
-                //TODO: call to server for new Product
-                String query = String.format("GETSTRPROD_%s_%s_%d",
-                        store.getSellerEmail(), store.getStoreName(), -1);
-                System.out.println(query);
-                storePage(store, products);
+                storePage(store, fetchStoreProduct(store));
             }
         });
 
@@ -1315,6 +1294,38 @@ public class ClientGUI implements Runnable {
     }
 
     /**
+     * Fetch new Store data from server for the current Seller
+     * @return all store owned by the current user; empty array list if there is an error
+     */
+    ArrayList<Store> fetchSellerStore() {
+        printWriter.println("GETSELLSTR_-1");
+        printWriter.flush();
+        try {
+            return (ArrayList<Store>) ois.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Fetch new Product data from server for the current Store
+     * @param store the current store object
+     * @return all product that are listed by the current Store
+     */
+    ArrayList<Product> fetchStoreProduct(Store store) {
+        String query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+        printWriter.println(query);
+        printWriter.flush();
+        try {
+            return (ArrayList<Product>) ois.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    /**
      * Page for adding new product
      *
      * @param store the store of the new product
@@ -1414,11 +1425,7 @@ public class ClientGUI implements Runnable {
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setPreferredSize(new Dimension(120, 50));
         goBackButton.addActionListener(e -> {
-            String query = String.format("GETSELLSTR_%s_%d", store.getStoreName(), -1);
-
-            // TODO: send and get from server
-            System.out.println(query);
-            storePage(store, new ArrayList<>());
+            storePage(store, fetchStoreProduct(store));
         });
 
         JButton confirmButton = new JButton("Add");
@@ -1644,11 +1651,7 @@ public class ClientGUI implements Runnable {
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setPreferredSize(new Dimension(120, 50));
         goBackButton.addActionListener(e -> {
-            String query = String.format("GETSELLSTR_%s_%d", store.getStoreName(), -1);
-
-            // TODO: send and get from server
-            System.out.println(query);
-            storePage(store, new ArrayList<>());
+            storePage(store, fetchStoreProduct(store));
         });
 
         JButton confirmButton = new JButton("Modify");
@@ -1714,23 +1717,13 @@ public class ClientGUI implements Runnable {
             printWriter.flush();
 
             try {
-                // Check if modification success
+                // If something went wrong
                 if (!((Boolean) ois.readObject())) {
                     JOptionPane.showMessageDialog(null,
                             "The new product name is taken!",
                             "ERROR-Modify Product", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    // Get seller email
-                    printWriter.println("EMAIL");
-                    printWriter.flush();
-                    String sellerEmail = (String) ois.readObject();
-
-                    // Go back, update Store Product
-                    query = String.format("GETSTRPROD_%s_%s_%d",
-                            sellerEmail, store.getStoreName(), -1);
-                    printWriter.println(query);
-                    printWriter.flush();
-                    storePage(store, (ArrayList<Product>) ois.readObject());
+                } else { // go back to store page
+                    storePage(store, fetchStoreProduct(store));
                 }
             } catch (Exception ei) {
                 ei.printStackTrace();
