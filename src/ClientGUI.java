@@ -167,10 +167,14 @@ public class ClientGUI implements Runnable {
             String id = idTxt.getText();
             String pw = pwTxt.getText();
 
+            // Empty fields
             if (id.isEmpty() || pw.isEmpty()) {
                 JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
+                return;
             }
+
+            // Fields are filled
             String query = String.format("LOGIN_%s_%s", id, pw);
             try {
                 Object obj;
