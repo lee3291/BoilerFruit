@@ -1095,9 +1095,16 @@ public class ClientGUI implements Runnable {
                 return;
             }
 
-            //TODO: Client-Server implementation, send query to server
+            // Making query and send to server
             String query = String.format("GETSTRPROD_%s_%s_%s",
                     store.getSellerEmail(), store.getStoreName(), searchBar.getText());
+            try {
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton refreshButton = new JButton("Refresh");
@@ -1482,11 +1489,15 @@ public class ClientGUI implements Runnable {
             }
 
             // Making query and send to server
-            String query = String.format("ADDPROD_%s_%s_%s_%.2f_%d",
-                    inputName, store.getStoreName(), inputDescription, price, quantity);
-
-            // TODO: send query and get from server
-            storePage(store, new ArrayList<>());
+            try {
+                String query = String.format("ADDPROD_%s_%s_%s_%.2f_%d",
+                        inputName, store.getStoreName(), inputDescription, price, quantity);
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         bottomPanel.add(goBackButton);
