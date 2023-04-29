@@ -23,6 +23,6 @@ public class Customer extends User implements Serializable {
     }
 
     public void addToPurchaseHistory(Product product, int quantity) {
-        this.purchaseHistory.add(String.format("Store: %s; Product: %s; Price: $%.2f; Qty: %d", product.getStore(), product.getName(), product.getPrice(), quantity));
+        this.purchaseHistory.add(String.format("Store: %s; Product: %s; Price: $%.2f; Qty: %d", product.getStoreName(), product.getName(), product.getPrice(), quantity));
     }
 }

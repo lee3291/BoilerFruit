@@ -3,13 +3,15 @@ import java.io.Serializable;
 public class Product implements Serializable {
     private String name;
     private final String storeName; // unique storeName
+    private final String sellerEmail;
     private String description;
     private double price;
     private int quantity; // available products in store OR item purchased
 
-    public Product(String name, String storeName, String description, double price, int quantity) {
+    public Product(String name, String storeName, String sellerEmail, String description, double price, int quantity) {
         this.name = name;
         this.storeName = storeName;
+        this.sellerEmail = sellerEmail;
         this.description = description;
         this.price = price;
         this.quantity = quantity;
@@ -19,8 +21,12 @@ public class Product implements Serializable {
         return name;
     }
 
-    public String getStore() {
+    public String getStoreName() {
         return storeName;
+    }
+
+    public String getSellerEmail() {
+        return sellerEmail;
     }
 
     public String getDescription() {

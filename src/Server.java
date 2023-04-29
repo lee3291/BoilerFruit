@@ -43,15 +43,14 @@ public class Server implements Runnable {
      * Send a FALSE boolean if failed (i.e. product is sold out)
      *
      * @param output         the output stream to communicate with client
-     * @param sellerEmail    the store's sellerEmail (used for quicker searching)
      * @param storeName      the product's storeName
      * @param productName    the product's name
      * @param strPurchaseQty the quantity purchase
      */
-    private void buyItem(ObjectOutputStream output, String sellerEmail, String storeName,
-                         String productName, String strPurchaseQty) throws IOException {
-        Seller productSeller = (Seller) users.get(sellerEmail);
-        Store productStore = productSeller.getStores().get(storeName);
+    private void buyItem(ObjectOutputStream output,
+                         String storeName, String productName, String strPurchaseQty) throws IOException {
+        // Find store from all the stores.
+        Store productStore = collectMarketStoreHM().get(storeName);
 
         synchronized (sentinel) { // TODO: checking concurrency
             for (Product p : productStore.getCurrentProducts()) {
@@ -74,9 +73,10 @@ public class Server implements Runnable {
                     ((Customer) currentUser).addToPurchaseHistory(p, quantity);
 
                     output.writeObject(true);
-                    output.writeObject(false);
+                    return;
                 }
             }
+            output.writeObject(false);
         }
     }
 
@@ -85,16 +85,30 @@ public class Server implements Runnable {
      *
      * @return an ArrayList of Store currently in the Marketplace
      */
-    private ArrayList<Store> collectMarketStore() {
+    private ArrayList<Store> collectMarketStoreAL() {
         // @Ethan
         ArrayList<Store> allStores = new ArrayList<>();
         for (User user : users.values()) {
             if (user instanceof Seller) {
-                // Get a user's stores into an arraylist.
-                ArrayList<Store> userStores = new ArrayList<>(((Seller) user).getStores().values());
+                for (Store store : ((Seller) user).getStores().values()) {
+                    allStores.add(store);
+                }
+            }
+        }
+        return allStores;
+    }
 
-                // Adds all the stores of a user to the collection of all the stores in the market.
-                allStores.addAll(userStores);
+    /**
+     * Loop through all Seller in the Market and collect all the Store
+     *
+     * @return an HashMap of Store currently in the Marketplace
+     */
+    private HashMap<String, Store> collectMarketStoreHM() {
+        // @Ethan
+        HashMap<String, Store> allStores = new HashMap<>();
+        for (User user : users.values()) {
+            if (user instanceof Seller) {
+                allStores.putAll(((Seller) user).getStores());
             }
         }
         return allStores;
@@ -108,8 +122,7 @@ public class Server implements Runnable {
     private ArrayList<Product> collectMarketProduct() {
         // @Ethan
         ArrayList<Product> allProducts = new ArrayList<>();
-        for (Store store : collectMarketStore()) {
-            // add a store's products to all products
+        for (Store store : collectMarketStoreAL()) {
             allProducts.addAll(store.getCurrentProducts());
         }
         return allProducts;
@@ -649,6 +662,11 @@ public class Server implements Runnable {
         }
     }
 
+    private void contactSeller(String sellerEmail) {
+        Seller productSeller = (Seller) users.get(sellerEmail);
+        productSeller.getContactingCustomers().add(currentUser.getEmail());
+    }
+
     /**
      * Process the query get from the Client GUI and call the appropriate method with appropriate parameters
      * Query will always be in the form: command_pram1_param2_..., where:
@@ -784,16 +802,22 @@ public class Server implements Runnable {
                 getMarketProduct(output, queryComponents[1]);
             }
 
-            // Buying a product (Query: BUY_sellerEmail_storeName_productName_quantity)
+            // Buying a product (Query: BUY_storeName_productName_quantity)
             case "BUY" -> {
                 System.out.printf("Received Query: %s\n->Calling buyItem()\n", query);
-                buyItem(output, queryComponents[1], queryComponents[2], queryComponents[3], queryComponents[4]);
+                buyItem(output, queryComponents[1], queryComponents[2], queryComponents[3]);
             }
 
             // Getting customer history (Query: GETHIS)
             case "GETHIS" -> {
                 System.out.printf("Received Query: %s\n->Calling getPurchaseHistory()\n", query);
                 getPurchaseHistory(output);
+            }
+
+            // Contacting seller of a product (Query: CNTSLR_sellerEmail)
+            case "CNTSLR" -> {
+                System.out.printf("Received Query: %s\n->Calling contactSeller()\n", query);
+                contactSeller(queryComponents[1]);
             }
 
             default -> System.out.printf("Received Query: %s. ERROR!", query);
