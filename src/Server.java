@@ -452,14 +452,13 @@ public class Server implements Runnable {
     }
 
     /**
-     * Modify the {@link #users}'s username and password
+     * Modify the {@link #users}'s username
      * Send a TRUE boolean object to client if success;
      * Send a FALSE boolean object to client if failed (i.e. username is taken)
      * @param output the output stream to communicate with client
      * @param username the new username of the user
-     * @param password the new password of the user
      */
-    private void modifyAccount(ObjectOutputStream output, String username, String password) throws IOException {
+    private void modifyID(ObjectOutputStream output, String username) throws IOException {
         // @Ethan
 
         // valid username type is checked
@@ -468,11 +467,20 @@ public class Server implements Runnable {
             outputObject = false;
         } else {
             currentUser.setUserName(username);
-            currentUser.setPassword(password);
             outputObject = true;
         }
         output.writeObject(outputObject);
         output.flush();
+    }
+
+
+    /**
+     * Modify the {@link #users}'s password
+     * @param password the new password of the user
+     */
+    private void modifyPW(String password) throws IOException {
+        // @Ethan
+        currentUser.setPassword(password);
     }
 
     /**
@@ -640,10 +648,16 @@ public class Server implements Runnable {
                 logOut();
             }
 
-            // Modifying account (Query: MODACC_username_password)
-            case "MODACC" -> {
-                System.out.printf("Received Query: %s\n->Calling modifyAccount()\n", query);
-                modifyAccount(output, queryComponents[1], queryComponents[2]);
+            // Modifying username (Query: MODID_username)
+            case "MODID" -> {
+                System.out.printf("Received Query: %s\n->Calling modifyID()\n", query);
+                modifyID(output, queryComponents[1]);
+            }
+
+            // Modifying password (Query: MODPW_password)
+            case "MODPW" -> {
+                System.out.printf("Received Query: %s\n->Calling modifyPW()\n", query);
+                modifyPW(queryComponents[1]);
             }
 
             // Deleting account (Query: DELACC_userEmail)
