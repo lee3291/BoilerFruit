@@ -622,7 +622,7 @@ public class Server implements Runnable {
 
         String command = queryComponents[0];
         switch (command) {
-            // Signing up (Query: SIGNUP_username_email_password)
+            // Signing up (Query: SIGNUP_usertype_username_email_password)
             case "SIGNUP" -> {
                 System.out.printf("Received Query: %s\n->Calling signUp()\n", query);
                 signUp(output, queryComponents[1], queryComponents[2], queryComponents[3], queryComponents[4]);
