@@ -819,7 +819,8 @@ public class ClientGUI implements Runnable {
         logOutButton.setPreferredSize(new Dimension(100 ,50));
         logOutButton.setMaximumSize(logOutButton.getPreferredSize());
         logOutButton.addActionListener(e -> {
-            // TODO: send Log out message to server
+            printWriter.println("LOGOUT");
+            printWriter.flush();
             loginPage();
         });
 
