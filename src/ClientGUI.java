@@ -2,10 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -26,13 +23,13 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
-        ipAddressPage();
+//        ipAddressPage();
 //        loginPage();
 //        signUpPage();
 //        sellerPage(new ArrayList<>());
 //        customerPage(new ArrayList<>());
 //        editAccountPage();
-//        reviewHistoryPage();
+        reviewHistoryPage();
     }
 
     void ipAddressPage() {
@@ -874,16 +871,47 @@ public class ClientGUI implements Runnable {
         jPanel.setLayout(new BorderLayout());
 
         // north
+        JPanel northPanel = new JPanel();
+        northPanel.setLayout(new GridLayout(2,0));
+
         JLabel titleLabel = new JLabel("Purchase History");
         titleLabel.setHorizontalAlignment(JLabel.CENTER);
         titleLabel.setFont(new Font(null, Font.PLAIN, 30));
-        jPanel.add(titleLabel, BorderLayout.NORTH);
+        northPanel.add(titleLabel);
+
+        JPanel columnPanel = new JPanel();
+        columnPanel.setLayout(new GridLayout(1,4));
+
+        JLabel storeLabel = new JLabel("Store");
+        storeLabel.setFont(new Font(null, Font.PLAIN, 20));
+        JLabel productLabel = new JLabel("Product");
+        productLabel.setFont(new Font(null, Font.PLAIN, 20));
+        JLabel priceLabel = new JLabel("Price");
+        priceLabel.setFont(new Font(null, Font.PLAIN, 20));
+        JLabel qtyLabel = new JLabel("Qty");
+        qtyLabel.setFont(new Font(null, Font.PLAIN, 20));
+
+        columnPanel.add(storeLabel);
+        columnPanel.add(productLabel);
+        columnPanel.add(priceLabel);
+        columnPanel.add(qtyLabel);
+        northPanel.add(columnPanel);
+
+        jPanel.add(northPanel, BorderLayout.NORTH);
 
         // Center, list
-        ArrayList<String> purchaseHistory = new ArrayList<>(); //TODO: Get from server
-        for (int i = 0; i < 15; i++) {
-            purchaseHistory.add("Some purchase history example" + i);
+        ArrayList<String> purchaseHistory = new ArrayList<>();
+        try {
+            purchaseHistory = (ArrayList<String>) queryServer("GETHIS");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
+                    JOptionPane.ERROR_MESSAGE);
         }
+
+//        for (int i = 0; i < 15; i++) {
+//            purchaseHistory.add("Some purchase history example" + i);
+//        }
 
         JList<String> historyList = new JList<>();
         DefaultListModel<String> model = new DefaultListModel<>();
@@ -902,8 +930,13 @@ public class ClientGUI implements Runnable {
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setMaximumSize(new Dimension(200, 50));
         goBackButton.addActionListener(e -> {
-            // TODO: Get allProducts ArrayList from server
-            // customerPage(allProducts);
+            try {
+                customerPage(((ArrayList<Product>) queryServer("GETMRKPROD_-1")));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton exportHistoryButton = new JButton("Export History");
@@ -914,8 +947,20 @@ public class ClientGUI implements Runnable {
             if (filePath == null || filePath.isEmpty()) {
                 JOptionPane.showMessageDialog(frame, "Please give valid file path!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
+            } else {
+                FileIO fileIO = new FileIO();
+                ArrayList<String> expHistory = new ArrayList<>();
+                try {
+                    expHistory = (ArrayList<String>) queryServer("GETHIS");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                fileIO.exportPurchaseHistory(filePath, expHistory);
+                JOptionPane.showMessageDialog(frame, "File export complete!", "SUCCESS",
+                        JOptionPane.PLAIN_MESSAGE);
             }
-            // TODO: server, export purchase history
         });
         southPanel.add(Box.createRigidArea(new Dimension(170, 0)));
         southPanel.add(goBackButton);
