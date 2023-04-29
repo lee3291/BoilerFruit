@@ -33,4 +33,12 @@ public class Seller extends User implements Serializable {
     public void addStore(Store store) {
         stores.put(store.getStoreName(), store);
     }
+
+    public ArrayList<String> getContactingCustomers() {
+        return contactingCustomers;
+    }
+
+    public void setContactingCustomers(ArrayList<String> contactingCustomers) {
+        this.contactingCustomers = contactingCustomers;
+    }
 }
