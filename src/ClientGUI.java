@@ -29,8 +29,8 @@ public class ClientGUI implements Runnable {
 //        loginPage();
 //        signUpPage();
 //        sellerPage(new ArrayList<>());
-//        customerPage(new ArrayList<>());
-        editAccountPage();
+        customerPage(new ArrayList<>());
+//        editAccountPage();
 //        reviewHistoryPage();
     }
 
@@ -189,10 +189,7 @@ public class ClientGUI implements Runnable {
                             JOptionPane.ERROR_MESSAGE);
                 } else if (response == 0) {
                     // CustomerPage, get products from server.
-                    printWriter.println("GETMRKPROD_-1"); // get all products query.
-                    printWriter.flush();
-                    ArrayList<Product> allProducts = (ArrayList<Product>) ois.readObject();
-                    customerPage(allProducts);
+                    customerPage(custPageQuery());
                 } else if (response == 1) {
                     // SellerPage, get stores query
                     // Get user email query, since log in is successful, "currentUser" in server is this user.
@@ -545,6 +542,25 @@ public class ClientGUI implements Runnable {
         frame.repaint();
     }
 
+    /**
+     *  Query server to get the recent list of all the products in the market.
+     * @return allProducts, all the products in the market.
+     * @return null if exception occurs.
+     */
+    ArrayList<Product> custPageQuery() {
+        try {
+            printWriter.println("GETMRKPROD_-1"); // get all products query.
+            printWriter.flush();
+            ArrayList<Product> allProducts = (ArrayList<Product>) ois.readObject();
+            return allProducts;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+    }
+
     void editAccountPage() {
         resetFrame();
 
@@ -727,11 +743,7 @@ public class ClientGUI implements Runnable {
                 if (userType.equals("Customer")) {
                     // go back to CustomerPage, get products from server.
                     try {
-                        printWriter.println("GETMRKPROD_-1"); // get all products query.
-                        printWriter.flush();
-                        obj1 = ois.readObject();
-                        ArrayList<Product> allProducts = (ArrayList<Product>) obj1;
-                        customerPage(allProducts);
+                        customerPage(custPageQuery());
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
