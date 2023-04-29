@@ -73,23 +73,6 @@ public class Store implements Serializable {
     }
 
     /**
-     * Add a list of new products to product listing; the product existed,
-     * increase the quantity by the product's quantity
-     *
-     * @param products the array list of products to be added
-     * @return the number of new products that are added
-     */
-    public int addMultipleProducts(ArrayList<Product> products) {
-        int result = 0;
-        for (Product product : products) {
-            if (addProduct(product)) {
-                result++;
-            }
-        }
-        return result;
-    }
-
-    /**
      * Remove a product from the current product listing
      *
      * @param productName the product class product to be existed
