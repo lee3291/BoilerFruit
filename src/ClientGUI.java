@@ -17,6 +17,7 @@ public class ClientGUI implements Runnable {
     PrintWriter printWriter;
     public final int USERINFO_MAX_LENGTH = 15; // Max username/password length
     public final int USERINFO_MIN_LENGTH = 5; // Min username/password/email length
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new ClientGUI());
     }
@@ -51,12 +52,14 @@ public class ClientGUI implements Runnable {
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.X_AXIS));
 
         JTextField ipAddressTxt = new JTextField("localhost", 10);
+        ipAddressTxt.setForeground(Color.GRAY);
         ipAddressTxt.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (ipAddressTxt.getText().equals("localhost")) {
-                    ipAddressTxt.setText("");}
                     ipAddressTxt.setForeground(Color.BLACK);
+                    ipAddressTxt.setText("");
+                }
             }
 
             @Override
@@ -132,7 +135,7 @@ public class ClientGUI implements Runnable {
 
         JLabel idLabel = new JLabel("ID: ");
         idLabel.setFont(new Font(null, Font.PLAIN, 20));
-        JTextField idTxt = new JTextField( 10);
+        JTextField idTxt = new JTextField(10);
         idTxt.setMaximumSize(new Dimension(200, 50));
 
         secondPanel.add(Box.createRigidArea(new Dimension(255, 0)));
@@ -147,7 +150,7 @@ public class ClientGUI implements Runnable {
 
         JLabel pwLabel = new JLabel("PW: ");
         pwLabel.setFont(new Font(null, Font.PLAIN, 20));
-        JTextField pwTxt = new JTextField( 10);
+        JTextField pwTxt = new JTextField(10);
         pwTxt.setMaximumSize(new Dimension(200, 50));
 
         thirdPanel.add(Box.createRigidArea(new Dimension(250, 0)));
@@ -364,12 +367,14 @@ public class ClientGUI implements Runnable {
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
         JTextField searchBar = new JTextField("Search for product name, store, or description", 10);
+        searchBar.setForeground(Color.GRAY);
         searchBar.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (searchBar.getText().equals("Search for product name, store, or description")) {
-                    searchBar.setText("");}
-                searchBar.setForeground(Color.BLACK);
+                    searchBar.setForeground(Color.BLACK);
+                    searchBar.setText("");
+                }
             }
 
             @Override
@@ -415,7 +420,7 @@ public class ClientGUI implements Runnable {
         editAccountButton.addActionListener(e -> editAccountPage());
 
         JButton logOutButton = new JButton("Log Out");
-        logOutButton.setPreferredSize(new Dimension(100 ,50));
+        logOutButton.setPreferredSize(new Dimension(100, 50));
         logOutButton.setMaximumSize(logOutButton.getPreferredSize());
         logOutButton.addActionListener(e -> {
             printWriter.println("LOGOUT");
@@ -484,7 +489,7 @@ public class ClientGUI implements Runnable {
 
         productListing.getSelectionModel().addListSelectionListener(e -> {
             Product p = productListing.getSelectedValue();
-            pDescTxtPane.setText(p.toString()+ '\n' + p.getDescription());
+            pDescTxtPane.setText(p.toString() + '\n' + p.getDescription());
         });
 
         JButton sortByPriceButton = new JButton("Sort By Price");
@@ -535,7 +540,6 @@ public class ClientGUI implements Runnable {
 
         jPanel.add(splitPane, BorderLayout.CENTER);
 
-
         frame.add(jPanel);
         frame.revalidate();
         frame.repaint();
@@ -573,12 +577,14 @@ public class ClientGUI implements Runnable {
         JLabel idLabel = new JLabel("ID: ");
         idLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField idTxt = new JTextField("Enter new user name", 10);
+        idTxt.setForeground(Color.GRAY);
         idTxt.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (idTxt.getText().equals("Enter new user name")) {
-                    idTxt.setText("");}
-                idTxt.setForeground(Color.BLACK);
+                    idTxt.setForeground(Color.BLACK);
+                    idTxt.setText("");
+                }
             }
 
             @Override
@@ -594,7 +600,8 @@ public class ClientGUI implements Runnable {
         idChangeButton.addActionListener(e -> {
             String newId = idTxt.getText();
             if ((newId.length() < USERINFO_MIN_LENGTH) || (newId.length() > USERINFO_MAX_LENGTH)) {
-                String idErrorMessage = String.format("Username must be %d-%d characters!", USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
+                String idErrorMessage = String.format("Username must be %d-%d characters!",
+                        USERINFO_MIN_LENGTH, USERINFO_MAX_LENGTH);
                 JOptionPane.showMessageDialog(frame, idErrorMessage, "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             } else if (newId.contains("_")) {
@@ -618,12 +625,14 @@ public class ClientGUI implements Runnable {
         JLabel pwLabel = new JLabel("PW: ");
         pwLabel.setFont(new Font(null, Font.PLAIN, 20));
         JTextField pwTxt = new JTextField("Enter new password", 10);
+        pwTxt.setForeground(Color.GRAY);
         pwTxt.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (pwTxt.getText().equals("Enter new password")) {
-                    pwTxt.setText("");}
-                pwTxt.setForeground(Color.BLACK);
+                    pwTxt.setForeground(Color.BLACK);
+                    pwTxt.setText("");
+                }
             }
 
             @Override
@@ -760,12 +769,14 @@ public class ClientGUI implements Runnable {
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
         JTextField searchBar = new JTextField("Search for store", 10);
+        searchBar.setForeground(Color.GRAY);
         searchBar.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (searchBar.getText().equals("Search for store")) {
-                    searchBar.setText("");}
                     searchBar.setForeground(Color.BLACK);
+                    searchBar.setText("");
+                }
             }
 
             @Override
@@ -779,8 +790,9 @@ public class ClientGUI implements Runnable {
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
             if (searchBar.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Please fill in blank field!", "ERROR",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null,
+                        "Please fill in blank field!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -816,7 +828,7 @@ public class ClientGUI implements Runnable {
         editAccountButton.addActionListener(e -> editAccountPage());
 
         JButton logOutButton = new JButton("Log Out");
-        logOutButton.setPreferredSize(new Dimension(100 ,50));
+        logOutButton.setPreferredSize(new Dimension(100, 50));
         logOutButton.setMaximumSize(logOutButton.getPreferredSize());
         logOutButton.addActionListener(e -> {
             printWriter.println("LOGOUT");
@@ -1023,7 +1035,7 @@ public class ClientGUI implements Runnable {
         addProductButton.addActionListener(e -> addProductPage(store));
 
         JButton backButton = new JButton("Go Back");
-        backButton.setPreferredSize(new Dimension(120 ,50));
+        backButton.setPreferredSize(new Dimension(120, 50));
         backButton.setMaximumSize(backButton.getPreferredSize());
         backButton.addActionListener(e -> {
             // TODO: Get stores ArrayList from server.
@@ -1164,7 +1176,7 @@ public class ClientGUI implements Runnable {
         });
 
         JButton modifyButton = new JButton("Modify");
-        modifyButton.setPreferredSize(new Dimension(100 ,50));
+        modifyButton.setPreferredSize(new Dimension(100, 50));
         modifyButton.setMaximumSize(modifyButton.getPreferredSize());
         modifyButton.addActionListener(e -> {
             Product selectedProduct = currentProducts.getSelectedValue();
@@ -1178,7 +1190,7 @@ public class ClientGUI implements Runnable {
         });
 
         JButton deleteButton = new JButton("Delete");
-        deleteButton.setPreferredSize(new Dimension(100 ,50));
+        deleteButton.setPreferredSize(new Dimension(100, 50));
         deleteButton.setMaximumSize(deleteButton.getPreferredSize());
         deleteButton.addActionListener(e -> {
             Product selectedProduct = currentProducts.getSelectedValue();
@@ -1215,6 +1227,7 @@ public class ClientGUI implements Runnable {
 
     /**
      * Page for adding new product
+     *
      * @param store the store of the new product
      */
     void addProductPage(Store store) {
@@ -1369,6 +1382,7 @@ public class ClientGUI implements Runnable {
 
     /**
      * Page for modify product
+     *
      * @param oldProduct the product to be modified
      */
     void modifyProductPage(Store store, Product oldProduct) {
@@ -1403,8 +1417,9 @@ public class ClientGUI implements Runnable {
             @Override
             public void focusGained(FocusEvent e) {
                 if (productName.getText().equals("Enter a new product name; Leave blank for old value!")) {
-                    productName.setText("");}
-                productName.setForeground(Color.BLACK);
+                    productName.setForeground(Color.BLACK);
+                    productName.setText("");
+                }
             }
 
             @Override
@@ -1475,8 +1490,9 @@ public class ClientGUI implements Runnable {
             @Override
             public void focusGained(FocusEvent e) {
                 if (productPrice.getText().equals("Enter a new product price; Leave blank for old value!")) {
-                    productPrice.setText("");}
-                productPrice.setForeground(Color.BLACK);
+                    productPrice.setForeground(Color.BLACK);
+                    productPrice.setText("");
+                }
             }
 
             @Override
@@ -1510,8 +1526,9 @@ public class ClientGUI implements Runnable {
             @Override
             public void focusGained(FocusEvent e) {
                 if (productQuantity.getText().equals("Enter a new product quantity; Leave blank for old value!")) {
-                    productQuantity.setText("");}
-                productQuantity.setForeground(Color.BLACK);
+                    productQuantity.setForeground(Color.BLACK);
+                    productQuantity.setText("");
+                }
             }
 
             @Override

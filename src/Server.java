@@ -14,6 +14,7 @@ public class Server implements Runnable {
 
     /**
      * Initiate a new server object
+     *
      * @param socket the client object associate with this server
      */
     public Server(Socket socket) {
@@ -22,6 +23,7 @@ public class Server implements Runnable {
 
     /**
      * Send an ArrayList of String containing the {@link #currentUser}'s purchase history
+     *
      * @param output the output stream to communicate with client
      */
     private void getPurchaseHistory(ObjectOutputStream output) throws IOException {
@@ -39,14 +41,15 @@ public class Server implements Runnable {
      * Add the new purchase history to the {@link #currentUser} purchaseHistory field
      * Send a TRUE boolean if success
      * Send a FALSE boolean if failed (i.e. product is sold out)
-     * @param output the output stream to communicate with client
-     * @param sellerEmail the store's sellerEmail (used for quicker searching)
-     * @param storeName the product's storeName
-     * @param productName the product's name
+     *
+     * @param output         the output stream to communicate with client
+     * @param sellerEmail    the store's sellerEmail (used for quicker searching)
+     * @param storeName      the product's storeName
+     * @param productName    the product's name
      * @param strPurchaseQty the quantity purchase
      */
     private void buyItem(ObjectOutputStream output, String sellerEmail, String storeName,
-                         String productName, String strPurchaseQty) throws IOException{
+                         String productName, String strPurchaseQty) throws IOException {
         Seller productSeller = (Seller) users.get(sellerEmail);
         Store productStore = productSeller.getStores().get(storeName);
 
@@ -79,6 +82,7 @@ public class Server implements Runnable {
 
     /**
      * Loop through all Seller in the Market and collect all the Store
+     *
      * @return an ArrayList of Store currently in the Marketplace
      */
     private ArrayList<Store> collectMarketStore() {
@@ -98,6 +102,7 @@ public class Server implements Runnable {
 
     /**
      * Loop through all Store in the Marketplace and collect all the Product
+     *
      * @return an ArrayList of Product currently in the Marketplace
      */
     private ArrayList<Product> collectMarketProduct() {
@@ -117,7 +122,8 @@ public class Server implements Runnable {
      * If searchKey IS NOT '-1',
      * send an ArrayList of Products that contain the searchKey in their name or description to client
      * ArrayList is empty if there is no matching Product
-     * @param output the output stream to communicate with client
+     *
+     * @param output    the output stream to communicate with client
      * @param searchKey the key to search (i.e. the product name or description); '-1' if no search is needed
      */
     private void getMarketProduct(ObjectOutputStream output, String searchKey) throws IOException {
@@ -146,6 +152,7 @@ public class Server implements Runnable {
     /**
      * Get an ArrayList contains the Product from all existing Store within the Marketplace
      * Sort the ArrayList in the ascending order by price
+     *
      * @param output the output stream to communicate with client
      */
     private void sortProductPrice(ObjectOutputStream output) throws IOException {
@@ -170,6 +177,7 @@ public class Server implements Runnable {
     /**
      * Get an ArrayList contains the Product from all existing Store within the Marketplace
      * Sort the ArrayList in the ascending order by quantity
+     *
      * @param output the output stream to communicate with client
      */
     private void sortProductQty(ObjectOutputStream output) throws IOException {
@@ -195,9 +203,10 @@ public class Server implements Runnable {
      * Remove the product from the specified store's product list
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. the product does not exist in the specified store)
-     * @param output output the output stream to communicate with client
+     *
+     * @param output      output the output stream to communicate with client
      * @param sellerEmail the store's sellerEmail (used for quicker searching)
-     * @param storeName the name of the Store that contain the product
+     * @param storeName   the name of the Store that contain the product
      * @param productName the name of the product
      */
     private void deleteProduct(ObjectOutputStream output, String sellerEmail,
@@ -217,12 +226,13 @@ public class Server implements Runnable {
      * Modify an existing product in the specified store, which exist in the {@link #currentUser}'s store field
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. product name is taken)
-     * @param output the output stream to communicate with client
-     * @param oldName the old product name (used for searching)
-     * @param newName the new product name
-     * @param storeName the store name (not allowed to be changed; used to search)
+     *
+     * @param output      the output stream to communicate with client
+     * @param oldName     the old product name (used for searching)
+     * @param newName     the new product name
+     * @param storeName   the store name (not allowed to be changed; used to search)
      * @param description the description of the product (same if description is not changed)
-     * @param strPrice the price of the product (same if description is not changed)
+     * @param strPrice    the price of the product (same if description is not changed)
      * @param strQuantity the quantity of the product (same if description is not changed)
      */
     private void modifyProduct(ObjectOutputStream output, String oldName, String newName, String storeName, String description,
@@ -265,11 +275,12 @@ public class Server implements Runnable {
      * Create a new product in the specified store, which exist in the {@link #currentUser}'s store field
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. product's name is taken within the same store)
-     * @param output the output stream to communicate with client
-     * @param name the new product name
-     * @param storeName the product's store
+     *
+     * @param output      the output stream to communicate with client
+     * @param name        the new product name
+     * @param storeName   the product's store
      * @param description the description of the product
-     * @param strPrice the price of the product
+     * @param strPrice    the price of the product
      * @param strQuantity the quantity of the product
      */
     private void addProduct(ObjectOutputStream output, String name, String storeName, String description,
@@ -298,9 +309,10 @@ public class Server implements Runnable {
      * If searchKey IS NOT '-1',
      * send an ArrayList of Products that contain the searchKey in their name or description to client
      * ArrayList is empty if there is no matching Product
-     * @param output the output stream to communicate with client
+     *
+     * @param output      the output stream to communicate with client
      * @param sellerEmail the store's sellerEmail (used for quicker searching)
-     * @param searchKey the key to search (i.e. the product name or description); '-1' if no search is needed
+     * @param searchKey   the key to search (i.e. the product name or description); '-1' if no search is needed
      */
     private void getStoreProduct(ObjectOutputStream output, String sellerEmail,
                                  String storeName, String searchKey) throws IOException {
@@ -334,7 +346,8 @@ public class Server implements Runnable {
      * If searchKey IS NOT '-1',
      * send an ArrayList of Store that contain the searchKey in their name to client
      * ArrayList is empty if there is no matching Store
-     * @param output the output stream to communicate with client
+     *
+     * @param output    the output stream to communicate with client
      * @param searchKey the key to search (i.e. the store name); '-1' if no search is needed
      */
     private void getSellerStores(ObjectOutputStream output, String searchKey) throws IOException {
@@ -361,7 +374,8 @@ public class Server implements Runnable {
      * Delete a store in the {@link #currentUser}'s stores field
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. there is no store with matching name)
-     * @param output the output stream to communicate with client
+     *
+     * @param output    the output stream to communicate with client
      * @param storeName the name of the store to be deleted
      */
     private void deleteStore(ObjectOutputStream output, String storeName) throws IOException {
@@ -383,8 +397,9 @@ public class Server implements Runnable {
      * Create a new store in the {@link #currentUser}'s stores field
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. seller also has the store with similar name)
+     *
      * @param storeName the new store's name
-     * @param output the output stream to communicate with client
+     * @param output    the output stream to communicate with client
      */
     private void createStore(ObjectOutputStream output, String storeName) throws IOException {
         // @Ethan
@@ -405,6 +420,7 @@ public class Server implements Runnable {
 
     /**
      * Send a string object containing the {@link #currentUser}'s usertype (customer or seller) to the client
+     *
      * @param output the output stream to communicate with client
      */
     private void getUserType(ObjectOutputStream output) throws IOException {
@@ -419,6 +435,7 @@ public class Server implements Runnable {
 
     /**
      * Send a string object containing the {@link #currentUser}'s email to the client
+     *
      * @param output the output stream to communicate with client
      */
     private void getUserEmail(ObjectOutputStream output) throws IOException {
@@ -428,6 +445,7 @@ public class Server implements Runnable {
 
     /**
      * Send a string object containing the {@link #currentUser}'s username to the client
+     *
      * @param output the output stream to communicate with client
      */
     private void getUserName(ObjectOutputStream output) throws IOException {
@@ -438,11 +456,12 @@ public class Server implements Runnable {
     /**
      * Delete the user in {@link #users} associate with the given email
      * ----------------------------------------------
-     *
+     * <p>
      * In addition, end socket and thread?
      * The client side should automatically send the user to logInPage.
-     *
+     * <p>
      * ----------------------------------------------
+     *
      * @param email the email of the account to be deleted
      */
     private void deleteAccount(String email) throws IOException {
@@ -455,7 +474,8 @@ public class Server implements Runnable {
      * Modify the {@link #users}'s username and password
      * Send a TRUE boolean object to client if success;
      * Send a FALSE boolean object to client if failed (i.e. username is taken)
-     * @param output the output stream to communicate with client
+     *
+     * @param output   the output stream to communicate with client
      * @param username the new username of the user
      * @param password the new password of the user
      */
@@ -489,8 +509,9 @@ public class Server implements Runnable {
      * Send a  1 integer object to client if success and client is a SELLER;
      * Send a  0 integer object to client if success and client is a CUSTOMER;
      * Send a -1 integer object to client if failed (i.e. username/email/password is incorrect)
-     * @param output the output stream to communicate with client
-     * @param id username or email of the client
+     *
+     * @param output   the output stream to communicate with client
+     * @param id       username or email of the client
      * @param password password of the client
      */
     private void logIn(ObjectOutputStream output, String id, String password) throws IOException {
@@ -518,11 +539,8 @@ public class Server implements Runnable {
                 output.flush();
                 return;
             }
-        }
-
-        // Passed in id can be username
-        else {
-            for(User u : users.values()) {
+        } else { // Passed in id can be username
+            for (User u : users.values()) {
                 // Username matched
                 if (u.getUserName().equals(id)) {
                     // Don't allow multiple log in
@@ -559,10 +577,11 @@ public class Server implements Runnable {
      * Send a  1 integer object to client if success;
      * Send a  0 integer object to client if email is taken
      * Send a -1 integer object to client if username is taken
-     * @param output the output stream to communicate with client
-     * @param type the usertype (Customer or Seller)
+     *
+     * @param output   the output stream to communicate with client
+     * @param type     the usertype (Customer or Seller)
      * @param username the username of the new user
-     * @param email the email of the new user
+     * @param email    the email of the new user
      * @param password the password of the new user
      */
     private void signUp(ObjectOutputStream output,
@@ -602,10 +621,7 @@ public class Server implements Runnable {
             }
             output.writeObject(1);
             output.flush();
-        }
-
-        // User is seller
-        else if (type.equals("Seller")){
+        } else if (type.equals("Seller")) { // User is seller
             Seller newSeller = new Seller(username, email, password);
             users.put(email, newSeller);
             currentUser = newSeller;
@@ -632,7 +648,8 @@ public class Server implements Runnable {
      * param* are the parameters for the method to be called.
      * This function only called other methods IFF the there are enough parameter to do so.
      * Print to terminal the query and method called TODO: delete after finish debugging
-     * @param query the query from the Client
+     *
+     * @param query  the query from the Client
      * @param output the ObjectOutputStream to send object to client
      */
     private void processCommand(String query, ObjectOutputStream output) throws IOException {
