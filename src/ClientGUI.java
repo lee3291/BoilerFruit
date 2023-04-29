@@ -25,12 +25,12 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
-//        ipAddressPage();
+        ipAddressPage();
 //        loginPage();
 //        signUpPage();
 //        sellerPage(new ArrayList<>());
 //        customerPage(new ArrayList<>());
-        editAccountPage();
+//        editAccountPage();
 //        reviewHistoryPage();
     }
 
@@ -197,7 +197,7 @@ public class ClientGUI implements Runnable {
                     // SellerPage, get stores query
                     // Get user email query, since log in is successful, "currentUser" in server is this user.
                     // get stores query
-                    sellerPage(fetchSellerStore());
+                    sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -542,6 +542,19 @@ public class ClientGUI implements Runnable {
         frame.repaint();
     }
 
+    /**
+     * Query server for desired object.
+     * @param query is the query convention in {@link Server}, processCommand method
+     * @return the expected object
+     * @throws Exception IO and ClassNotFound exceptions
+     */
+    Object queryServer(String query) throws Exception {
+        System.out.println(query); // TODO: delete after debug
+        printWriter.println(query); // get all products query.
+        printWriter.flush();
+        return ois.readObject();
+    }
+
     void editAccountPage() {
         resetFrame();
 
@@ -739,7 +752,7 @@ public class ClientGUI implements Runnable {
                     // Get user email query, since log in is successful, "currentUser" in server is this user.
                     // get stores query
                     try {
-                        sellerPage(fetchSellerStore());
+                        sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
@@ -880,12 +893,17 @@ public class ClientGUI implements Runnable {
 
             String query = String.format("GETSELLSTR_%s", searchBar.getText());
             //TODO: Client-Server implementation, send query to server
-            System.out.println(query);
         });
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-             sellerPage(fetchSellerStore());
+            try {
+                sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         northPanel.add(searchBar);
@@ -1080,12 +1098,18 @@ public class ClientGUI implements Runnable {
             //TODO: Client-Server implementation, send query to server
             String query = String.format("GETSTRPROD_%s_%s_%s",
                     store.getSellerEmail(), store.getStoreName(), searchBar.getText());
-            System.out.println(query);
         });
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            storePage(store, fetchStoreProduct(store));
+            String query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+            try {
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         northPanel.add(searchBar);
@@ -1113,7 +1137,13 @@ public class ClientGUI implements Runnable {
         backButton.setPreferredSize(new Dimension(120, 50));
         backButton.setMaximumSize(backButton.getPreferredSize());
         backButton.addActionListener(e -> {
-            sellerPage(fetchSellerStore());
+            try {
+                sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
@@ -1168,7 +1198,14 @@ public class ClientGUI implements Runnable {
                 }
 
                 // Refresh
-                storePage(store, fetchStoreProduct(store));
+                try {
+                    String query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+                    storePage(store, (ArrayList<Product>) queryServer(query));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                            "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -1268,13 +1305,24 @@ public class ClientGUI implements Runnable {
                 return;
             }
 
-            // TODO: delete the selected product from server
-            String query = String.format("DELPROD_%s_%s_%s",
-                    store.getSellerEmail(), selectedProduct.getStore(), selectedProduct.getName());
-            System.out.println(query);
-            ArrayList<Product> newProductList = new ArrayList<>();
-            storePage(store, products);
-            updateFrame();
+            // Delete product from server
+            // Refresh
+            try {
+                String query = String.format("DELPROD_%s_%s_%s",
+                        store.getSellerEmail(), selectedProduct.getStore(), selectedProduct.getName());
+                if (!((Boolean) queryServer(query))) {
+                    JOptionPane.showMessageDialog(null, "No product matched the name provided!",
+                            "ERROR - Delete Product", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         detailProductPanel.add(detailLabel, BorderLayout.NORTH);
@@ -1291,38 +1339,6 @@ public class ClientGUI implements Runnable {
 
         frame.add(jPanel);
         updateFrame();
-    }
-
-    /**
-     * Fetch new Store data from server for the current Seller
-     * @return all store owned by the current user; empty array list if there is an error
-     */
-    ArrayList<Store> fetchSellerStore() {
-        printWriter.println("GETSELLSTR_-1");
-        printWriter.flush();
-        try {
-            return (ArrayList<Store>) ois.readObject();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
-    }
-
-    /**
-     * Fetch new Product data from server for the current Store
-     * @param store the current store object
-     * @return all product that are listed by the current Store
-     */
-    ArrayList<Product> fetchStoreProduct(Store store) {
-        String query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
-        printWriter.println(query);
-        printWriter.flush();
-        try {
-            return (ArrayList<Product>) ois.readObject();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
     }
 
     /**
@@ -1425,7 +1441,14 @@ public class ClientGUI implements Runnable {
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setPreferredSize(new Dimension(120, 50));
         goBackButton.addActionListener(e -> {
-            storePage(store, fetchStoreProduct(store));
+            try {
+                String query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton confirmButton = new JButton("Add");
@@ -1463,7 +1486,6 @@ public class ClientGUI implements Runnable {
                     inputName, store.getStoreName(), inputDescription, price, quantity);
 
             // TODO: send query and get from server
-            System.out.println(query);
             storePage(store, new ArrayList<>());
         });
 
@@ -1651,7 +1673,14 @@ public class ClientGUI implements Runnable {
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setPreferredSize(new Dimension(120, 50));
         goBackButton.addActionListener(e -> {
-            storePage(store, fetchStoreProduct(store));
+            try {
+                String query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+                storePage(store, (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton confirmButton = new JButton("Modify");
@@ -1712,7 +1741,6 @@ public class ClientGUI implements Runnable {
             // Send query
             String query = String.format("MODPROD_%s_%s_%s_%s_%.2f_%d",
                     oldProduct.getName(), adjustName, store.getStoreName(), adjustDescription, adjustPrice, adjustQty);
-            System.out.println(query);
             printWriter.println(query);
             printWriter.flush();
 
@@ -1723,10 +1751,13 @@ public class ClientGUI implements Runnable {
                             "The new product name is taken!",
                             "ERROR-Modify Product", JOptionPane.ERROR_MESSAGE);
                 } else { // go back to store page
-                    storePage(store, fetchStoreProduct(store));
+                    query = String.format("GETSTRPROD_%s_%s_-1", store.getSellerEmail(), store.getStoreName());
+                    storePage(store, (ArrayList<Product>) queryServer(query));
                 }
-            } catch (Exception ei) {
-                ei.printStackTrace();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
             }
         });
 
