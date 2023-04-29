@@ -174,7 +174,7 @@ public class ClientGUI implements Runnable {
                 JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
-            String query = String.format("LOGIN_%s/email_%s", id, pw);
+            String query = String.format("LOGIN_%s_%s", id, pw);
             try {
                 Object obj;
 
@@ -197,11 +197,6 @@ public class ClientGUI implements Runnable {
                 } else if (response == 1) {
                     // SellerPage, get stores query
                     // Get user email query, since log in is successful, "currentUser" in server is this user.
-                    oos.writeObject("EMAIL");
-                    oos.flush();
-                    obj = ois.readObject();
-                    String userEmail = (String) obj;
-
                     // get stores query
                     oos.writeObject("GETSELLSTR_-1");
                     oos.flush();
@@ -794,12 +789,12 @@ public class ClientGUI implements Runnable {
         });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
-            String query = searchBar.getText();
-            if (query.isEmpty()) {
+            if (searchBar.getText().isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
+
             String query = String.format("GETSELLSTR_%s", searchBar.getText());
             //TODO: Client-Server implementation, send query to server
             System.out.println(query);
@@ -1001,8 +996,7 @@ public class ClientGUI implements Runnable {
         });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
-            String query = searchBar.getText();
-            if (query.isEmpty()) {
+            if (searchBar.getText().isEmpty()) {
                 JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
                 return;
