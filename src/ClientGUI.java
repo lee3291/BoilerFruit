@@ -5,11 +5,10 @@ import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ClientGUI implements Runnable {
@@ -17,7 +16,7 @@ public class ClientGUI implements Runnable {
     JFrame frame;
     Socket socket;
     ObjectInputStream ois;
-    ObjectOutputStream oos;
+    PrintWriter printWriter;
     public final int USERINFO_MAX_LENGTH = 15; // Max username/password length
     public final int USERINFO_MIN_LENGTH = 5; // Min username/password/email length
     public static void main(String[] args) {
@@ -59,7 +58,7 @@ public class ClientGUI implements Runnable {
             public void focusGained(FocusEvent e) {
                 if (ipAddressTxt.getText().equals("localhost")) {
                     ipAddressTxt.setText("");}
-                ipAddressTxt.setForeground(Color.BLACK);
+                    ipAddressTxt.setForeground(Color.BLACK);
             }
 
             @Override
@@ -82,8 +81,8 @@ public class ClientGUI implements Runnable {
                 try {
                     socket = new Socket(ipAddress, 8080);
                     ois = new ObjectInputStream(socket.getInputStream());
-                    oos = new ObjectOutputStream(socket.getOutputStream());
-                    oos.flush();
+                    printWriter = new PrintWriter(socket.getOutputStream());
+                    printWriter.flush();
                     loginPage();
                 } catch (UnknownHostException ex) {
                     JOptionPane.showMessageDialog(frame, "Unknown Host! Please Try Again!", "ERROR",
@@ -178,8 +177,8 @@ public class ClientGUI implements Runnable {
             try {
                 Object obj;
 
-                oos.writeObject(query); // query for login
-                oos.flush();
+                printWriter.println(query); // query for login
+                printWriter.flush();
 
                 obj = ois.readObject();
                 int response = ((Integer) obj).intValue();
@@ -189,8 +188,8 @@ public class ClientGUI implements Runnable {
                             JOptionPane.ERROR_MESSAGE);
                 } else if (response == 0) {
                     // CustomerPage, get products from server.
-                    oos.writeObject("GETMRKPROD_-1"); // get all products query.
-                    oos.flush();
+                    printWriter.println("GETMRKPROD_-1"); // get all products query.
+                    printWriter.flush();
                     obj = ois.readObject();
                     ArrayList<Product> allProducts = (ArrayList<Product>) obj;
                     customerPage(allProducts);
@@ -198,8 +197,8 @@ public class ClientGUI implements Runnable {
                     // SellerPage, get stores query
                     // Get user email query, since log in is successful, "currentUser" in server is this user.
                     // get stores query
-                    oos.writeObject("GETSELLSTR_-1");
-                    oos.flush();
+                    printWriter.println("GETSELLSTR_-1");
+                    printWriter.flush();
                     obj = ois.readObject();
                     ArrayList<Store> userStores = (ArrayList<Store>) obj;
                     sellerPage(userStores);
@@ -334,10 +333,11 @@ public class ClientGUI implements Runnable {
             Object obj;
             String signUpQuery = String.format("SIGNUP_%s_%s_%s_%s", userTypeStr.get(), id, email, pw);
             try {
-                oos.writeObject(signUpQuery);
-                oos.flush();
+                System.out.println(signUpQuery);
+                printWriter.println(signUpQuery);
+                printWriter.flush();
                 obj = ois.readObject();
-                int response = ((Integer) obj).intValue();
+                int response = (Integer) obj;
                 if (response == 1) {
                     JOptionPane.showMessageDialog(frame, "Please Log-In", "Sign Up Complete",
                             JOptionPane.PLAIN_MESSAGE);
