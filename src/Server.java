@@ -412,7 +412,7 @@ public class Server implements Runnable {
             returnObject = false;
         } else {
             returnObject = true;
-            Store newStore = new Store(storeName, currentSeller.getUserName());
+            Store newStore = new Store(storeName, currentSeller.getEmail());
             sellerStores.put(storeName, newStore);
         }
         output.writeObject(returnObject);
