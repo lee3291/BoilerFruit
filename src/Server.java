@@ -40,7 +40,7 @@ public class Server implements Runnable {
      * Send a TRUE boolean if success
      * Send a FALSE boolean if failed (i.e. product is sold out)
      * @param output the output stream to communicate with client
-     * @param sellerEmail the store's sellerName (used for quicker searching)
+     * @param sellerEmail the store's sellerEmail (used for quicker searching)
      * @param storeName the product's storeName
      * @param productName the product's name
      * @param strPurchaseQty the quantity purchase
@@ -196,7 +196,7 @@ public class Server implements Runnable {
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. the product does not exist in the specified store)
      * @param output output the output stream to communicate with client
-     * @param sellerEmail the store's sellerName (used for quicker searching)
+     * @param sellerEmail the store's sellerEmail (used for quicker searching)
      * @param storeName the name of the Store that contain the product
      * @param productName the name of the product
      */
@@ -299,7 +299,7 @@ public class Server implements Runnable {
      * send an ArrayList of Products that contain the searchKey in their name or description to client
      * ArrayList is empty if there is no matching Product
      * @param output the output stream to communicate with client
-     * @param sellerEmail the store's sellerName (used for quicker searching)
+     * @param sellerEmail the store's sellerEmail (used for quicker searching)
      * @param searchKey the key to search (i.e. the product name or description); '-1' if no search is needed
      */
     private void getStoreProduct(ObjectOutputStream output, String sellerEmail,
@@ -702,7 +702,8 @@ public class Server implements Runnable {
                         queryComponents[4], queryComponents[5]);
             }
 
-            // Modifying a store's product (Query: MODPROD_productOldName_productNewName_storeName_description_price_quantity)
+            // Modifying a store's product
+            // (Query: MODPROD_productOldName_productNewName_storeName_description_price_quantity)
             case "MODPROD" -> {
                 System.out.printf("Received Query: %s\n->Calling modifyProduct()\n", query);
                 modifyProduct(output, queryComponents[1], queryComponents[2], queryComponents[3],

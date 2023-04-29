@@ -175,6 +175,7 @@ public class FileIO {
             return false;
         }
 
+        System.out.printf("Products are exported to \n\t%s\n", filePath);
         return true;
     }
 
