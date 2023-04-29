@@ -302,8 +302,8 @@ public class Server implements Runnable {
         Store store = ((Seller) currentUser).getStores().get(storeName); // TODO: concurrency?
 
         // Add the product
-        Product newProduct = new Product(name, storeName, description,
-                currentUser.getEmail(), Double.parseDouble(strPrice), Integer.parseInt(strQuantity));
+        Product newProduct = new Product(name, storeName, currentUser.getEmail(),
+                description, Double.parseDouble(strPrice), Integer.parseInt(strQuantity));
 
         // Add to store
         if (store.addProduct(newProduct)) {
@@ -763,7 +763,8 @@ public class Server implements Runnable {
                 getStoreProduct(output, queryComponents[1], queryComponents[2], queryComponents[3]);
             }
 
-            // Adding a new product to a store (Query: ADDPROD_productName_storeName_description_price_quantity)
+            // Adding a new product to a store
+            // (Query: ADDPROD_productName_storeName_sellerEmail_description_price_quantity)
             case "ADDPROD" -> {
                 System.out.printf("Received Query: %s\n->Calling addProduct()\n", query);
                 addProduct(output, queryComponents[1], queryComponents[2], queryComponents[3],

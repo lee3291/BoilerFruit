@@ -23,13 +23,13 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
-//        ipAddressPage();
+        ipAddressPage();
 //        loginPage();
 //        signUpPage();
 //        sellerPage(new ArrayList<>());
 //        customerPage(new ArrayList<>());
 //        editAccountPage();
-        reviewHistoryPage();
+//        reviewHistoryPage();
     }
 
     void ipAddressPage() {
@@ -1637,7 +1637,7 @@ public class ClientGUI implements Runnable {
                 // Making query and send to server
                 String query = String.format("ADDPROD_%s_%s_%s_%.2f_%d",
                         inputName, store.getStoreName(), inputDescription, price, quantity);
-                if (!((Boolean) queryServer(query))) {
+                if (!((boolean) queryServer(query))) {
                     JOptionPane.showMessageDialog(null,
                             "Product name is taken!",
                             "ERROR-Add Product", JOptionPane.ERROR_MESSAGE);
