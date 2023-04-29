@@ -26,12 +26,12 @@ public class ClientGUI implements Runnable {
     @Override
     public void run() {
         createGUI();
-        ipAddressPage();
+//        ipAddressPage();
 //        loginPage();
 //        signUpPage();
 //        sellerPage(new ArrayList<>());
 //        customerPage(new ArrayList<>());
-//        editAccountPage();
+        editAccountPage();
 //        reviewHistoryPage();
     }
 
@@ -562,7 +562,18 @@ public class ClientGUI implements Runnable {
         JLabel firstPanel = new JLabel();
         firstPanel.setLayout(new GridLayout(2, 1));
 
-        String userEmail = "example123@purdue.edu"; //TODO: Get from server
+
+        String userEmail = "";
+        // Get user email from server.
+        Object obj;
+        try {
+            printWriter.println("EMAIL");   // get email from server
+            printWriter.flush();
+            obj = ois.readObject();
+            userEmail = (String) obj;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         String emailStr = String.format("Email: %s", userEmail);
 
         JLabel titleLabel = new JLabel("Edit Account Page");
@@ -611,8 +622,28 @@ public class ClientGUI implements Runnable {
             } else if (newId.contains("_")) {
                 JOptionPane.showMessageDialog(frame, "Do not include '_' in the fields!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
+            } else {
+                try {
+                    Object obj2;
+                    // send query to server
+                    String query = String.format("MODID_%s", newId);
+                    printWriter.println(query);
+                    printWriter.flush();
+                    obj2 = ois.readObject();
+                    boolean success = (boolean) obj2;
+                    if (success) {
+                        JOptionPane.showMessageDialog(frame, "ID has been changed!", "SUCCESS",
+                                JOptionPane.PLAIN_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(frame, "ID already exists!", "ERROR",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                            "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
             }
-            //TODO: send to server to check if it already exists and change field
         });
 
         secondPanel.add(Box.createRigidArea(new Dimension(250, 0)));
@@ -658,8 +689,20 @@ public class ClientGUI implements Runnable {
             } else if (newPw.contains("_")) {
                 JOptionPane.showMessageDialog(frame, "Do not include '_' in the fields!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
+            } else {
+                try {
+                    // send query to change password
+                    String query = String.format("MODPW_%s", newPw);
+                    printWriter.println(query);
+                    printWriter.flush();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                            "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
+                JOptionPane.showMessageDialog(frame, "Password has been changed!",
+                        "ERROR", JOptionPane.PLAIN_MESSAGE);
             }
-            //TODO: send to server and change field
         });
 
         thirdPanel.add(Box.createRigidArea(new Dimension(240, 0)));
@@ -676,15 +719,61 @@ public class ClientGUI implements Runnable {
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setMaximumSize(new Dimension(200, 50));
         goBackButton.addActionListener(e -> {
-            // TODO: Get products ArrayList from server
-            // customerPage(allProducts);
+            Object obj1;
+            // query usertype from server
+            try {
+                printWriter.println("TYPE");
+                printWriter.flush();
+                obj1 = ois.readObject();
+                String userType = (String) obj1;
+                if (userType.equals("Customer")) {
+                    // go back to CustomerPage, get products from server.
+                    try {
+                        printWriter.println("GETMRKPROD_-1"); // get all products query.
+                        printWriter.flush();
+                        obj1 = ois.readObject();
+                        ArrayList<Product> allProducts = (ArrayList<Product>) obj1;
+                        customerPage(allProducts);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                                "ERROR", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    // SellerPage, get stores query
+                    // Get user email query, since log in is successful, "currentUser" in server is this user.
+                    // get stores query
+                    try {
+                        printWriter.println("GETSELLSTR_-1");
+                        printWriter.flush();
+                        obj1 = ois.readObject();
+                        ArrayList<Store> userStores = (ArrayList<Store>) obj1;
+                        sellerPage(userStores);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                                "ERROR", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JButton deleteAccountButton = new JButton("Delete Account");
         deleteAccountButton.setMaximumSize(new Dimension(200, 50));
         deleteAccountButton.addActionListener(e -> {
-            int answer = JOptionPane.showConfirmDialog(frame, "Are you sure?");
-            // TODO: Depending on response, delete account or don't. Null pointer exception needs to be taken care of
+            int answer = JOptionPane.showConfirmDialog(frame, "Are you sure?",
+                    "Delete Account", JOptionPane.YES_NO_OPTION);
+            if (answer == JOptionPane.YES_OPTION) {
+                printWriter.println("DELACC"); // account has been deleted and currentUser set to null.
+                printWriter.flush();
+                JOptionPane.showMessageDialog(frame, "Account has been deleted! Redirecting to Log-in Page...",
+                        "SUCCESS", JOptionPane.PLAIN_MESSAGE);
+                loginPage();
+            }
         });
 
         fourthPanel.add(Box.createRigidArea(new Dimension(172, 0)));
