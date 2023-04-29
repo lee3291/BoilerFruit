@@ -647,17 +647,21 @@ public class ClientGUI implements Runnable {
         });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
-            String query = searchBar.getText();
-            if (query.isEmpty()) {
+            if (searchBar.getText().equals("Search for store")) {
                 JOptionPane.showMessageDialog(null, "Please fill in blank field!",
                         "Error", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+            String query = String.format("GETSELLSTR_%s", searchBar.getText());
             //TODO: Client-Server implementation, send query to server
+            System.out.println(query);
         });
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
+            String query = "GETSELLSTR_-1";
             // TODO: Get stores ArrayList from server
+            System.out.println(query);
             // sellerPage(stores);
         });
 
@@ -710,7 +714,7 @@ public class ClientGUI implements Runnable {
             String storeName = JOptionPane.showInputDialog(null, "Enter a New Store Name:",
                     "Create Store", JOptionPane.QUESTION_MESSAGE);
 
-            // User close the GUI; terminal the program; do nothing
+            // User close the GUI; terminate the program; do nothing
             if (storeName == null) {
                 return;
             }
@@ -724,6 +728,7 @@ public class ClientGUI implements Runnable {
             // Make query and send to server
             else {
                 String serverQuery = String.format("CRTSTR_%s", storeName);
+                System.out.println(serverQuery);
 
                 ArrayList<Store> newStores = new ArrayList<>(); // TODO: send query & receive newStores from server
                 sellerPage(newStores);
@@ -752,6 +757,7 @@ public class ClientGUI implements Runnable {
             // Make query and send to server
             else {
                 String serverQuery = String.format("DELSTR_%s", storeName);
+                System.out.println(serverQuery);
 
                 ArrayList<Store> newStores = new ArrayList<>(); // TODO: send query & receive newStores from server
                 sellerPage(newStores);
@@ -827,6 +833,7 @@ public class ClientGUI implements Runnable {
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
         JTextField searchBar = new JTextField("Search for product name or description", 10);
+        searchBar.setForeground(Color.GRAY);
         searchBar.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -846,17 +853,25 @@ public class ClientGUI implements Runnable {
         });
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
-            String query = searchBar.getText();
-            if (query.isEmpty()) {
+            if (searchBar.getText().equals("Search for product name or description")) {
                 JOptionPane.showMessageDialog(frame, "Please fill in blank field!", "Error",
                         JOptionPane.ERROR_MESSAGE);
+                return;
             }
+
             //TODO: Client-Server implementation, send query to server
+            String query = String.format("GETSTRPROD_%s_%s_%s",
+                    store.getSellerEmail(), store.getStoreName(), searchBar.getText());
+            System.out.println(query);
         });
 
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
-            storePage(store, products); //TODO: call to server for new store?
+            //TODO: call to server for new Product
+            String query = String.format("GETSTRPROD_%s_%s_%d",
+                    store.getSellerEmail(), store.getStoreName(), -1);
+            System.out.println(query);
+            storePage(store, products);
         });
 
         northPanel.add(searchBar);
@@ -904,20 +919,75 @@ public class ClientGUI implements Runnable {
         // South, review Purchase History button. use box layout for size
         JPanel southPanel = new JPanel();
         southPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 0));
+        FileIO fileIO = new FileIO();
 
         JButton importProductButton = new JButton("Import Products");
         importProductButton.setPreferredSize(new Dimension(120, 50));
         importProductButton.setMaximumSize(importProductButton.getPreferredSize());
         importProductButton.addActionListener(e -> {
-            // TODO: get client's arraylist and send to server???
-            updateFrame();
+            // Getting input path
+            String inputPath = JOptionPane.showInputDialog(null, "Enter a CSV file path: ",
+                    "Import Product", JOptionPane.QUESTION_MESSAGE);
+
+            // User close the GUI; terminate the program; do nothing
+            if (inputPath == null) {
+                return;
+            } else if (inputPath.isEmpty()) { // File path is empty
+                JOptionPane.showMessageDialog(null, "Path cannot be empty!",
+                        "ERROR - Import Product", JOptionPane.ERROR_MESSAGE);
+            } else {
+                // Import product
+                ArrayList<Product> importedProduct = fileIO.importCSV(inputPath);
+                if (importedProduct == null) {
+                    JOptionPane.showMessageDialog(null,
+                            "Either path or the file format is incorrect",
+                            "ERROR - Import Product", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Add products
+                for (Product p : importedProduct) {
+                    String serverQuery = String.format(String.format("ADDPROD_%s_%s_%s_%.2f_%d",
+                            p.getName(), store.getStoreName(), p.getDescription(), p.getPrice(), p.getQuantity()));
+                    // TODO: send query to add product to server
+                    System.out.println(serverQuery);
+                }
+
+                // Refresh
+                //TODO: call to server for new Product
+                String query = String.format("GETSTRPROD_%s_%s_%d",
+                        store.getSellerEmail(), store.getStoreName(), -1);
+                System.out.println(query);
+                storePage(store, products);
+            }
         });
 
         JButton exportProductButton = new JButton("Export Products");
         exportProductButton.setPreferredSize(new Dimension(120, 50));
         exportProductButton.setMaximumSize(exportProductButton.getPreferredSize());
         exportProductButton.addActionListener(e -> {
-            // TODO: get client's path and ArrayList from server?
+            // Getting output path
+            String outputPath = JOptionPane.showInputDialog(null, "Enter a path for output: ",
+                    "Export Product", JOptionPane.QUESTION_MESSAGE);
+
+            // User close the GUI; terminate the program; do nothing
+            if (outputPath == null) {
+                return;
+            } else if (outputPath.isEmpty()) { // File path is empty
+                JOptionPane.showMessageDialog(null, "Path cannot be empty!",
+                        "ERROR - Export Product", JOptionPane.ERROR_MESSAGE);
+            } else { // Exporting
+                ArrayList<Product> exportProducts = store.getCurrentProducts();
+                if (fileIO.exportCSV(outputPath, exportProducts)) {
+                    JOptionPane.showMessageDialog(null,
+                            "Product is written into " + outputPath,
+                            "SUCCESS - Export Product", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null,
+                            "Something went wrong. Please try again later!",
+                            "ERROR - Export Product", JOptionPane.ERROR_MESSAGE);
+                }
+            }
         });
 
         southPanel.add(importProductButton);
@@ -988,6 +1058,7 @@ public class ClientGUI implements Runnable {
             // TODO: delete the selected product from server
             String query = String.format("DELPROD_%s_%s_%s",
                     store.getSellerEmail(), selectedProduct.getStore(), selectedProduct.getName());
+            System.out.println(query);
             ArrayList<Product> newProductList = new ArrayList<>();
             storePage(store, products);
             updateFrame();
