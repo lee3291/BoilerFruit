@@ -69,6 +69,11 @@ public class Store implements Serializable {
         }
         // Add new product to listing if the product is new
         currentProducts.add(newProduct);
+        System.out.println("Current Products: ");
+        for (Product p : currentProducts) {
+            System.out.println(p.toString());
+            System.out.println("-----------");
+        }
         return true;
     }
 

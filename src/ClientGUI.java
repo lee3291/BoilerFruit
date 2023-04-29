@@ -456,13 +456,13 @@ public class ClientGUI implements Runnable {
         // Get products arraylist from server, loop and make a String[] of productInfo.
         // Below is an example. TODO: client-server implementation required
 
-        // Example products
-        Product product1 = new Product("Apple", "FruitStore1", "Some Apples", 2.00, 3);
-        Product product2 = new Product("Banana", "FruitStore2", "Some Bananas", 3.00, 6);
-        Product product3 = new Product("Oranges", "FruitStore3", "Some Oranges", 4.00, 12);
-        products.add(product1);
-        products.add(product2);
-        products.add(product3);
+//        // Example products
+//        Product product1 = new Product("Apple", "FruitStore1", "Some Apples", 2.00, 3);
+//        Product product2 = new Product("Banana", "FruitStore2", "Some Bananas", 3.00, 6);
+//        Product product3 = new Product("Oranges", "FruitStore3", "Some Oranges", 4.00, 12);
+//        products.add(product1);
+//        products.add(product2);
+//        products.add(product3);
 
         // JList
         JList<Product> productListing = new JList<>();
@@ -1365,7 +1365,7 @@ public class ClientGUI implements Runnable {
             // Refresh
             try {
                 String query = String.format("DELPROD_%s_%s_%s",
-                        store.getSellerEmail(), selectedProduct.getStore(), selectedProduct.getName());
+                        store.getSellerEmail(), selectedProduct.getStoreName(), selectedProduct.getName());
                 if (!((Boolean) queryServer(query))) {
                     JOptionPane.showMessageDialog(null, "No product matched the name provided!",
                             "ERROR - Delete Product", JOptionPane.ERROR_MESSAGE);

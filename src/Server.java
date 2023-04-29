@@ -291,10 +291,11 @@ public class Server implements Runnable {
 
         // Add the product
         Product newProduct = new Product(name, storeName, description,
-                Double.parseDouble(strPrice), Integer.parseInt(strQuantity));
+                currentUser.getEmail(), Double.parseDouble(strPrice), Integer.parseInt(strQuantity));
 
         // Add to store
         if (store.addProduct(newProduct)) {
+            System.out.println("Successfully added " + newProduct.getName());
             output.writeObject(true);
             output.flush();
         } else {
