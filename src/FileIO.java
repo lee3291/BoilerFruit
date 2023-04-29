@@ -82,15 +82,18 @@ public class FileIO {
      * @param filePath        the path to the file to be created
      * @param purchaseHistory the purchase history
      */
-    public boolean exportPurchaseHistory(String filePath, ArrayList<Product> purchaseHistory) {
+    public boolean exportPurchaseHistory(String filePath, ArrayList<String> purchaseHistory) {
         try (CSVWriter writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(filePath))
                 .withSeparator(',')
                 .build()) {
 
             // Create a String array of entries
             ArrayList<String[]> lines = new ArrayList<>();
-            for (Product product : purchaseHistory) {
-                String[] entries = product.productDetails();
+            for (String history : purchaseHistory) {
+                String[] entries = history.split("\\|");
+                for (int i = 0; i < entries.length; i++) {
+                    entries[i] = entries[i].trim();
+                }
                 lines.add(entries);
             }
 
@@ -105,7 +108,6 @@ public class FileIO {
             e.printStackTrace();
             return false;
         }
-
         return true;
     }
 
