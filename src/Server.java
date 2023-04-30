@@ -218,14 +218,11 @@ public class Server implements Runnable {
      * Send a FALSE boolean object to client if failed (i.e. the product does not exist in the specified store)
      *
      * @param output      output the output stream to communicate with client
-     * @param sellerEmail the store's sellerEmail (used for quicker searching)
      * @param storeName   the name of the Store that contain the product
      * @param productName the name of the product
      */
-    private void deleteProduct(ObjectOutputStream output, String sellerEmail,
-                               String storeName, String productName) throws IOException {
-        Seller seller = (Seller) users.get(sellerEmail);
-        Store store = seller.getStores().get(storeName);
+    private void deleteProduct(ObjectOutputStream output, String storeName, String productName) throws IOException {
+        Store store = ((Seller) currentUser).getStores().get(storeName);
         if (store.removeProduct(productName)) {
             output.writeObject(true);
             output.flush();
@@ -307,7 +304,6 @@ public class Server implements Runnable {
 
         // Add to store
         if (store.addProduct(newProduct)) {
-            System.out.println("Successfully added " + newProduct.getName());
             output.writeObject(true);
             output.flush();
         } else {
@@ -325,17 +321,18 @@ public class Server implements Runnable {
      * ArrayList is empty if there is no matching Product
      *
      * @param output      the output stream to communicate with client
-     * @param sellerEmail the store's sellerEmail (used for quicker searching)
      * @param searchKey   the key to search (i.e. the product name or description); '-1' if no search is needed
      */
-    private void getStoreProduct(ObjectOutputStream output, String sellerEmail,
-                                 String storeName, String searchKey) throws IOException {
+    private void getStoreProduct(ObjectOutputStream output, String storeName, String searchKey) throws IOException {
         // @Ethan
         // Find store with sellerEmail and storeName
-        Seller specifiedSeller = (Seller) users.get(sellerEmail); // Desired Seller
-        Store specifiedStore = specifiedSeller.getStores().get(storeName); // Desired Store of Seller
+        Store specifiedStore = ((Seller) currentUser).getStores().get(storeName); // Desired Store of Seller
         ArrayList<Product> specifiedProducts = specifiedStore.getCurrentProducts(); // Desired Products of Store
         if (searchKey.equals("-1")) {
+            for (Product p : specifiedProducts) {
+                System.out.println(p.toString());
+            }
+            System.out.println("------------");
             output.writeObject(specifiedProducts);
             output.flush();
         } else {
@@ -646,16 +643,16 @@ public class Server implements Runnable {
             users.put(email, newCustomer);
             currentUser = newCustomer;
 
-            // TODO: delete after debug
-            System.out.printf("Customer|%s|%s|%s\n", username, email, password);
-            for (User u : users.values()) {
-                System.out.println("User: ");
-                System.out.println(u.getUserName());
-                System.out.println(u.getEmail());
-                System.out.println(u.getPassword());
-                System.out.println(u.isOnline());
-                System.out.println("-----");
-            }
+//            // TODO: delete after debug
+//            System.out.printf("Customer|%s|%s|%s\n", username, email, password);
+//            for (User u : users.values()) {
+//                System.out.println("User: ");
+//                System.out.println(u.getUserName());
+//                System.out.println(u.getEmail());
+//                System.out.println(u.getPassword());
+//                System.out.println(u.isOnline());
+//                System.out.println("-----");
+//            }
             output.writeObject(1);
             output.flush();
         } else if (type.equals("Seller")) { // User is seller
@@ -663,16 +660,16 @@ public class Server implements Runnable {
             users.put(email, newSeller);
             currentUser = newSeller;
 
-            // TODO: delete after debug
-            System.out.printf("Seller|%s|%s|%s\n", username, email, password);
-            for (User u : users.values()) {
-                System.out.println("User: ");
-                System.out.println(u.getUserName());
-                System.out.println(u.getEmail());
-                System.out.println(u.getPassword());
-                System.out.println(u.isOnline());
-                System.out.println("-----");
-            }
+//            // TODO: delete after debug
+//            System.out.printf("Seller|%s|%s|%s\n", username, email, password);
+//            for (User u : users.values()) {
+//                System.out.println("User: ");
+//                System.out.println(u.getUserName());
+//                System.out.println(u.getEmail());
+//                System.out.println(u.getPassword());
+//                System.out.println(u.isOnline());
+//                System.out.println("-----");
+//            }
             output.writeObject(1);
             output.flush();
         }
@@ -778,14 +775,14 @@ public class Server implements Runnable {
             }
 
             // Getting a store's list of products (can be used for searching)
-            // (Query: GETSTRPROD_sellerEmail_storeName_searchKey)
+            // (Query: GETSTRPROD_storeName_searchKey)
             case "GETSTRPROD" -> {
                 System.out.printf("Received Query: %s\n->Calling getStoreProduct()\n", query);
-                getStoreProduct(output, queryComponents[1], queryComponents[2], queryComponents[3]);
+                getStoreProduct(output, queryComponents[1], queryComponents[2]);
             }
 
             // Adding a new product to a store
-            // (Query: ADDPROD_productName_storeName_sellerEmail_description_price_quantity)
+            // (Query: ADDPROD_productName_storeName_description_price_quantity)
             case "ADDPROD" -> {
                 System.out.printf("Received Query: %s\n->Calling addProduct()\n", query);
                 addProduct(output, queryComponents[1], queryComponents[2], queryComponents[3],
@@ -801,10 +798,10 @@ public class Server implements Runnable {
 
             }
 
-            // Deleting a store's product (Query: DELPROD_sellerEmail_storeName_productName)
+            // Deleting a store's product (Query: DELPROD_storeName_productName)
             case "DELPROD" -> {
                 System.out.printf("Received Query: %s\n->Calling deleteProduct()\n", query);
-                deleteProduct(output, queryComponents[1], queryComponents[2], queryComponents[3]);
+                deleteProduct(output, queryComponents[1], queryComponents[2]);
             }
 
             // Sorting market's product by price (Query: SORTP)
