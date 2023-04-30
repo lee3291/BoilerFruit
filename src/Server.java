@@ -597,7 +597,6 @@ public class Server implements Runnable {
         if (type.equals("Customer")) {
             Customer newCustomer = new Customer(username, email, password);
             users.put(email, newCustomer);
-            currentUser = newCustomer;
 
             // TODO: delete after debug
             System.out.printf("Customer|%s|%s|%s\n", username, email, password);
@@ -613,7 +612,6 @@ public class Server implements Runnable {
         } else if (type.equals("Seller")) { // User is seller
             Seller newSeller = new Seller(username, email, password);
             users.put(email, newSeller);
-            currentUser = newSeller;
 
             // TODO: delete after debug
             System.out.printf("Seller|%s|%s|%s\n", username, email, password);
@@ -631,11 +629,25 @@ public class Server implements Runnable {
 
     /**
      *  Add current user(Customer)'s email to a seller's contactingCustomers list.
+     *  Send true if successful.
+     *  If customer email already exists in the list, send false
      * @param sellerEmail the sellerEmail the customer is trying to contact.
      */
-    private void contactSeller(String sellerEmail) {
+    private void contactSeller(ObjectOutputStream output, String sellerEmail) throws IOException {
+        boolean noDuplicate = true;
         Seller productSeller = (Seller) users.get(sellerEmail);
-        productSeller.getContactingCustomers().add(currentUser.getEmail());
+        for (String contactEmail : productSeller.getContactingCustomers()) {
+            if (contactEmail.equals(currentUser.getEmail())) { // check if customer has already contacted this seller.
+                noDuplicate = false;
+            }
+        }
+        // if there is no duplicate which means customer is contacting seller for the first time,
+        // add customer email to seller's contactingCustomer list
+        if (noDuplicate) {
+            productSeller.getContactingCustomers().add(currentUser.getEmail());
+        }
+        output.writeObject(noDuplicate);
+        output.flush();
     }
 
     /**
@@ -795,7 +807,7 @@ public class Server implements Runnable {
             // Contacting seller of a product (Query: CNTSLR_sellerEmail)
             case "CNTSLR" -> {
                 System.out.printf("Received Query: %s\n->Calling contactSeller()\n", query);
-                contactSeller(queryComponents[1]);
+                contactSeller(output, queryComponents[1]);
             }
 
             default -> System.out.printf("Received Query: %s. ERROR!", query);

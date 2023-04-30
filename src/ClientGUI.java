@@ -578,19 +578,24 @@ public class ClientGUI implements Runnable {
             if (selectedProduct == null) {
                 JOptionPane.showMessageDialog(frame, "Please select an item!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            // find seller of product.
-            String sellerEmail = selectedProduct.getSellerEmail();
-            String query = String.format("CNTSLR_%s", sellerEmail);
-            try {
-                queryServer(query);
-                JOptionPane.showMessageDialog(frame, sellerEmail, "Seller has been notified!",
-                        JOptionPane.PLAIN_MESSAGE);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
-                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                // find seller of product.
+                String sellerEmail = selectedProduct.getSellerEmail();
+                String query = String.format("CNTSLR_%s", sellerEmail);
+                try {
+                    if ((boolean) queryServer(query)) {
+                        JOptionPane.showMessageDialog(frame, "Seller email: " + sellerEmail,
+                                "Seller has been notified!", JOptionPane.PLAIN_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(frame, "You have already notified this seller!",
+                                "ERROR", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+
             }
         });
 
@@ -625,7 +630,7 @@ public class ClientGUI implements Runnable {
      */
     Object queryServer(String query) throws Exception {
         System.out.println(query); // TODO: delete after debug
-        printWriter.println(query); // get all products query.
+        printWriter.println(query);
         printWriter.flush();
         return ois.readObject();
     }
