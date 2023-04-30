@@ -262,22 +262,18 @@ public class Server implements Runnable {
         }
 
         // Find the product
-        Product targetProduct = null;
         for (Product p : store.getCurrentProducts()) {
             if (p.getName().equalsIgnoreCase(oldName)) {
-                targetProduct = p;
+                // Modify product
+                p.setName(newName);
+                p.setDescription(description);
+                p.setPrice(Double.parseDouble(strPrice));
+                p.setQuantity(Integer.parseInt(strQuantity));
+
+                output.writeObject(true);
+                output.flush();
+                return;
             }
-        }
-
-        // Modify product
-        if (targetProduct != null) {
-            targetProduct.setName(newName);
-            targetProduct.setDescription(description);
-            targetProduct.setPrice(Double.parseDouble(strPrice));
-            targetProduct.setQuantity(Integer.parseInt(strQuantity));
-
-            output.writeObject(true);
-            output.flush();
         }
     }
 
@@ -370,7 +366,7 @@ public class Server implements Runnable {
         } else {
             // Find stores that the key String contains the searchKey String.
             for (String storeName : sellerStoresHM.keySet()) {
-                if (storeName.contains(searchKey)) {
+                if (storeName.toLowerCase().contains(searchKey.toLowerCase())) {
                     sellerStoresAL.add(sellerStoresHM.get(storeName));
                 }
             }
@@ -861,41 +857,10 @@ public class Server implements Runnable {
     }
 
     public static void main(String[] args) {
-//        ArrayList<String> product = new ArrayList<>();
-//        product.add("apple");
-//        product.add("pen");
-//        product.add("pencil");
-//        Store store1 = new Store("Amazon", product);
-//
-//        ArrayList<String> product2 = new ArrayList<>();
-//        product2.add("banana");
-//        product2.add("eraser");
-//        product2.add("computer");
-//        Store store2 = new Store("Lazada", product2);
-//
-//
-//        ArrayList<String> inbox = new ArrayList<>();
-//        inbox.add("alo");
-//        inbox.add("dmm");
-//
-//        ArrayList<Store> stores = new ArrayList<>();
-//        stores.add(store1);
-//        stores.add(store2);
-//
-//        Seller seller1 = new Seller("bao2803", "phan43@purdue.edu", "Abc@1", inbox, stores);
-//        seller1.printSeller();
-//        Seller seller2 = new Seller("bao2003", "phan34@purdue.edu", "Abc@2", inbox, stores);
-//        seller2.printSeller();
-
-//        HashMap<String, Seller> users = new HashMap<>();
-//        users.put(seller1.getEmail(), seller1);
-//        users.put(seller2.getEmail(), seller2);
-//
-//        Server.setUsers(users);
-
         // Reading in existing users
         FileIO fileIO = new FileIO();
         Server.users = fileIO.readUsers();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> fileIO.writeUsers(users), "Shutdown-thread"));
 
         // Allocate server socket at given port...
         try {
