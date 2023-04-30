@@ -1303,7 +1303,16 @@ public class ClientGUI implements Runnable {
         JButton viewSaleButton = new JButton("View sale");
         viewSaleButton.setPreferredSize(new Dimension(120, 50));
         viewSaleButton.setMaximumSize(viewSaleButton.getPreferredSize());
-//        viewSaleButton.addActionListener(e -> storeViewSale());
+        viewSaleButton.addActionListener(e -> {
+            String query = String.format("FINDSELLSTR_%s", storeName);
+            try {
+                viewSalePage((Store) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         // Add product - west
         JButton addProductButton = new JButton("Add Product");
@@ -1977,6 +1986,85 @@ public class ClientGUI implements Runnable {
         jPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         // Add to frame and update
+        frame.add(jPanel);
+        updateFrame();
+    }
+
+    void viewSalePage(Store store) {
+        // Setting up store page frame
+        resetFrame();
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new BorderLayout());
+
+        /// North
+        JPanel northPanel = new JPanel();
+        northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
+
+        // Page title - north
+        JLabel titleLabel = new JLabel("Store's Sale");
+        titleLabel.setHorizontalAlignment(JLabel.CENTER);
+        titleLabel.setFont(new Font(null, Font.PLAIN, 20));
+        titleLabel.setPreferredSize(new Dimension(200, 100));
+        jPanel.add(titleLabel, BorderLayout.NORTH);
+
+        /// West
+        JPanel westPanel = new JPanel();
+        westPanel.setLayout(new BoxLayout(westPanel, BoxLayout.Y_AXIS));
+
+        // Store's name display - west
+        JLabel userType = new JLabel("         " + store.getStoreName()); // Space for alignment with buttons
+
+        // Store's revenue display - west
+        JLabel totalRevenue = new JLabel(String.format("  Revenue: %.2f", store.getTotalRevenue()));
+
+        // Back - west
+        JButton backButton = new JButton("Go Back");
+        backButton.setPreferredSize(new Dimension(120, 50));
+        backButton.setMaximumSize(backButton.getPreferredSize());
+        backButton.addActionListener(e -> {
+            try {
+                String query = String.format("GETSTRPROD_%s_-1", store.getStoreName());
+                storePage(store.getStoreName(), (ArrayList<Product>) queryServer(query));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // Add component to west panel
+        westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        westPanel.add(userType);
+        westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        westPanel.add(totalRevenue);
+        westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        westPanel.add(backButton);
+        jPanel.add(westPanel, BorderLayout.WEST);
+
+        /// Center
+        JPanel centerPanel = new JPanel(new BorderLayout());
+
+        // Title
+        JLabel historyTitle = new JLabel("Item name | Quantity | Price/unit | Customer Email");
+        centerPanel.add(historyTitle, BorderLayout.NORTH);
+
+        // History
+        JPanel centerBottomPanel = new JPanel();
+        centerBottomPanel.setLayout(new BoxLayout(centerBottomPanel, BoxLayout.Y_AXIS));
+        JList<String> saleHistory = new JList<>();
+        DefaultListModel<String> model = new DefaultListModel<>();
+        saleHistory.setModel(model);
+        for (String hist : store.getSaleHistory()) {
+            model.addElement(hist); // Add stores to list
+        }
+
+        // Add component to center bottom panel
+        centerBottomPanel.add(new JScrollPane(saleHistory));
+        centerPanel.add(centerBottomPanel, BorderLayout.CENTER);
+
+        // Add component to jPanel
+        jPanel.add(centerPanel, BorderLayout.CENTER);
+
         frame.add(jPanel);
         updateFrame();
     }
