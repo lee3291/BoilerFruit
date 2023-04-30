@@ -328,12 +328,10 @@ public class Server implements Runnable {
         // Find store with sellerEmail and storeName
         Store specifiedStore = ((Seller) currentUser).getStores().get(storeName); // Desired Store of Seller
         ArrayList<Product> specifiedProducts = specifiedStore.getCurrentProducts(); // Desired Products of Store
+
         if (searchKey.equals("-1")) {
-            for (Product p : specifiedProducts) {
-                System.out.println(p.toString());
-            }
-            System.out.println("------------");
-            output.writeObject(specifiedProducts);
+            ArrayList<Product> newProducts = new ArrayList<>(specifiedProducts);
+            output.writeObject(newProducts);
             output.flush();
         } else {
             ArrayList<Product> matchingProducts = new ArrayList<>();

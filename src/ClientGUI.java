@@ -1195,7 +1195,7 @@ public class ClientGUI implements Runnable {
                 String query = String.format("GETSTRPROD_%s_-1", storeName);
                 try {
                     ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                    System.out.println("Calling method: ");
+                    System.out.println("Calling method 1: ");
                     for (Product p : result) {
                         System.out.println(p.toString());
                     }
@@ -1279,7 +1279,7 @@ public class ClientGUI implements Runnable {
             String query = String.format("GETSTRPROD_%s_-1", storeName);
             try {
                 ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                System.out.println("Calling method: ");
+                System.out.println("Calling method 2: ");
                 for (Product p : result) {
                     System.out.println(p.toString());
                 }
@@ -1402,7 +1402,7 @@ public class ClientGUI implements Runnable {
                     // Refresh
                     String query = String.format("GETSTRPROD_%s_-1", storeName);
                     ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                    System.out.println("Calling method: ");
+                    System.out.println("Calling method 3: ");
                     for (Product p : result) {
                         System.out.println(p.toString());
                     }
@@ -1464,13 +1464,13 @@ public class ClientGUI implements Runnable {
         }
 
         // Product list - center/left
-        JLabel noProductAnnouncement = new JLabel();
-        noProductAnnouncement.setText("Store has no product yet.\nYou can add more product to the store!");
-        if (products.isEmpty()) {
-            centralSplitPanel.setLeftComponent(noProductAnnouncement);
-        } else {
-            centralSplitPanel.setLeftComponent(new JScrollPane(currentProducts));
-        }
+//        JLabel noProductAnnouncement = new JLabel();
+//        noProductAnnouncement.setText("Store has no product yet.\nYou can add more product to the store!");
+//        if (products.isEmpty()) {
+//            centralSplitPanel.setLeftComponent(noProductAnnouncement);
+//        } else {
+//        }
+        centralSplitPanel.setLeftComponent(new JScrollPane(currentProducts));
 
         // Right panel - center
         JPanel detailProductPanel = new JPanel();
@@ -1532,7 +1532,7 @@ public class ClientGUI implements Runnable {
 
                 query = String.format("GETSTRPROD_%s_-1", storeName);
                 ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                System.out.println("Calling method: ");
+                System.out.println("Calling method 4: ");
                 for (Product p : result) {
                     System.out.println(p.toString());
                 }
@@ -1550,7 +1550,7 @@ public class ClientGUI implements Runnable {
         centerRightBottomPanel.add(deleteButton);
         detailProductPanel.add(centerRightBottomPanel, BorderLayout.SOUTH);
 
-        centralSplitPanel.setRightComponent(detailProductPanel);
+        centralSplitPanel.setRightComponent(new JScrollPane(detailProductPanel));
         jPanel.add(centralSplitPanel, BorderLayout.CENTER);
         frame.add(jPanel);
         updateFrame();
@@ -1659,7 +1659,7 @@ public class ClientGUI implements Runnable {
             String query = String.format("GETSTRPROD_%s_-1", storeName);
             try {
                 ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                System.out.println("Calling method: ");
+                System.out.println("Calling method 5: ");
                 for (Product p : result) {
                     System.out.println(p.toString());
                 }
@@ -1719,7 +1719,7 @@ public class ClientGUI implements Runnable {
                 printWriter.flush();
 //                ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
                 ArrayList<Product> result = (ArrayList<Product>) ois.readObject();
-                System.out.println("Calling method: ");
+                System.out.println("Calling method 6: ");
                 for (Product p : result) {
                     System.out.println(p.toString());
                 }
@@ -1920,7 +1920,7 @@ public class ClientGUI implements Runnable {
             try {
                 String query = String.format("GETSTRPROD_%s_-1", storeName);
                 ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                System.out.println("Calling method: ");
+                System.out.println("Calling method 7: ");
                 for (Product p : result) {
                     System.out.println(p.toString());
                 }
@@ -2003,7 +2003,7 @@ public class ClientGUI implements Runnable {
                 } else { // go back to store page
                     query = String.format("GETSTRPROD_%s_-1", storeName);
                     ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                    System.out.println("Calling method: ");
+                    System.out.println("Calling method 8: ");
                     for (Product p : result) {
                         System.out.println(p.toString());
                     }
