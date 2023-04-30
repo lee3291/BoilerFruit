@@ -58,9 +58,9 @@ public class FileIO {
             while (curr != null) {
                 // User is a seller
                 if (curr instanceof Seller newSeller) {
-                    users.put(curr.getUserName(), newSeller);
+                    users.put(curr.getEmail(), newSeller);
                 } else if (curr instanceof Customer newCustomer) { // User is a customer
-                    users.put(curr.getUserName(), newCustomer);
+                    users.put(curr.getEmail(), newCustomer);
                 }
 
                 curr = (User) ois.readObject();
