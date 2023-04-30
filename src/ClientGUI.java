@@ -1464,13 +1464,13 @@ public class ClientGUI implements Runnable {
         }
 
         // Product list - center/left
-//        JLabel noProductAnnouncement = new JLabel();
-//        noProductAnnouncement.setText("Store has no product yet.\nYou can add more product to the store!");
-//        if (products.isEmpty()) {
-//            centralSplitPanel.setLeftComponent(noProductAnnouncement);
-//        } else {
-//        }
-        centralSplitPanel.setLeftComponent(new JScrollPane(currentProducts));
+        JLabel noProductAnnouncement = new JLabel();
+        noProductAnnouncement.setText("Store has no product yet.\nYou can add more product to the store!");
+        if (products.isEmpty()) {
+            centralSplitPanel.setLeftComponent(noProductAnnouncement);
+        } else {
+            centralSplitPanel.setLeftComponent(new JScrollPane(currentProducts));
+        }
 
         // Right panel - center
         JPanel detailProductPanel = new JPanel();
@@ -1975,7 +1975,7 @@ public class ClientGUI implements Runnable {
 
             // Input quantity
             String inputQty = productQuantity.getText();
-            if (inputPrice.equals("Enter a new product quantity; Leave blank for old value!")) {
+            if (inputQty.equals("Enter a new product quantity; Leave blank for old value!")) {
                 adjustQty = oldProduct.getQuantity();
             } else {
                 try {
