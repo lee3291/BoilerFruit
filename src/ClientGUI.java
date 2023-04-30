@@ -470,8 +470,6 @@ public class ClientGUI implements Runnable {
         jPanel.add(southPanel, BorderLayout.SOUTH);
 
         // Center, combobox in box layout
-        JPanel centerPanel = new JPanel();
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS)); //TODO: unused centerPanel
 
         // JList
         JList<Product> productListing = new JList<>();
