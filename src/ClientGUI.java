@@ -1192,15 +1192,9 @@ public class ClientGUI implements Runnable {
         storeList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 String storeName = userStores.getSelectedValue().getStoreName();
-                String query = String.format("GETSTRPROD_%s_-1", storeName);
                 try {
-                    ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                    System.out.println("Calling method 1: ");
-                    for (Product p : result) {
-                        System.out.println(p.toString());
-                    }
-                    System.out.println("----------");
-                    storePage(storeName, result);
+                    String query = String.format("GETSTRPROD_%s_-1", storeName);
+                    storePage(storeName, (ArrayList<Product>) queryServer(query));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
@@ -1278,13 +1272,7 @@ public class ClientGUI implements Runnable {
         refreshButton.addActionListener(e -> {
             String query = String.format("GETSTRPROD_%s_-1", storeName);
             try {
-                ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                System.out.println("Calling method 2: ");
-                for (Product p : result) {
-                    System.out.println(p.toString());
-                }
-                System.out.println("----------");
-                storePage(storeName, result);
+                storePage(storeName, (ArrayList<Product>) queryServer(query));
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
@@ -1401,13 +1389,7 @@ public class ClientGUI implements Runnable {
 
                     // Refresh
                     String query = String.format("GETSTRPROD_%s_-1", storeName);
-                    ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                    System.out.println("Calling method 3: ");
-                    for (Product p : result) {
-                        System.out.println(p.toString());
-                    }
-                    System.out.println("----------");
-                    storePage(storeName, result);
+                    storePage(storeName, (ArrayList<Product>) queryServer(query));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
@@ -1531,13 +1513,7 @@ public class ClientGUI implements Runnable {
                 }
 
                 query = String.format("GETSTRPROD_%s_-1", storeName);
-                ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                System.out.println("Calling method 4: ");
-                for (Product p : result) {
-                    System.out.println(p.toString());
-                }
-                System.out.println("----------");
-                storePage(storeName, result);
+                storePage(storeName, (ArrayList<Product>) queryServer(query));
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
@@ -1658,13 +1634,7 @@ public class ClientGUI implements Runnable {
         goBackButton.addActionListener(e -> {
             String query = String.format("GETSTRPROD_%s_-1", storeName);
             try {
-                ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                System.out.println("Calling method 5: ");
-                for (Product p : result) {
-                    System.out.println(p.toString());
-                }
-                System.out.println("----------");
-                storePage(storeName, result);
+                storePage(storeName, (ArrayList<Product>) queryServer(query));
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
@@ -1715,16 +1685,7 @@ public class ClientGUI implements Runnable {
 
                 // Refresh
                 query = String.format("GETSTRPROD_%s_-1", storeName);
-                printWriter.println(query);
-                printWriter.flush();
-//                ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                ArrayList<Product> result = (ArrayList<Product>) ois.readObject();
-                System.out.println("Calling method 6: ");
-                for (Product p : result) {
-                    System.out.println(p.toString());
-                }
-                System.out.println("----------");
-                storePage(storeName, result);
+                storePage(storeName, (ArrayList<Product>) queryServer(query));
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
@@ -1917,15 +1878,9 @@ public class ClientGUI implements Runnable {
         JButton goBackButton = new JButton("Go Back");
         goBackButton.setPreferredSize(new Dimension(120, 50));
         goBackButton.addActionListener(e -> {
+            String query = String.format("GETSTRPROD_%s_-1", storeName);
             try {
-                String query = String.format("GETSTRPROD_%s_-1", storeName);
-                ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                System.out.println("Calling method 7: ");
-                for (Product p : result) {
-                    System.out.println(p.toString());
-                }
-                System.out.println("----------");
-                storePage(storeName, result);
+                storePage(storeName, (ArrayList<Product>) queryServer(query));
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
@@ -2002,13 +1957,7 @@ public class ClientGUI implements Runnable {
                             "ERROR-Modify Product", JOptionPane.ERROR_MESSAGE);
                 } else { // go back to store page
                     query = String.format("GETSTRPROD_%s_-1", storeName);
-                    ArrayList<Product> result = (ArrayList<Product>) queryServer(query);
-                    System.out.println("Calling method 8: ");
-                    for (Product p : result) {
-                        System.out.println(p.toString());
-                    }
-                    System.out.println("----------");
-                    storePage(storeName, result);
+                    storePage(storeName, (ArrayList<Product>) queryServer(query));
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
