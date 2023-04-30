@@ -31,6 +31,7 @@ public class Server implements Runnable {
         // Assume this user must be customer
         output.writeObject(((Customer) this.currentUser).getPurchaseHistory());
         output.flush();
+        output.reset();
     }
 
     /**
@@ -62,6 +63,7 @@ public class Server implements Runnable {
                     if (quantity > p.getQuantity()) {
                         output.writeObject(false);
                         output.flush();
+                        output.reset();
                         return;
                     }
 
@@ -146,6 +148,7 @@ public class Server implements Runnable {
         if (searchKey.equals("-1")) {
             output.writeObject(allProducts);
             output.flush();
+            output.reset();
 
         } else { // Searching
             searchKey = searchKey.toLowerCase();
@@ -159,6 +162,7 @@ public class Server implements Runnable {
             }
             output.writeObject(matchingProducts);
             output.flush();
+            output.reset();
         }
     }
 
@@ -185,6 +189,7 @@ public class Server implements Runnable {
         }
         output.writeObject(sortedProducts);
         output.flush();
+        output.reset();
     }
 
     /**
@@ -210,6 +215,7 @@ public class Server implements Runnable {
         }
         output.writeObject(sortedProducts);
         output.flush();
+        output.reset();
     }
 
     /**
@@ -226,9 +232,11 @@ public class Server implements Runnable {
         if (store.removeProduct(productName)) {
             output.writeObject(true);
             output.flush();
+            output.reset();
         } else {
             output.writeObject(false);
             output.flush();
+            output.reset();
         }
     }
 
@@ -256,6 +264,7 @@ public class Server implements Runnable {
                 if (p.getName().equalsIgnoreCase(newName)) {
                     output.writeObject(false);
                     output.flush();
+                    output.reset();
                     return;
                 }
             }
@@ -272,6 +281,7 @@ public class Server implements Runnable {
 
                 output.writeObject(true);
                 output.flush();
+                output.reset();
                 return;
             }
         }
@@ -302,9 +312,11 @@ public class Server implements Runnable {
         if (store.addProduct(newProduct)) {
             output.writeObject(true);
             output.flush();
+            output.reset();
         } else {
             output.writeObject(false);
             output.flush();
+            output.reset();
         }
     }
 
@@ -329,6 +341,7 @@ public class Server implements Runnable {
             ArrayList<Product> newProducts = new ArrayList<>(specifiedProducts);
             output.writeObject(newProducts);
             output.flush();
+            output.reset();
         } else {
             ArrayList<Product> matchingProducts = new ArrayList<>();
             searchKey = searchKey.toLowerCase();
@@ -341,6 +354,7 @@ public class Server implements Runnable {
             }
             output.writeObject(matchingProducts);
             output.flush();
+            output.reset();
         }
     }
 
@@ -373,6 +387,7 @@ public class Server implements Runnable {
         }
         output.writeObject(sellerStoresAL);
         output.flush();
+        output.reset();
     }
 
     /**
@@ -388,6 +403,7 @@ public class Server implements Runnable {
         Seller currentSeller = (Seller) currentUser;
         output.writeObject(currentSeller.getStores().get(storeName));
         output.flush();
+        output.reset();
     }
 
     /**
@@ -411,6 +427,7 @@ public class Server implements Runnable {
         }
         output.writeObject(returnObject);
         output.flush();
+        output.reset();
     }
 
     /**
@@ -436,6 +453,7 @@ public class Server implements Runnable {
         }
         output.writeObject(returnObject);
         output.flush();
+        output.reset();
     }
 
     /**
@@ -447,9 +465,11 @@ public class Server implements Runnable {
         if (currentUser instanceof Customer) {
             output.writeObject("Customer");
             output.flush();
+            output.reset();
         } else {
             output.writeObject("Seller");
             output.flush();
+            output.reset();
         }
     }
 
@@ -461,6 +481,7 @@ public class Server implements Runnable {
     private void getUserEmail(ObjectOutputStream output) throws IOException {
         output.writeObject(currentUser.getEmail());
         output.flush();
+        output.reset();
     }
 
     /**
@@ -471,6 +492,7 @@ public class Server implements Runnable {
     private void getUserName(ObjectOutputStream output) throws IOException {
         output.writeObject(currentUser.getUserName());
         output.flush();
+        output.reset();
     }
 
     /**
@@ -511,6 +533,7 @@ public class Server implements Runnable {
         }
         output.writeObject(outputObject);
         output.flush();
+        output.reset();
     }
 
 
@@ -551,6 +574,7 @@ public class Server implements Runnable {
             if (user.isOnline()) {
                 output.writeObject(-1);
                 output.flush();
+                output.reset();
                 return;
             }
 
@@ -565,6 +589,7 @@ public class Server implements Runnable {
                     output.writeObject(0);
                 }
                 output.flush();
+                output.reset();
                 return;
             }
         } else { // Passed in id can be username
@@ -575,6 +600,7 @@ public class Server implements Runnable {
                     if (u.isOnline()) {
                         output.writeObject(-1);
                         output.flush();
+                        output.reset();
                         return;
                     }
 
@@ -589,6 +615,7 @@ public class Server implements Runnable {
                             output.writeObject(0);
                         }
                         output.flush();
+                        output.reset();
                         return;
                     }
                 }
@@ -598,6 +625,7 @@ public class Server implements Runnable {
         // No matched username or email or password is wrong
         output.writeObject(-1);
         output.flush();
+        output.reset();
     }
 
     /**
@@ -619,6 +647,7 @@ public class Server implements Runnable {
         if (checker != null) {
             output.writeObject(0);
             output.flush();
+            output.reset();
             return;
         }
 
@@ -627,6 +656,7 @@ public class Server implements Runnable {
             if (user.getUserName().equals(username)) {
                 output.writeObject(-1);
                 output.flush();
+                output.reset();
                 return;
             }
         }
@@ -649,6 +679,7 @@ public class Server implements Runnable {
 //            }
             output.writeObject(1);
             output.flush();
+            output.reset();
         } else if (type.equals("Seller")) { // User is seller
             Seller newSeller = new Seller(username, email, password);
             users.put(email, newSeller);
@@ -666,6 +697,7 @@ public class Server implements Runnable {
 //            }
             output.writeObject(1);
             output.flush();
+            output.reset();
         }
     }
 
