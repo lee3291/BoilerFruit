@@ -449,19 +449,11 @@ public class Server implements Runnable {
     }
 
     /**
-     * Delete the user in {@link #users} associate with the given email
-     * ----------------------------------------------
-     * <p>
-     * In addition, end socket and thread?
-     * The client side should automatically send the user to logInPage.
-     * <p>
-     * ----------------------------------------------
-     *
-     * @param email the email of the account to be deleted
+     * Delete the currentUser from users and log out
      */
-    private void deleteAccount(String email) throws IOException {
+    private void deleteAccount() throws IOException {
         // @Ethan
-        users.remove(email);
+        users.remove(currentUser.getEmail());
         logOut(); // client side should send the user to logInPage
     }
 
@@ -662,7 +654,7 @@ public class Server implements Runnable {
             // Deleting account (Query: DELACC_userEmail)
             case "DELACC" -> {
                 System.out.printf("Received Query: %s\n->Calling deleteAccount()\n", query);
-                deleteAccount(queryComponents[1]);
+                deleteAccount();
             }
 
             // Getting username (Query: NAME)
