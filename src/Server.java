@@ -678,6 +678,10 @@ public class Server implements Runnable {
         }
     }
 
+    /**
+     *  Add current user(Customer)'s email to a seller's contactingCustomers list.
+     * @param sellerEmail the sellerEmail the customer is trying to contact.
+     */
     private void contactSeller(String sellerEmail) {
         Seller productSeller = (Seller) users.get(sellerEmail);
         productSeller.getContactingCustomers().add(currentUser.getEmail());

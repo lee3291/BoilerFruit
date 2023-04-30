@@ -574,7 +574,6 @@ public class ClientGUI implements Runnable {
         contactSellerButton.setPreferredSize(new Dimension(100, 50));
         contactSellerButton.setMaximumSize(contactSellerButton.getPreferredSize());
         contactSellerButton.addActionListener(e -> {
-            // TODO: JOptionPane message: "Seller has been notified!" Get seller email from server and display.
             Product selectedProduct = productListing.getSelectedValue();
             if (selectedProduct == null) {
                 JOptionPane.showMessageDialog(frame, "Please select an item!", "ERROR",
@@ -586,13 +585,13 @@ public class ClientGUI implements Runnable {
             String query = String.format("CNTSLR_%s", sellerEmail);
             try {
                 queryServer(query);
+                JOptionPane.showMessageDialog(frame, sellerEmail, "Seller has been notified!",
+                        JOptionPane.PLAIN_MESSAGE);
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             }
-            JOptionPane.showMessageDialog(frame, sellerEmail, "Seller has been notified!",
-                    JOptionPane.PLAIN_MESSAGE);
         });
 
         productPagePanel.add(pDescTxtPane, BorderLayout.NORTH);
