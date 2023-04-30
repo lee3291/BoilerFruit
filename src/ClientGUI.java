@@ -1214,11 +1214,15 @@ public class ClientGUI implements Runnable {
     }
 
     void storePage(String storeName, ArrayList<Product> products) {
+        
+        // ------------Testing-----------------
         System.out.println("Store: ");
         for (Product p : products) {
             System.out.println(p.toString());
         }
         System.out.println("------------");
+        // ------------Testing-----------------
+        
         // Setting up store page frame
         resetFrame();
         JPanel jPanel = new JPanel();
