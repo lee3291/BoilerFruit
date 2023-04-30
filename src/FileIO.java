@@ -23,6 +23,7 @@ public class FileIO {
 
     /**
      * Write all user objects in users into a file (path: ./data/users.ser)
+     *
      * @param users a hashmap of all users
      * @return true if success, false otherwise
      */
@@ -46,6 +47,7 @@ public class FileIO {
 
     /**
      * Read all user object from data file (path: ./data/users.ser)
+     *
      * @return the HashMap<String, User> if success, null otherwise
      */
     public HashMap<String, User> readUsers() {
@@ -57,10 +59,7 @@ public class FileIO {
                 // User is a seller
                 if (curr instanceof Seller newSeller) {
                     users.put(curr.getUserName(), newSeller);
-                }
-
-                // User is a customer
-                else if (curr instanceof Customer newCustomer) {
+                } else if (curr instanceof Customer newCustomer) { // User is a customer
                     users.put(curr.getUserName(), newCustomer);
                 }
 
@@ -80,18 +79,21 @@ public class FileIO {
     /**
      * Export purchase history into a CSV file at filePath
      *
-     * @param filePath the path to the file to be created
+     * @param filePath        the path to the file to be created
      * @param purchaseHistory the purchase history
      */
-    public boolean exportPurchaseHistory(String filePath, ArrayList<Product> purchaseHistory) {
+    public boolean exportPurchaseHistory(String filePath, ArrayList<String> purchaseHistory) {
         try (CSVWriter writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(filePath))
                 .withSeparator(',')
                 .build()) {
 
             // Create a String array of entries
             ArrayList<String[]> lines = new ArrayList<>();
-            for (Product product : purchaseHistory) {
-                String[] entries = product.productDetails();
+            for (String history : purchaseHistory) {
+                String[] entries = history.split("\\|");
+                for (int i = 0; i < entries.length; i++) {
+                    entries[i] = entries[i].trim();
+                }
                 lines.add(entries);
             }
 
@@ -106,7 +108,6 @@ public class FileIO {
             e.printStackTrace();
             return false;
         }
-
         return true;
     }
 
@@ -126,6 +127,7 @@ public class FileIO {
                 Product curr = new Product(
                         row[0], // product name
                         row[1], // store's name
+                        row[2], // seller's email
                         row[2], // description
                         Double.parseDouble(row[4]), // price
                         Integer.parseInt(row[5]) // quanity
@@ -147,7 +149,7 @@ public class FileIO {
     /**
      * Export the currentProducts to the specified filePath
      *
-     * @param filePath the filePath to the CSV file for exporting product
+     * @param filePath        the filePath to the CSV file for exporting product
      * @param currentProducts the current product
      * @return true if success; false otherwise
      */

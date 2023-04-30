@@ -14,6 +14,7 @@ public class Server implements Runnable {
 
     /**
      * Initiate a new server object
+     *
      * @param socket the client object associate with this server
      */
     public Server(Socket socket) {
@@ -22,13 +23,13 @@ public class Server implements Runnable {
 
     /**
      * Send an ArrayList of String containing the {@link #currentUser}'s purchase history
+     *
      * @param output the output stream to communicate with client
      */
     private void getPurchaseHistory(ObjectOutputStream output) throws IOException {
         // @Ethan
         // Assume this user must be customer
-        output.writeObject(((Customer) this.currentUser).getPurchaseHistory());
-        output.flush();
+        respondToClient(output, ((Customer) this.currentUser).getPurchaseHistory());
     }
 
     /**
@@ -39,16 +40,16 @@ public class Server implements Runnable {
      * Add the new purchase history to the {@link #currentUser} purchaseHistory field
      * Send a TRUE boolean if success
      * Send a FALSE boolean if failed (i.e. product is sold out)
-     * @param output the output stream to communicate with client
-     * @param sellerEmail the store's sellerEmail (used for quicker searching)
-     * @param storeName the product's storeName
-     * @param productName the product's name
+     *
+     * @param output         the output stream to communicate with client
+     * @param storeName      the product's storeName
+     * @param productName    the product's name
      * @param strPurchaseQty the quantity purchase
      */
-    private void buyItem(ObjectOutputStream output, String sellerEmail, String storeName,
-                         String productName, String strPurchaseQty) throws IOException{
-        Seller productSeller = (Seller) users.get(sellerEmail);
-        Store productStore = productSeller.getStores().get(storeName);
+    private void buyItem(ObjectOutputStream output,
+                         String storeName, String productName, String strPurchaseQty) throws IOException {
+        // Find store from all the stores.
+        Store productStore = collectMarketStoreHM().get(storeName);
 
         synchronized (sentinel) { // TODO: checking concurrency
             for (Product p : productStore.getCurrentProducts()) {
@@ -58,8 +59,7 @@ public class Server implements Runnable {
 
                     // Making sure product is not sold out
                     if (quantity > p.getQuantity()) {
-                        output.writeObject(false);
-                        output.flush();
+                        respondToClient(output, false);
                         return;
                     }
 
@@ -71,26 +71,42 @@ public class Server implements Runnable {
                     ((Customer) currentUser).addToPurchaseHistory(p, quantity);
 
                     output.writeObject(true);
-                    output.writeObject(false);
+                    return;
                 }
             }
+            output.writeObject(false);
         }
     }
 
     /**
      * Loop through all Seller in the Market and collect all the Store
+     *
      * @return an ArrayList of Store currently in the Marketplace
      */
-    private ArrayList<Store> collectMarketStore() {
+    private ArrayList<Store> collectMarketStoreAL() {
         // @Ethan
         ArrayList<Store> allStores = new ArrayList<>();
         for (User user : users.values()) {
             if (user instanceof Seller) {
-                // Get a user's stores into an arraylist.
-                ArrayList<Store> userStores = new ArrayList<>(((Seller) user).getStores().values());
+                for (Store store : ((Seller) user).getStores().values()) {
+                    allStores.add(store);
+                }
+            }
+        }
+        return allStores;
+    }
 
-                // Adds all the stores of a user to the collection of all the stores in the market.
-                allStores.addAll(userStores);
+    /**
+     * Loop through all Seller in the Market and collect all the Store
+     *
+     * @return an HashMap of Store currently in the Marketplace
+     */
+    private HashMap<String, Store> collectMarketStoreHM() {
+        // @Ethan
+        HashMap<String, Store> allStores = new HashMap<>();
+        for (User user : users.values()) {
+            if (user instanceof Seller) {
+                allStores.putAll(((Seller) user).getStores());
             }
         }
         return allStores;
@@ -98,13 +114,13 @@ public class Server implements Runnable {
 
     /**
      * Loop through all Store in the Marketplace and collect all the Product
+     *
      * @return an ArrayList of Product currently in the Marketplace
      */
     private ArrayList<Product> collectMarketProduct() {
         // @Ethan
         ArrayList<Product> allProducts = new ArrayList<>();
-        for (Store store : collectMarketStore()) {
-            // add a store's products to all products
+        for (Store store : collectMarketStoreAL()) {
             allProducts.addAll(store.getCurrentProducts());
         }
         return allProducts;
@@ -117,7 +133,8 @@ public class Server implements Runnable {
      * If searchKey IS NOT '-1',
      * send an ArrayList of Products that contain the searchKey in their name or description to client
      * ArrayList is empty if there is no matching Product
-     * @param output the output stream to communicate with client
+     *
+     * @param output    the output stream to communicate with client
      * @param searchKey the key to search (i.e. the product name or description); '-1' if no search is needed
      */
     private void getMarketProduct(ObjectOutputStream output, String searchKey) throws IOException {
@@ -125,8 +142,7 @@ public class Server implements Runnable {
         ArrayList<Product> allProducts = collectMarketProduct();
         // No search
         if (searchKey.equals("-1")) {
-            output.writeObject(allProducts);
-            output.flush();
+            respondToClient(output, allProducts);
 
         } else { // Searching
             searchKey = searchKey.toLowerCase();
@@ -138,14 +154,14 @@ public class Server implements Runnable {
                     matchingProducts.add(p);
                 }
             }
-            output.writeObject(matchingProducts);
-            output.flush();
+            respondToClient(output, matchingProducts);
         }
     }
 
     /**
      * Get an ArrayList contains the Product from all existing Store within the Marketplace
      * Sort the ArrayList in the ascending order by price
+     *
      * @param output the output stream to communicate with client
      */
     private void sortProductPrice(ObjectOutputStream output) throws IOException {
@@ -163,13 +179,13 @@ public class Server implements Runnable {
             }
             sortedProducts.set(j + 1, p);
         }
-        output.writeObject(sortedProducts);
-        output.flush();
+        respondToClient(output, sortedProducts);
     }
 
     /**
      * Get an ArrayList contains the Product from all existing Store within the Marketplace
      * Sort the ArrayList in the ascending order by quantity
+     *
      * @param output the output stream to communicate with client
      */
     private void sortProductQty(ObjectOutputStream output) throws IOException {
@@ -187,29 +203,24 @@ public class Server implements Runnable {
             }
             sortedProducts.set(j + 1, p);
         }
-        output.writeObject(sortedProducts);
-        output.flush();
+        respondToClient(output, sortedProducts);
     }
 
     /**
      * Remove the product from the specified store's product list
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. the product does not exist in the specified store)
-     * @param output output the output stream to communicate with client
-     * @param sellerEmail the store's sellerEmail (used for quicker searching)
-     * @param storeName the name of the Store that contain the product
+     *
+     * @param output      output the output stream to communicate with client
+     * @param storeName   the name of the Store that contain the product
      * @param productName the name of the product
      */
-    private void deleteProduct(ObjectOutputStream output, String sellerEmail,
-                               String storeName, String productName) throws IOException {
-        Seller seller = (Seller) users.get(sellerEmail);
-        Store store = seller.getStores().get(storeName);
+    private void deleteProduct(ObjectOutputStream output, String storeName, String productName) throws IOException {
+        Store store = ((Seller) currentUser).getStores().get(storeName);
         if (store.removeProduct(productName)) {
-            output.writeObject(true);
-            output.flush();
+            respondToClient(output, true);
         } else {
-            output.writeObject(false);
-            output.flush();
+            respondToClient(output, false);
         }
     }
 
@@ -217,12 +228,13 @@ public class Server implements Runnable {
      * Modify an existing product in the specified store, which exist in the {@link #currentUser}'s store field
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. product name is taken)
-     * @param output the output stream to communicate with client
-     * @param oldName the old product name (used for searching)
-     * @param newName the new product name
-     * @param storeName the store name (not allowed to be changed; used to search)
+     *
+     * @param output      the output stream to communicate with client
+     * @param oldName     the old product name (used for searching)
+     * @param newName     the new product name
+     * @param storeName   the store name (not allowed to be changed; used to search)
      * @param description the description of the product (same if description is not changed)
-     * @param strPrice the price of the product (same if description is not changed)
+     * @param strPrice    the price of the product (same if description is not changed)
      * @param strQuantity the quantity of the product (same if description is not changed)
      */
     private void modifyProduct(ObjectOutputStream output, String oldName, String newName, String storeName, String description,
@@ -234,30 +246,24 @@ public class Server implements Runnable {
         if (!oldName.equalsIgnoreCase(newName)) {
             for (Product p : store.getCurrentProducts()) {
                 if (p.getName().equalsIgnoreCase(newName)) {
-                    output.writeObject(false);
-                    output.flush();
+                    respondToClient(output, false);
                     return;
                 }
             }
         }
 
         // Find the product
-        Product targetProduct = null;
         for (Product p : store.getCurrentProducts()) {
             if (p.getName().equalsIgnoreCase(oldName)) {
-                targetProduct = p;
+                // Modify product
+                p.setName(newName);
+                p.setDescription(description);
+                p.setPrice(Double.parseDouble(strPrice));
+                p.setQuantity(Integer.parseInt(strQuantity));
+
+                respondToClient(output, true);
+                return;
             }
-        }
-
-        // Modify product
-        if (targetProduct != null) {
-            targetProduct.setName(newName);
-            targetProduct.setDescription(description);
-            targetProduct.setPrice(Double.parseDouble(strPrice));
-            targetProduct.setQuantity(Integer.parseInt(strQuantity));
-
-            output.writeObject(true);
-            output.flush();
         }
     }
 
@@ -265,11 +271,12 @@ public class Server implements Runnable {
      * Create a new product in the specified store, which exist in the {@link #currentUser}'s store field
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. product's name is taken within the same store)
-     * @param output the output stream to communicate with client
-     * @param name the new product name
-     * @param storeName the product's store
+     *
+     * @param output      the output stream to communicate with client
+     * @param name        the new product name
+     * @param storeName   the product's store
      * @param description the description of the product
-     * @param strPrice the price of the product
+     * @param strPrice    the price of the product
      * @param strQuantity the quantity of the product
      */
     private void addProduct(ObjectOutputStream output, String name, String storeName, String description,
@@ -278,16 +285,14 @@ public class Server implements Runnable {
         Store store = ((Seller) currentUser).getStores().get(storeName); // TODO: concurrency?
 
         // Add the product
-        Product newProduct = new Product(name, storeName, description,
-                Double.parseDouble(strPrice), Integer.parseInt(strQuantity));
+        Product newProduct = new Product(name, storeName, currentUser.getEmail(),
+                description, Double.parseDouble(strPrice), Integer.parseInt(strQuantity));
 
         // Add to store
         if (store.addProduct(newProduct)) {
-            output.writeObject(true);
-            output.flush();
+            respondToClient(output, true);
         } else {
-            output.writeObject(false);
-            output.flush();
+            respondToClient(output, false);
         }
     }
 
@@ -298,20 +303,19 @@ public class Server implements Runnable {
      * If searchKey IS NOT '-1',
      * send an ArrayList of Products that contain the searchKey in their name or description to client
      * ArrayList is empty if there is no matching Product
-     * @param output the output stream to communicate with client
-     * @param sellerEmail the store's sellerEmail (used for quicker searching)
-     * @param searchKey the key to search (i.e. the product name or description); '-1' if no search is needed
+     *
+     * @param output      the output stream to communicate with client
+     * @param searchKey   the key to search (i.e. the product name or description); '-1' if no search is needed
      */
-    private void getStoreProduct(ObjectOutputStream output, String sellerEmail,
-                                 String storeName, String searchKey) throws IOException {
+    private void getStoreProduct(ObjectOutputStream output, String storeName, String searchKey) throws IOException {
         // @Ethan
         // Find store with sellerEmail and storeName
-        Seller specifiedSeller = (Seller) users.get(sellerEmail); // Desired Seller
-        Store specifiedStore = specifiedSeller.getStores().get(storeName); // Desired Store of Seller
+        Store specifiedStore = ((Seller) currentUser).getStores().get(storeName); // Desired Store of Seller
         ArrayList<Product> specifiedProducts = specifiedStore.getCurrentProducts(); // Desired Products of Store
+
         if (searchKey.equals("-1")) {
-            output.writeObject(specifiedProducts);
-            output.flush();
+            ArrayList<Product> newProducts = new ArrayList<>(specifiedProducts);
+            respondToClient(output, newProducts);
         } else {
             ArrayList<Product> matchingProducts = new ArrayList<>();
             searchKey = searchKey.toLowerCase();
@@ -322,8 +326,7 @@ public class Server implements Runnable {
                     matchingProducts.add(p);
                 }
             }
-            output.writeObject(matchingProducts);
-            output.flush();
+            respondToClient(output, matchingProducts);
         }
     }
 
@@ -334,7 +337,8 @@ public class Server implements Runnable {
      * If searchKey IS NOT '-1',
      * send an ArrayList of Store that contain the searchKey in their name to client
      * ArrayList is empty if there is no matching Store
-     * @param output the output stream to communicate with client
+     *
+     * @param output    the output stream to communicate with client
      * @param searchKey the key to search (i.e. the store name); '-1' if no search is needed
      */
     private void getSellerStores(ObjectOutputStream output, String searchKey) throws IOException {
@@ -348,20 +352,34 @@ public class Server implements Runnable {
         } else {
             // Find stores that the key String contains the searchKey String.
             for (String storeName : sellerStoresHM.keySet()) {
-                if (storeName.contains(searchKey)) {
+                if (storeName.toLowerCase().contains(searchKey.toLowerCase())) {
                     sellerStoresAL.add(sellerStoresHM.get(storeName));
                 }
             }
         }
-        output.writeObject(sellerStoresAL);
-        output.flush();
+        respondToClient(output, sellerStoresAL);
+    }
+
+    /**
+     *  Find a store from all the stores of a seller, send to server.
+     *  Send null if store does not exist.
+     *
+     * @param output    the output stream to communicate with client
+     * @param storeName the name of the store
+     * @throws IOException
+     */
+    private void findSellerStore(ObjectOutputStream output, String storeName) throws IOException {
+        // @Ethan
+        Seller currentSeller = (Seller) currentUser;
+        respondToClient(output, currentSeller.getStores().get(storeName));
     }
 
     /**
      * Delete a store in the {@link #currentUser}'s stores field
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. there is no store with matching name)
-     * @param output the output stream to communicate with client
+     *
+     * @param output    the output stream to communicate with client
      * @param storeName the name of the store to be deleted
      */
     private void deleteStore(ObjectOutputStream output, String storeName) throws IOException {
@@ -375,16 +393,16 @@ public class Server implements Runnable {
         } else { // if it successfully removed, returns the value of the object.
             returnObject = true;
         }
-        output.writeObject(returnObject);
-        output.flush();
+        respondToClient(output, returnObject);
     }
 
     /**
      * Create a new store in the {@link #currentUser}'s stores field
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. seller also has the store with similar name)
+     *
      * @param storeName the new store's name
-     * @param output the output stream to communicate with client
+     * @param output    the output stream to communicate with client
      */
     private void createStore(ObjectOutputStream output, String storeName) throws IOException {
         // @Ethan
@@ -396,53 +414,49 @@ public class Server implements Runnable {
             returnObject = false;
         } else {
             returnObject = true;
-            Store newStore = new Store(storeName, currentSeller.getUserName());
+            Store newStore = new Store(storeName, currentSeller.getEmail());
             sellerStores.put(storeName, newStore);
         }
-        output.writeObject(returnObject);
-        output.flush();
+        respondToClient(output, returnObject);
     }
 
     /**
      * Send a string object containing the {@link #currentUser}'s usertype (customer or seller) to the client
+     *
      * @param output the output stream to communicate with client
      */
     private void getUserType(ObjectOutputStream output) throws IOException {
-        if (currentUser instanceof Customer) {
-            output.writeObject("Customer");
-            output.flush();
-        } else {
-            output.writeObject("Seller");
-            output.flush();
-        }
+        String userType = (currentUser instanceof Customer)? "Customer" : "Seller";
+        respondToClient(output, userType);
     }
 
     /**
      * Send a string object containing the {@link #currentUser}'s email to the client
+     *
      * @param output the output stream to communicate with client
      */
     private void getUserEmail(ObjectOutputStream output) throws IOException {
-        output.writeObject(currentUser.getEmail());
-        output.flush();
+        respondToClient(output, currentUser.getEmail());
     }
 
     /**
      * Send a string object containing the {@link #currentUser}'s username to the client
+     *
      * @param output the output stream to communicate with client
      */
     private void getUserName(ObjectOutputStream output) throws IOException {
-        output.writeObject(currentUser.getUserName());
-        output.flush();
+        respondToClient(output, currentUser.getUserName());
     }
 
     /**
      * Delete the user in {@link #users} associate with the given email
      * ----------------------------------------------
-     *
+     * <p>
      * In addition, end socket and thread?
      * The client side should automatically send the user to logInPage.
-     *
+     * <p>
      * ----------------------------------------------
+     *
      * @param email the email of the account to be deleted
      */
     private void deleteAccount(String email) throws IOException {
@@ -452,14 +466,14 @@ public class Server implements Runnable {
     }
 
     /**
-     * Modify the {@link #users}'s username and password
+     * Modify the {@link #users}'s username
      * Send a TRUE boolean object to client if success;
      * Send a FALSE boolean object to client if failed (i.e. username is taken)
-     * @param output the output stream to communicate with client
+     *
+     * @param output   the output stream to communicate with client
      * @param username the new username of the user
-     * @param password the new password of the user
      */
-    private void modifyAccount(ObjectOutputStream output, String username, String password) throws IOException {
+    private void modifyID(ObjectOutputStream output, String username) throws IOException {
         // @Ethan
 
         // valid username type is checked
@@ -468,90 +482,51 @@ public class Server implements Runnable {
             outputObject = false;
         } else {
             currentUser.setUserName(username);
-            currentUser.setPassword(password);
             outputObject = true;
         }
-        output.writeObject(outputObject);
-        output.flush();
+        respondToClient(output, outputObject);
+    }
+
+
+    /**
+     * Modify the {@link #users}'s password
+     * @param password the new password of the user
+     */
+    private void modifyPW(String password) throws IOException {
+        // @Ethan
+        currentUser.setPassword(password);
     }
 
     /**
      * Set user's online status to false and close the socket
      */
     private void logOut() throws IOException {
-        currentUser.setOnline(false); // set user to offline
         currentUser = null; // set current user to null, in case a different user logs in before the socket is lost
     }
 
     /**
-     * Find the user with a matching id (username or email) and email
+     * Find the user with a matching id and check for password
      * Set the {@link #currentUser} to the newly created User if success;
      * Send a  1 integer object to client if success and client is a SELLER;
      * Send a  0 integer object to client if success and client is a CUSTOMER;
      * Send a -1 integer object to client if failed (i.e. username/email/password is incorrect)
-     * @param output the output stream to communicate with client
-     * @param id username or email of the client
+     *
+     * @param output   the output stream to communicate with client
+     * @param id       username of the client
      * @param password password of the client
      */
     private void logIn(ObjectOutputStream output, String id, String password) throws IOException {
-        User user; // logging in user
-
-        // Email matched
-        if ((user = users.get(id)) != null) {
-            // Don't allow multiple log in
-            if (user.isOnline()) {
-                output.writeObject(-1);
-                output.flush();
-                return;
-            }
-
-            // Email and password matched
-            if (user.getPassword().equals(password)) {
+        int outputInt = -1;
+        for (User user : users.values()) {
+            // check if User exists and the password matches, and set currentUser to user.
+            // if there is no user that matches this condition, user does not exist.
+            if (user.getUserName().equals(id) && user.getPassword().equals(password)) {
                 currentUser = user;
-                user.setOnline(true);
-
-                if (user instanceof Seller) {
-                    output.writeObject(1);
-                } else {
-                    output.writeObject(0);
-                }
-                output.flush();
-                return;
+                outputInt = (currentUser instanceof Customer) ? 0 : 1;
+                break;
             }
         }
-
-        // Passed in id can be username
-        else {
-            for(User u : users.values()) {
-                // Username matched
-                if (u.getUserName().equals(id)) {
-                    // Don't allow multiple log in
-                    if (u.isOnline()) {
-                        output.writeObject(-1);
-                        output.flush();
-                        return;
-                    }
-
-                    // Username and password matched
-                    if (u.getPassword().equals(password)) {
-                        currentUser = u;
-                        u.setOnline(true);
-
-                        if (u instanceof Seller) {
-                            output.writeObject(1);
-                        } else {
-                            output.writeObject(0);
-                        }
-                        output.flush();
-                        return;
-                    }
-                }
-            }
-        }
-
-        // No matched username or email or password is wrong
-        output.writeObject(-1);
-        output.flush();
+        respondToClient(output, outputInt);
     }
 
     /**
@@ -559,10 +534,11 @@ public class Server implements Runnable {
      * Send a  1 integer object to client if success;
      * Send a  0 integer object to client if email is taken
      * Send a -1 integer object to client if username is taken
-     * @param output the output stream to communicate with client
-     * @param type the usertype (Customer or Seller)
+     *
+     * @param output   the output stream to communicate with client
+     * @param type     the usertype (Customer or Seller)
      * @param username the username of the new user
-     * @param email the email of the new user
+     * @param email    the email of the new user
      * @param password the password of the new user
      */
     private void signUp(ObjectOutputStream output,
@@ -570,41 +546,71 @@ public class Server implements Runnable {
         // Validate email
         User checker = users.get(email);
         if (checker != null) {
-            output.writeObject(0);
-            output.flush();
+            respondToClient(output, 0);
             return;
         }
-
         // Validate username
         for (User user : users.values()) {
             if (user.getUserName().equals(username)) {
-                output.writeObject(-1);
-                output.flush();
+                respondToClient(output, -1);
                 return;
             }
         }
-
         // User is customer
         if (type.equals("Customer")) {
             Customer newCustomer = new Customer(username, email, password);
             users.put(email, newCustomer);
-            currentUser = newCustomer;
-            currentUser.setOnline(true);
-
-            output.writeObject(1);
-            output.flush();
-        }
-
-        // User is seller
-        else if (type.equals("Seller")){
+          
+//            // TODO: delete after debug
+//            System.out.printf("Customer|%s|%s|%s\n", username, email, password);
+//            for (User u : users.values()) {
+//                System.out.println("User: ");
+//                System.out.println(u.getUserName());
+//                System.out.println(u.getEmail());
+//                System.out.println(u.getPassword());
+//                System.out.println(u.isOnline());
+//                System.out.println("-----");
+//            }
+            respondToClient(output, 1);
+        } else if (type.equals("Seller")) { // User is seller
             Seller newSeller = new Seller(username, email, password);
             users.put(email, newSeller);
-            currentUser = newSeller;
-            currentUser.setOnline(true);
 
-            output.writeObject(1);
-            output.flush();
+//            // TODO: delete after debug
+//            System.out.printf("Seller|%s|%s|%s\n", username, email, password);
+//            for (User u : users.values()) {
+//                System.out.println("User: ");
+//                System.out.println(u.getUserName());
+//                System.out.println(u.getEmail());
+//                System.out.println(u.getPassword());
+//                System.out.println(u.isOnline());
+//                System.out.println("-----");
+//            }
+            respondToClient(output, 1);
         }
+    }
+
+    /**
+     *  Add current user(Customer)'s email to a seller's contactingCustomers list.
+     *  Send true if successful.
+     *  If customer email already exists in the list, send false
+     * @param sellerEmail the sellerEmail the customer is trying to contact.
+     */
+    private void contactSeller(ObjectOutputStream output, String sellerEmail) throws IOException {
+        boolean noDuplicate = true;
+        Seller productSeller = (Seller) users.get(sellerEmail);
+        for (String contactEmail : productSeller.getContactingCustomers()) {
+            if (contactEmail.equals(currentUser.getEmail())) { // check if customer has already contacted this seller.
+                noDuplicate = false;
+                break;
+            }
+        }
+        // if there is no duplicate which means customer is contacting seller for the first time,
+        // add customer email to seller's contactingCustomer list
+        if (noDuplicate) {
+            productSeller.getContactingCustomers().add(currentUser.getEmail());
+        }
+        respondToClient(output, noDuplicate);
     }
 
     /**
@@ -614,7 +620,8 @@ public class Server implements Runnable {
      * param* are the parameters for the method to be called.
      * This function only called other methods IFF the there are enough parameter to do so.
      * Print to terminal the query and method called TODO: delete after finish debugging
-     * @param query the query from the Client
+     *
+     * @param query  the query from the Client
      * @param output the ObjectOutputStream to send object to client
      */
     private void processCommand(String query, ObjectOutputStream output) throws IOException {
@@ -640,10 +647,16 @@ public class Server implements Runnable {
                 logOut();
             }
 
-            // Modifying account (Query: MODACC_username_password)
-            case "MODACC" -> {
-                System.out.printf("Received Query: %s\n->Calling modifyAccount()\n", query);
-                modifyAccount(output, queryComponents[1], queryComponents[2]);
+            // Modifying username (Query: MODID_username)
+            case "MODID" -> {
+                System.out.printf("Received Query: %s\n->Calling modifyID()\n", query);
+                modifyID(output, queryComponents[1]);
+            }
+
+            // Modifying password (Query: MODPW_password)
+            case "MODPW" -> {
+                System.out.printf("Received Query: %s\n->Calling modifyPW()\n", query);
+                modifyPW(queryComponents[1]);
             }
 
             // Deleting account (Query: DELACC_userEmail)
@@ -688,14 +701,21 @@ public class Server implements Runnable {
                 getSellerStores(output, queryComponents[1]);
             }
 
-            // Getting a store's list of products (can be used for searching)
-            // (Query: GETSTRPROD_sellerEmail_storeName_searchKey)
-            case "GETSTRPROD" -> {
-                System.out.printf("Received Query: %s\n->Calling getStoreProduct()\n", query);
-                getStoreProduct(output, queryComponents[1], queryComponents[2], queryComponents[3]);
+            // Getting a specific Store of a seller (Query: FINDSELLSTR_storeName)
+            case "FINDSELLSTR" -> {
+                System.out.printf("Received Query: %s\n->Calling findSellerStore()\n", query);
+                findSellerStore(output, queryComponents[1]);
             }
 
-            // Adding a new product to a store (Query: ADDPROD_productName_storeName_description_price_quantity)
+            // Getting a store's list of products (can be used for searching)
+            // (Query: GETSTRPROD_storeName_searchKey)
+            case "GETSTRPROD" -> {
+                System.out.printf("Received Query: %s\n->Calling getStoreProduct()\n", query);
+                getStoreProduct(output, queryComponents[1], queryComponents[2]);
+            }
+
+            // Adding a new product to a store
+            // (Query: ADDPROD_productName_storeName_description_price_quantity)
             case "ADDPROD" -> {
                 System.out.printf("Received Query: %s\n->Calling addProduct()\n", query);
                 addProduct(output, queryComponents[1], queryComponents[2], queryComponents[3],
@@ -711,10 +731,10 @@ public class Server implements Runnable {
 
             }
 
-            // Deleting a store's product (Query: DELPROD_sellerEmail_storeName_productName)
+            // Deleting a store's product (Query: DELPROD_storeName_productName)
             case "DELPROD" -> {
                 System.out.printf("Received Query: %s\n->Calling deleteProduct()\n", query);
-                deleteProduct(output, queryComponents[1], queryComponents[2], queryComponents[3]);
+                deleteProduct(output, queryComponents[1], queryComponents[2]);
             }
 
             // Sorting market's product by price (Query: SORTP)
@@ -735,10 +755,10 @@ public class Server implements Runnable {
                 getMarketProduct(output, queryComponents[1]);
             }
 
-            // Buying a product (Query: BUY_sellerEmail_storeName_productName_quantity)
+            // Buying a product (Query: BUY_storeName_productName_quantity)
             case "BUY" -> {
                 System.out.printf("Received Query: %s\n->Calling buyItem()\n", query);
-                buyItem(output, queryComponents[1], queryComponents[2], queryComponents[3], queryComponents[4]);
+                buyItem(output, queryComponents[1], queryComponents[2], queryComponents[3]);
             }
 
             // Getting customer history (Query: GETHIS)
@@ -747,8 +767,20 @@ public class Server implements Runnable {
                 getPurchaseHistory(output);
             }
 
+            // Contacting seller of a product (Query: CNTSLR_sellerEmail)
+            case "CNTSLR" -> {
+                System.out.printf("Received Query: %s\n->Calling contactSeller()\n", query);
+                contactSeller(output, queryComponents[1]);
+            }
+
             default -> System.out.printf("Received Query: %s. ERROR!", query);
         }
+    }
+
+    private void respondToClient(ObjectOutputStream output, Object returnObj) throws IOException {
+        output.writeObject(returnObj);
+        output.flush();
+        output.reset();
     }
 
     /**
@@ -770,41 +802,10 @@ public class Server implements Runnable {
     }
 
     public static void main(String[] args) {
-//        ArrayList<String> product = new ArrayList<>();
-//        product.add("apple");
-//        product.add("pen");
-//        product.add("pencil");
-//        Store store1 = new Store("Amazon", product);
-//
-//        ArrayList<String> product2 = new ArrayList<>();
-//        product2.add("banana");
-//        product2.add("eraser");
-//        product2.add("computer");
-//        Store store2 = new Store("Lazada", product2);
-//
-//
-//        ArrayList<String> inbox = new ArrayList<>();
-//        inbox.add("alo");
-//        inbox.add("dmm");
-//
-//        ArrayList<Store> stores = new ArrayList<>();
-//        stores.add(store1);
-//        stores.add(store2);
-//
-//        Seller seller1 = new Seller("bao2803", "phan43@purdue.edu", "Abc@1", inbox, stores);
-//        seller1.printSeller();
-//        Seller seller2 = new Seller("bao2003", "phan34@purdue.edu", "Abc@2", inbox, stores);
-//        seller2.printSeller();
-
-//        HashMap<String, Seller> users = new HashMap<>();
-//        users.put(seller1.getEmail(), seller1);
-//        users.put(seller2.getEmail(), seller2);
-//
-//        Server.setUsers(users);
-
         // Reading in existing users
         FileIO fileIO = new FileIO();
         Server.users = fileIO.readUsers();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> fileIO.writeUsers(users), "Shutdown-thread"));
 
         // Allocate server socket at given port...
         try {
