@@ -558,6 +558,7 @@ public class Server implements Runnable {
             if (user.getUserName().equals(id) && user.getPassword().equals(password)) {
                 currentUser = user;
                 outputInt = (currentUser instanceof Customer) ? 0 : 1;
+                break;
             }
         }
         output.writeObject(outputInt);
@@ -639,6 +640,7 @@ public class Server implements Runnable {
         for (String contactEmail : productSeller.getContactingCustomers()) {
             if (contactEmail.equals(currentUser.getEmail())) { // check if customer has already contacted this seller.
                 noDuplicate = false;
+                break;
             }
         }
         // if there is no duplicate which means customer is contacting seller for the first time,
