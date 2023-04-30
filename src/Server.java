@@ -65,7 +65,7 @@ public class Server implements Runnable {
 
                     // Change data in appropriate location
                     p.setQuantity(p.getQuantity() - quantity);
-                    productStore.setTotalRevenue(productStore.getTotalRevenue() + p.getPrice());
+                    productStore.setTotalRevenue(productStore.getTotalRevenue() + p.getPrice() * quantity);
                     productStore.addCustomerEmail(currentUser.getEmail());
                     productStore.addToSaleHistory(productStore.makeSaleDetail(p, quantity, currentUser.getEmail()));
                     ((Customer) currentUser).addToPurchaseHistory(p, quantity);
