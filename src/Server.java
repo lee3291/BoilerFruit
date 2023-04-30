@@ -536,76 +536,32 @@ public class Server implements Runnable {
      * Set user's online status to false and close the socket
      */
     private void logOut() throws IOException {
-        currentUser.setOnline(false); // set user to offline
         currentUser = null; // set current user to null, in case a different user logs in before the socket is lost
     }
 
     /**
-     * Find the user with a matching id (username or email) and email
+     * Find the user with a matching id and check for password
      * Set the {@link #currentUser} to the newly created User if success;
      * Send a  1 integer object to client if success and client is a SELLER;
      * Send a  0 integer object to client if success and client is a CUSTOMER;
      * Send a -1 integer object to client if failed (i.e. username/email/password is incorrect)
      *
      * @param output   the output stream to communicate with client
-     * @param id       username or email of the client
+     * @param id       username of the client
      * @param password password of the client
      */
     private void logIn(ObjectOutputStream output, String id, String password) throws IOException {
-        User user; // logging in user
-
-        // Email matched
-        if ((user = users.get(id)) != null) {
-            // Don't allow multiple log in
-            if (user.isOnline()) {
-                output.writeObject(-1);
-                output.flush();
-                return;
-            }
-
-            // Email and password matched
-            if (user.getPassword().equals(password)) {
+        int outputInt = -1;
+        for (User user : users.values()) {
+            // check if User exists and the password matches, and set currentUser to user.
+            // if there is no user that matches this condition, user does not exist.
+            if (user.getUserName().equals(id) && user.getPassword().equals(password)) {
                 currentUser = user;
-                user.setOnline(true);
-
-                if (user instanceof Seller) {
-                    output.writeObject(1);
-                } else {
-                    output.writeObject(0);
-                }
-                output.flush();
-                return;
-            }
-        } else { // Passed in id can be username
-            for (User u : users.values()) {
-                // Username matched
-                if (u.getUserName().equals(id)) {
-                    // Don't allow multiple log in
-                    if (u.isOnline()) {
-                        output.writeObject(-1);
-                        output.flush();
-                        return;
-                    }
-
-                    // Username and password matched
-                    if (u.getPassword().equals(password)) {
-                        currentUser = u;
-                        u.setOnline(true);
-
-                        if (u instanceof Seller) {
-                            output.writeObject(1);
-                        } else {
-                            output.writeObject(0);
-                        }
-                        output.flush();
-                        return;
-                    }
-                }
+                outputInt = (currentUser instanceof Customer) ? 0 : 1;
+                break;
             }
         }
-
-        // No matched username or email or password is wrong
-        output.writeObject(-1);
+        output.writeObject(outputInt);
         output.flush();
     }
 
@@ -630,7 +586,6 @@ public class Server implements Runnable {
             output.flush();
             return;
         }
-
         // Validate username
         for (User user : users.values()) {
             if (user.getUserName().equals(username)) {
@@ -639,12 +594,10 @@ public class Server implements Runnable {
                 return;
             }
         }
-
         // User is customer
         if (type.equals("Customer")) {
             Customer newCustomer = new Customer(username, email, password);
             users.put(email, newCustomer);
-            currentUser = newCustomer;
 
             // TODO: delete after debug
             System.out.printf("Customer|%s|%s|%s\n", username, email, password);
@@ -653,7 +606,6 @@ public class Server implements Runnable {
                 System.out.println(u.getUserName());
                 System.out.println(u.getEmail());
                 System.out.println(u.getPassword());
-                System.out.println(u.isOnline());
                 System.out.println("-----");
             }
             output.writeObject(1);
@@ -661,7 +613,6 @@ public class Server implements Runnable {
         } else if (type.equals("Seller")) { // User is seller
             Seller newSeller = new Seller(username, email, password);
             users.put(email, newSeller);
-            currentUser = newSeller;
 
             // TODO: delete after debug
             System.out.printf("Seller|%s|%s|%s\n", username, email, password);
@@ -670,7 +621,6 @@ public class Server implements Runnable {
                 System.out.println(u.getUserName());
                 System.out.println(u.getEmail());
                 System.out.println(u.getPassword());
-                System.out.println(u.isOnline());
                 System.out.println("-----");
             }
             output.writeObject(1);
@@ -678,9 +628,28 @@ public class Server implements Runnable {
         }
     }
 
-    private void contactSeller(String sellerEmail) {
+    /**
+     *  Add current user(Customer)'s email to a seller's contactingCustomers list.
+     *  Send true if successful.
+     *  If customer email already exists in the list, send false
+     * @param sellerEmail the sellerEmail the customer is trying to contact.
+     */
+    private void contactSeller(ObjectOutputStream output, String sellerEmail) throws IOException {
+        boolean noDuplicate = true;
         Seller productSeller = (Seller) users.get(sellerEmail);
-        productSeller.getContactingCustomers().add(currentUser.getEmail());
+        for (String contactEmail : productSeller.getContactingCustomers()) {
+            if (contactEmail.equals(currentUser.getEmail())) { // check if customer has already contacted this seller.
+                noDuplicate = false;
+                break;
+            }
+        }
+        // if there is no duplicate which means customer is contacting seller for the first time,
+        // add customer email to seller's contactingCustomer list
+        if (noDuplicate) {
+            productSeller.getContactingCustomers().add(currentUser.getEmail());
+        }
+        output.writeObject(noDuplicate);
+        output.flush();
     }
 
     /**
@@ -840,7 +809,7 @@ public class Server implements Runnable {
             // Contacting seller of a product (Query: CNTSLR_sellerEmail)
             case "CNTSLR" -> {
                 System.out.printf("Received Query: %s\n->Calling contactSeller()\n", query);
-                contactSeller(queryComponents[1]);
+                contactSeller(output, queryComponents[1]);
             }
 
             default -> System.out.printf("Received Query: %s. ERROR!", query);
