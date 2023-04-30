@@ -385,6 +385,21 @@ public class Server implements Runnable {
     }
 
     /**
+     *  Find a store from all the stores of a seller, send to server.
+     *  Send null if store does not exist.
+     *
+     * @param output    the output stream to communicate with client
+     * @param storeName the name of the store
+     * @throws IOException
+     */
+    private void findSellerStore(ObjectOutputStream output, String storeName) throws IOException {
+        // @Ethan
+        Seller currentSeller = (Seller) currentUser;
+        output.writeObject(currentSeller.getStores().get(storeName));
+        output.flush();
+    }
+
+    /**
      * Delete a store in the {@link #currentUser}'s stores field
      * Send a TRUE boolean object to client if success
      * Send a FALSE boolean object to client if failed (i.e. there is no store with matching name)
@@ -754,6 +769,12 @@ public class Server implements Runnable {
             case "GETSELLSTR" -> {
                 System.out.printf("Received Query: %s\n->Calling getSellerStores()\n", query);
                 getSellerStores(output, queryComponents[1]);
+            }
+
+            // Getting a specific Store of a seller (Query: FINDSELLSTR_storeName)
+            case "FINDSELLSTR" -> {
+                System.out.printf("Received Query: %s\n->Calling findSellerStore()\n", query);
+                findSellerStore(output, queryComponents[1]);
             }
 
             // Getting a store's list of products (can be used for searching)
