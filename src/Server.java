@@ -29,9 +29,7 @@ public class Server implements Runnable {
     private void getPurchaseHistory(ObjectOutputStream output) throws IOException {
         // @Ethan
         // Assume this user must be customer
-        output.writeObject(((Customer) this.currentUser).getPurchaseHistory());
-        output.flush();
-        output.reset();
+        respondToClient(output, ((Customer) this.currentUser).getPurchaseHistory());
     }
 
     /**
@@ -61,9 +59,7 @@ public class Server implements Runnable {
 
                     // Making sure product is not sold out
                     if (quantity > p.getQuantity()) {
-                        output.writeObject(false);
-                        output.flush();
-                        output.reset();
+                        respondToClient(output, false);
                         return;
                     }
 
@@ -146,9 +142,7 @@ public class Server implements Runnable {
         ArrayList<Product> allProducts = collectMarketProduct();
         // No search
         if (searchKey.equals("-1")) {
-            output.writeObject(allProducts);
-            output.flush();
-            output.reset();
+            respondToClient(output, allProducts);
 
         } else { // Searching
             searchKey = searchKey.toLowerCase();
@@ -160,9 +154,7 @@ public class Server implements Runnable {
                     matchingProducts.add(p);
                 }
             }
-            output.writeObject(matchingProducts);
-            output.flush();
-            output.reset();
+            respondToClient(output, matchingProducts);
         }
     }
 
@@ -187,9 +179,7 @@ public class Server implements Runnable {
             }
             sortedProducts.set(j + 1, p);
         }
-        output.writeObject(sortedProducts);
-        output.flush();
-        output.reset();
+        respondToClient(output, sortedProducts);
     }
 
     /**
@@ -213,9 +203,7 @@ public class Server implements Runnable {
             }
             sortedProducts.set(j + 1, p);
         }
-        output.writeObject(sortedProducts);
-        output.flush();
-        output.reset();
+        respondToClient(output, sortedProducts);
     }
 
     /**
@@ -230,13 +218,9 @@ public class Server implements Runnable {
     private void deleteProduct(ObjectOutputStream output, String storeName, String productName) throws IOException {
         Store store = ((Seller) currentUser).getStores().get(storeName);
         if (store.removeProduct(productName)) {
-            output.writeObject(true);
-            output.flush();
-            output.reset();
+            respondToClient(output, true);
         } else {
-            output.writeObject(false);
-            output.flush();
-            output.reset();
+            respondToClient(output, false);
         }
     }
 
@@ -262,9 +246,7 @@ public class Server implements Runnable {
         if (!oldName.equalsIgnoreCase(newName)) {
             for (Product p : store.getCurrentProducts()) {
                 if (p.getName().equalsIgnoreCase(newName)) {
-                    output.writeObject(false);
-                    output.flush();
-                    output.reset();
+                    respondToClient(output, false);
                     return;
                 }
             }
@@ -279,9 +261,7 @@ public class Server implements Runnable {
                 p.setPrice(Double.parseDouble(strPrice));
                 p.setQuantity(Integer.parseInt(strQuantity));
 
-                output.writeObject(true);
-                output.flush();
-                output.reset();
+                respondToClient(output, true);
                 return;
             }
         }
@@ -310,13 +290,9 @@ public class Server implements Runnable {
 
         // Add to store
         if (store.addProduct(newProduct)) {
-            output.writeObject(true);
-            output.flush();
-            output.reset();
+            respondToClient(output, true);
         } else {
-            output.writeObject(false);
-            output.flush();
-            output.reset();
+            respondToClient(output, false);
         }
     }
 
@@ -339,9 +315,7 @@ public class Server implements Runnable {
 
         if (searchKey.equals("-1")) {
             ArrayList<Product> newProducts = new ArrayList<>(specifiedProducts);
-            output.writeObject(newProducts);
-            output.flush();
-            output.reset();
+            respondToClient(output, newProducts);
         } else {
             ArrayList<Product> matchingProducts = new ArrayList<>();
             searchKey = searchKey.toLowerCase();
@@ -352,9 +326,7 @@ public class Server implements Runnable {
                     matchingProducts.add(p);
                 }
             }
-            output.writeObject(matchingProducts);
-            output.flush();
-            output.reset();
+            respondToClient(output, matchingProducts);
         }
     }
 
@@ -385,9 +357,7 @@ public class Server implements Runnable {
                 }
             }
         }
-        output.writeObject(sellerStoresAL);
-        output.flush();
-        output.reset();
+        respondToClient(output, sellerStoresAL);
     }
 
     /**
@@ -401,9 +371,7 @@ public class Server implements Runnable {
     private void findSellerStore(ObjectOutputStream output, String storeName) throws IOException {
         // @Ethan
         Seller currentSeller = (Seller) currentUser;
-        output.writeObject(currentSeller.getStores().get(storeName));
-        output.flush();
-        output.reset();
+        respondToClient(output, currentSeller.getStores().get(storeName));
     }
 
     /**
@@ -425,9 +393,7 @@ public class Server implements Runnable {
         } else { // if it successfully removed, returns the value of the object.
             returnObject = true;
         }
-        output.writeObject(returnObject);
-        output.flush();
-        output.reset();
+        respondToClient(output, returnObject);
     }
 
     /**
@@ -451,9 +417,7 @@ public class Server implements Runnable {
             Store newStore = new Store(storeName, currentSeller.getEmail());
             sellerStores.put(storeName, newStore);
         }
-        output.writeObject(returnObject);
-        output.flush();
-        output.reset();
+        respondToClient(output, returnObject);
     }
 
     /**
@@ -462,15 +426,8 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getUserType(ObjectOutputStream output) throws IOException {
-        if (currentUser instanceof Customer) {
-            output.writeObject("Customer");
-            output.flush();
-            output.reset();
-        } else {
-            output.writeObject("Seller");
-            output.flush();
-            output.reset();
-        }
+        String userType = (currentUser instanceof Customer)? "Customer" : "Seller";
+        respondToClient(output, userType);
     }
 
     /**
@@ -479,9 +436,7 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getUserEmail(ObjectOutputStream output) throws IOException {
-        output.writeObject(currentUser.getEmail());
-        output.flush();
-        output.reset();
+        respondToClient(output, currentUser.getEmail());
     }
 
     /**
@@ -490,9 +445,7 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getUserName(ObjectOutputStream output) throws IOException {
-        output.writeObject(currentUser.getUserName());
-        output.flush();
-        output.reset();
+        respondToClient(output, currentUser.getUserName());
     }
 
     /**
@@ -531,9 +484,7 @@ public class Server implements Runnable {
             currentUser.setUserName(username);
             outputObject = true;
         }
-        output.writeObject(outputObject);
-        output.flush();
-        output.reset();
+        respondToClient(output, outputObject);
     }
 
 
@@ -575,9 +526,7 @@ public class Server implements Runnable {
                 break;
             }
         }
-        output.writeObject(outputInt);
-        output.flush();
-        output.reset();
+        respondToClient(output, outputInt);
     }
 
     /**
@@ -597,17 +546,13 @@ public class Server implements Runnable {
         // Validate email
         User checker = users.get(email);
         if (checker != null) {
-            output.writeObject(0);
-            output.flush();
-            output.reset();
+            respondToClient(output, 0);
             return;
         }
         // Validate username
         for (User user : users.values()) {
             if (user.getUserName().equals(username)) {
-                output.writeObject(-1);
-                output.flush();
-                output.reset();
+                respondToClient(output, -1);
                 return;
             }
         }
@@ -626,10 +571,7 @@ public class Server implements Runnable {
 //                System.out.println(u.isOnline());
 //                System.out.println("-----");
 //            }
-          
-            output.writeObject(1);
-            output.flush();
-            output.reset();
+            respondToClient(output, 1);
         } else if (type.equals("Seller")) { // User is seller
             Seller newSeller = new Seller(username, email, password);
             users.put(email, newSeller);
@@ -644,10 +586,7 @@ public class Server implements Runnable {
 //                System.out.println(u.isOnline());
 //                System.out.println("-----");
 //            }
-
-            output.writeObject(1);
-            output.flush();
-            output.reset();
+            respondToClient(output, 1);
         }
     }
 
@@ -671,8 +610,7 @@ public class Server implements Runnable {
         if (noDuplicate) {
             productSeller.getContactingCustomers().add(currentUser.getEmail());
         }
-        output.writeObject(noDuplicate);
-        output.flush();
+        respondToClient(output, noDuplicate);
     }
 
     /**
@@ -837,6 +775,12 @@ public class Server implements Runnable {
 
             default -> System.out.printf("Received Query: %s. ERROR!", query);
         }
+    }
+
+    private void respondToClient(ObjectOutputStream output, Object returnObj) throws IOException {
+        output.writeObject(returnObj);
+        output.flush();
+        output.reset();
     }
 
     /**

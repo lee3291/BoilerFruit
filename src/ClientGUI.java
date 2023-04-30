@@ -626,8 +626,8 @@ public class ClientGUI implements Runnable {
      * @return the expected object
      * @throws Exception IO and ClassNotFound exceptions
      */
-    Object queryServer(String query) throws Exception {
-        System.out.println(query); // TODO: delete after debug
+    private Object queryServer(String query) throws Exception {
+        System.out.println(query);
         printWriter.println(query);
         printWriter.flush();
         return ois.readObject();
