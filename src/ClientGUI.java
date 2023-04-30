@@ -471,7 +471,7 @@ public class ClientGUI implements Runnable {
 
         // Center, combobox in box layout
         JPanel centerPanel = new JPanel();
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS)); //TODO: unused centerPanel
 
         // JList
         JList<Product> productListing = new JList<>();
@@ -978,15 +978,16 @@ public class ClientGUI implements Runnable {
      * @param stores the user's stores; used to make the page's component
      */
     void sellerPage(ArrayList<Store> stores) { // this stores will be allStores
+        // Setting up seller page
         resetFrame();
-
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new BorderLayout());
 
-        // North, search bar, search button, refresh button, to add two components, make an inner panel with boxlayout.
+        /// North panel
         JPanel northPanel = new JPanel();
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
+        // Search bar - north
         JTextField searchBar = new JTextField("Search for store", 10);
         searchBar.setForeground(Color.GRAY);
         searchBar.addFocusListener(new FocusListener() {
@@ -1006,6 +1007,8 @@ public class ClientGUI implements Runnable {
                 }
             }
         });
+
+        // Search button - north
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
             if (searchBar.getText().equals("Search for store")) {
@@ -1025,6 +1028,7 @@ public class ClientGUI implements Runnable {
             }
         });
 
+        // Refresh button - north
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
             try {
@@ -1036,15 +1040,17 @@ public class ClientGUI implements Runnable {
             }
         });
 
+        // Add components to north panel
         northPanel.add(searchBar);
         northPanel.add(searchButton);
         northPanel.add(refreshButton);
         jPanel.add(northPanel, BorderLayout.NORTH);
 
-        // West, usertype label, username label, edit account button, logout button
+        /// West panel
         JPanel westPanel = new JPanel();
         westPanel.setLayout(new BoxLayout(westPanel, BoxLayout.Y_AXIS));
 
+        // Usertype - west
         JLabel userType = new JLabel("  Seller"); // Space for alignment with buttons
         String userNameStr = "  Unknown User";
         // Getting username from server
@@ -1052,16 +1058,16 @@ public class ClientGUI implements Runnable {
             userNameStr = "  " + queryServer("NAME");
         } catch (Exception ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
-                    "ERROR", JOptionPane.ERROR_MESSAGE);
         }
         JLabel userNameLabel = new JLabel(userNameStr);
 
+        // Edit account - west
         JButton editAccountButton = new JButton("Edit Account");
         editAccountButton.setPreferredSize(new Dimension(100, 50));
         editAccountButton.setMaximumSize(editAccountButton.getPreferredSize());
         editAccountButton.addActionListener(e -> editAccountPage());
 
+        // Log out - west
         JButton logOutButton = new JButton("Log Out");
         logOutButton.setPreferredSize(new Dimension(100, 50));
         logOutButton.setMaximumSize(logOutButton.getPreferredSize());
@@ -1071,6 +1077,7 @@ public class ClientGUI implements Runnable {
             loginPage();
         });
 
+        // Add components to west panel
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(userType);
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
@@ -1079,13 +1086,13 @@ public class ClientGUI implements Runnable {
         westPanel.add(editAccountButton);
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(logOutButton);
-
         jPanel.add(westPanel, BorderLayout.WEST);
 
-        // South, create & delete store buttons. use flow layout
+        /// South
         JPanel southPanel = new JPanel();
         southPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 0));
 
+        // Create store - south
         JButton createStoreButton = new JButton("Create Store");
         createStoreButton.setPreferredSize(new Dimension(100, 50));
         createStoreButton.setMaximumSize(createStoreButton.getPreferredSize());
@@ -1123,6 +1130,7 @@ public class ClientGUI implements Runnable {
             }
         });
 
+        // Delete store - south
         JButton deleteStoreButton = new JButton("Delete Store");
         deleteStoreButton.setPreferredSize(new Dimension(100, 50));
         deleteStoreButton.setMaximumSize(deleteStoreButton.getPreferredSize());
@@ -1161,11 +1169,14 @@ public class ClientGUI implements Runnable {
             }
         });
 
+        // Add component to south panel
         southPanel.add(createStoreButton);
         southPanel.add(deleteStoreButton);
         jPanel.add(southPanel, BorderLayout.SOUTH);
 
-        // Center, combo-box in box layout
+        /// Center
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
 
         // JList
         JList<Store> userStores = new JList<>();
@@ -1198,10 +1209,8 @@ public class ClientGUI implements Runnable {
             }
         });
 
-        JPanel centerPanel = new JPanel();
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        // Add component to center panel
         centerPanel.add(new JScrollPane(userStores));
-
         jPanel.add(centerPanel, BorderLayout.CENTER);
 
         frame.add(jPanel);
@@ -1219,10 +1228,11 @@ public class ClientGUI implements Runnable {
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new BorderLayout());
 
-        // North, search bar, search button, refresh button, to add two components, make an inner panel with boxlayout.
+        /// North
         JPanel northPanel = new JPanel();
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
 
+        // Search bar - north
         JTextField searchBar = new JTextField("Search for product name or description", 10);
         searchBar.setForeground(Color.GRAY);
         searchBar.addFocusListener(new FocusListener() {
@@ -1242,6 +1252,8 @@ public class ClientGUI implements Runnable {
                 }
             }
         });
+
+        // Search button - north
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> {
             if (searchBar.getText().equals("Search for product name or description")) {
@@ -1261,6 +1273,7 @@ public class ClientGUI implements Runnable {
             }
         });
 
+        // Refresh button - north
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
             String query = String.format("GETSTRPROD_%s_-1", storeName);
@@ -1279,27 +1292,32 @@ public class ClientGUI implements Runnable {
             }
         });
 
+        // Add components to north panel
         northPanel.add(searchBar);
         northPanel.add(searchButton);
         northPanel.add(refreshButton);
         jPanel.add(northPanel, BorderLayout.NORTH);
 
-        // West, usertype label, view sale button, export button, back button
+        /// West
         JPanel westPanel = new JPanel();
         westPanel.setLayout(new BoxLayout(westPanel, BoxLayout.Y_AXIS));
 
+        // Usertype display - west
         JLabel userType = new JLabel("         " + storeName); // Space for alignment with buttons
 
+        // View sale - west
         JButton viewSaleButton = new JButton("View sale");
         viewSaleButton.setPreferredSize(new Dimension(120, 50));
         viewSaleButton.setMaximumSize(viewSaleButton.getPreferredSize());
 //        viewSaleButton.addActionListener(e -> storeViewSale());
 
+        // Add product - west
         JButton addProductButton = new JButton("Add Product");
         addProductButton.setPreferredSize(new Dimension(120, 50));
         addProductButton.setMaximumSize(addProductButton.getPreferredSize());
         addProductButton.addActionListener(e -> addProductPage(storeName));
 
+        // Back - west
         JButton backButton = new JButton("Go Back");
         backButton.setPreferredSize(new Dimension(120, 50));
         backButton.setMaximumSize(backButton.getPreferredSize());
@@ -1313,6 +1331,7 @@ public class ClientGUI implements Runnable {
             }
         });
 
+        // Add component to west panel
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(userType);
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
@@ -1321,14 +1340,14 @@ public class ClientGUI implements Runnable {
         westPanel.add(addProductButton);
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(backButton);
-
         jPanel.add(westPanel, BorderLayout.WEST);
 
-        // South, review Purchase History button. use box layout for size
+        /// South
         JPanel southPanel = new JPanel();
         southPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 50, 0));
         FileIO fileIO = new FileIO();
 
+        // Import - south
         JButton importProductButton = new JButton("Import Products");
         importProductButton.setPreferredSize(new Dimension(120, 50));
         importProductButton.setMaximumSize(importProductButton.getPreferredSize());
@@ -1397,6 +1416,7 @@ public class ClientGUI implements Runnable {
             }
         });
 
+        // Export - south
         JButton exportProductButton = new JButton("Export Products");
         exportProductButton.setPreferredSize(new Dimension(120, 50));
         exportProductButton.setMaximumSize(exportProductButton.getPreferredSize());
@@ -1427,46 +1447,53 @@ public class ClientGUI implements Runnable {
             }
         });
 
+        // Add components to south panel
         southPanel.add(importProductButton);
         southPanel.add(exportProductButton);
         jPanel.add(southPanel, BorderLayout.SOUTH);
 
-        // Center, combo-box in box layout
+        /// Center
         JSplitPane centralSplitPanel = new JSplitPane();
 
-        // JList
+        // Left panel - center
         JList<Product> currentProducts = new JList<>();
         DefaultListModel<Product> model = new DefaultListModel<>();
         currentProducts.setModel(model);
         for (Product p : products) {
-            model.addElement(p); // Add stores to list
+            model.addElement(p); // Add products to list
         }
 
+        // Product list - center/left
         JLabel noProductAnnouncement = new JLabel();
         noProductAnnouncement.setText("Store has no product yet.\nYou can add more product to the store!");
-
-        // Left
         if (products.isEmpty()) {
             centralSplitPanel.setLeftComponent(noProductAnnouncement);
         } else {
             centralSplitPanel.setLeftComponent(new JScrollPane(currentProducts));
         }
 
-        // Right
+        // Right panel - center
         JPanel detailProductPanel = new JPanel();
         detailProductPanel.setLayout(new BorderLayout());
-        JLabel detailLabel = new JLabel();
 
-        // Implement ListSelectionModel (avoid it from fire twice)
+        // Product detail - center/right/north
+        JTextPane detailLabel = new JTextPane();
+        detailLabel.setEditable(false);
         ListSelectionModel productList = currentProducts.getSelectionModel();
-        productList.setValueIsAdjusting(false);
+        productList.setValueIsAdjusting(false); // avoid it from fire twice
         productList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
+            if (!e.getValueIsAdjusting()) { // avoid it from fire twice
                 Product p = currentProducts.getSelectedValue();
                 detailLabel.setText(p.getDescription());
             }
         });
+        detailProductPanel.add(detailLabel, BorderLayout.NORTH);
 
+        // South right panel
+        JPanel centerRightBottomPanel = new JPanel();
+        centerRightBottomPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 0));
+
+        // Modify - center/right/south
         JButton modifyButton = new JButton("Modify");
         modifyButton.setPreferredSize(new Dimension(100, 50));
         modifyButton.setMaximumSize(modifyButton.getPreferredSize());
@@ -1481,6 +1508,7 @@ public class ClientGUI implements Runnable {
             modifyProductPage(storeName, selectedProduct);
         });
 
+        // Delete - center/right/south
         JButton deleteButton = new JButton("Delete");
         deleteButton.setPreferredSize(new Dimension(100, 50));
         deleteButton.setMaximumSize(deleteButton.getPreferredSize());
@@ -1517,18 +1545,13 @@ public class ClientGUI implements Runnable {
             }
         });
 
-        detailProductPanel.add(detailLabel, BorderLayout.NORTH);
-
-        JPanel centerRightBottomPanel = new JPanel();
-        centerRightBottomPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        // Add components to center right panel
         centerRightBottomPanel.add(modifyButton);
         centerRightBottomPanel.add(deleteButton);
         detailProductPanel.add(centerRightBottomPanel, BorderLayout.SOUTH);
 
-        centralSplitPanel.setRightComponent(new JScrollPane(detailProductPanel));
-
+        centralSplitPanel.setRightComponent(detailProductPanel);
         jPanel.add(centralSplitPanel, BorderLayout.CENTER);
-
         frame.add(jPanel);
         updateFrame();
     }
