@@ -69,11 +69,6 @@ public class Store implements Serializable {
         }
         // Add new product to listing if the product is new
         currentProducts.add(newProduct);
-        System.out.println("Current Products: ");
-        for (Product p : currentProducts) {
-            System.out.println(p.toString());
-            System.out.println("-----------");
-        }
         return true;
     }
 
@@ -85,7 +80,6 @@ public class Store implements Serializable {
      */
     public boolean removeProduct(String productName) {
         // Search currentListing for product
-        int newQuantity;
         Product product;
         for (int i = 0; i < currentProducts.size(); i++) {
             product = currentProducts.get(i);
