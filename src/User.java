@@ -9,7 +9,6 @@ public abstract class User implements Serializable {
     private String userName; // unique value per user
     private final String email; // unique value per user; Hashmap key for user
     private String password;
-    private boolean online;
 
     /**
      * Constructors have been overloaded for different situation.
@@ -23,7 +22,6 @@ public abstract class User implements Serializable {
         this.userName = userName;
         this.email = email;
         this.password = password;
-        this.online = false;
     }
 
     /**
@@ -51,13 +49,5 @@ public abstract class User implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public boolean isOnline() {
-        return online;
-    }
-
-    public void setOnline(boolean online) {
-        this.online = online;
     }
 }
