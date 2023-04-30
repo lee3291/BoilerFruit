@@ -606,6 +606,14 @@ public class Server implements Runnable {
     }
 
     /**
+     * Send an ArrayList of contacted customer to client
+     * @param output the output stream to communicate with client
+     */
+    private void contactCustomer(ObjectOutputStream output) throws IOException {
+        respondToClient(output, ((Seller) currentUser).getContactingCustomers());
+    }
+
+    /**
      * Process the query get from the Client GUI and call the appropriate method with appropriate parameters
      * Query will always be in the form: command_pram1_param2_..., where:
      * command is the command (used to decide which method to be called)
@@ -763,6 +771,12 @@ public class Server implements Runnable {
             case "CNTSLR" -> {
                 System.out.printf("Received Query: %s\n->Calling contactSeller()\n", query);
                 contactSeller(output, queryComponents[1]);
+            }
+
+            // Get current user's contacted customers (Query: CNTCUS)
+            case "CNTCUS" -> {
+                System.out.printf("Received Query: %s\n->Calling contactCustomer()\n", query);
+                contactCustomer(output);
             }
 
             default -> System.out.printf("Received Query: %s. ERROR!", query);
