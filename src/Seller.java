@@ -9,14 +9,16 @@ public class Seller extends User implements Serializable {
     private final HashMap<String, Store> stores; // Key is store name.
     private ArrayList<String> contactingCustomers; // Customer emails who tried to contact seller
 
-    public Seller(String userName, String email, String password, HashMap<String, Store> stores) {
+    public Seller(String userName, String email, String password, HashMap<String, Store> stores, ArrayList<String> contactingCustomers) {
         super(userName, email, password);
         this.stores = stores;
+        this.contactingCustomers = contactingCustomers;
     }
 
     public Seller(String userName, String email, String password) {
         super(userName, email, password);
         this.stores = new HashMap<>();
+        this.contactingCustomers = new ArrayList<>();
         // pre-existing stores will be read from a file in a different method, and assigned
         // after instantiation of the object.
     }
