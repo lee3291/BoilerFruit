@@ -537,8 +537,14 @@ public class ClientGUI implements Runnable {
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            quantity = Integer.parseInt(JOptionPane.showInputDialog(frame, "Enter quantity",
-                    "Purchase Item", JOptionPane.QUESTION_MESSAGE));
+
+            try {
+                quantity = Integer.parseInt(JOptionPane.showInputDialog(frame, "Enter quantity",
+                        "Purchase Item", JOptionPane.QUESTION_MESSAGE));
+            } catch (Exception ex) {
+                return;
+            }
+
             if (quantity <= 0 || quantity > selectedProduct.getQuantity()) {
                 JOptionPane.showMessageDialog(frame, "Please enter a valid quantity!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
@@ -1071,6 +1077,20 @@ public class ClientGUI implements Runnable {
         editAccountButton.setMaximumSize(editAccountButton.getPreferredSize());
         editAccountButton.addActionListener(e -> editAccountPage());
 
+        // Contacted customer - west
+        JButton customerButton = new JButton("Cust. Inbox");
+        customerButton.setPreferredSize(new Dimension(100, 50));
+        customerButton.setMaximumSize(customerButton.getPreferredSize());
+        customerButton.addActionListener(e -> {
+            try {
+                contactedCustomersPage((String) queryServer("NAME"), (ArrayList<String>) queryServer("CNTCUS"));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
         // Log out - west
         JButton logOutButton = new JButton("Log Out");
         logOutButton.setPreferredSize(new Dimension(100, 50));
@@ -1088,6 +1108,8 @@ public class ClientGUI implements Runnable {
         westPanel.add(userNameLabel);
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(editAccountButton);
+        westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        westPanel.add(customerButton);
         westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
         westPanel.add(logOutButton);
         jPanel.add(westPanel, BorderLayout.WEST);
@@ -2063,6 +2085,72 @@ public class ClientGUI implements Runnable {
         // Add component to center bottom panel
         centerBottomPanel.add(new JScrollPane(saleHistory));
         centerPanel.add(centerBottomPanel, BorderLayout.CENTER);
+
+        // Add component to jPanel
+        jPanel.add(centerPanel, BorderLayout.CENTER);
+
+        frame.add(jPanel);
+        updateFrame();
+    }
+
+    void contactedCustomersPage(String sellerName, ArrayList<String> contactedCustomer) {
+        // Setting up store page frame
+        resetFrame();
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new BorderLayout());
+
+        /// North
+        JPanel northPanel = new JPanel();
+        northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.X_AXIS));
+
+        // Page title - north
+        JLabel titleLabel = new JLabel("Contacted Customers");
+        titleLabel.setHorizontalAlignment(JLabel.CENTER);
+        titleLabel.setFont(new Font(null, Font.PLAIN, 20));
+        titleLabel.setPreferredSize(new Dimension(200, 100));
+        jPanel.add(titleLabel, BorderLayout.NORTH);
+
+        /// West
+        JPanel westPanel = new JPanel();
+        westPanel.setLayout(new BoxLayout(westPanel, BoxLayout.Y_AXIS));
+
+        // Store's name display - west
+        JLabel userName = new JLabel("         " + sellerName); // Space for alignment with buttons
+
+        // Back - west
+        JButton backButton = new JButton("Go Back");
+        backButton.setPreferredSize(new Dimension(120, 50));
+        backButton.setMaximumSize(backButton.getPreferredSize());
+        backButton.addActionListener(e -> {
+            try {
+                sellerPage((ArrayList<Store>) queryServer("GETSELLSTR_-1"));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!",
+                        "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // Add component to west panel
+        westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        westPanel.add(userName);
+        westPanel.add(Box.createRigidArea(new Dimension(0, 50)));
+        westPanel.add(backButton);
+        jPanel.add(westPanel, BorderLayout.WEST);
+
+        /// Center
+        JPanel centerPanel = new JPanel(new BorderLayout());
+
+        // Customer emails
+        JList<String> customerEmails = new JList<>();
+        DefaultListModel<String> model = new DefaultListModel<>();
+        customerEmails.setModel(model);
+        for (String email : contactedCustomer) {
+            model.addElement(email); // Add stores to list
+        }
+
+        // Add component to center bottom panel
+        centerPanel.add(new JScrollPane(customerEmails));
 
         // Add component to jPanel
         jPanel.add(centerPanel, BorderLayout.CENTER);
