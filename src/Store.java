@@ -12,16 +12,6 @@ public class Store implements Serializable {
     private ArrayList<String> saleHistory; // the sale history: item name, quantity, revenue(price), customerName
     private ArrayList<String> customerEmails; // Customers who shopped at this store.
 
-    public Store(String name, String sellerEmail, double totalRevenue, ArrayList<Product> currentProducts,
-                 ArrayList<String> saleHistory, ArrayList<String> customerEmails) {
-        this.name = name;
-        this.sellerEmail = sellerEmail;
-        this.totalRevenue = totalRevenue;
-        this.currentProducts = currentProducts;
-        this.saleHistory = saleHistory;
-        this.customerEmails = customerEmails;
-    }
-
     public Store(String name, String sellerEmail) {
         this.name = name;
         this.sellerEmail = sellerEmail;
@@ -45,14 +35,6 @@ public class Store implements Serializable {
 
     public ArrayList<Product> getCurrentProducts() {
         return currentProducts;
-    }
-
-    public void setCurrentProducts(ArrayList<Product> currentProducts) {
-        this.currentProducts = currentProducts;
-    }
-
-    public String getSellerEmail() {
-        return sellerEmail;
     }
 
     /**
@@ -96,10 +78,6 @@ public class Store implements Serializable {
         return saleHistory;
     }
 
-    public void setHistory(ArrayList<String> saleHistory) {
-        this.saleHistory = saleHistory;
-    }
-
     /**
      * Add new purchased item to history
      *
@@ -107,10 +85,6 @@ public class Store implements Serializable {
      */
     public void addToSaleHistory(String saleDetail) {
         saleHistory.add(saleDetail);
-    }
-
-    public void setSaleHistory(ArrayList<String> saleHistory) {
-        this.saleHistory = saleHistory;
     }
 
     /**
@@ -127,10 +101,6 @@ public class Store implements Serializable {
 
     public ArrayList<String> getCustomerEmails() {
         return customerEmails;
-    }
-
-    public void setCustomerEmails(ArrayList<String> customerEmails) {
-        this.customerEmails = customerEmails;
     }
 
     /**

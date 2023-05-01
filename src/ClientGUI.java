@@ -25,12 +25,6 @@ public class ClientGUI implements Runnable {
     public void run() {
         createGUI();
         ipAddressPage();
-//        loginPage();
-//        signUpPage();
-//        sellerPage(new ArrayList<>());
-//        customerPage(new ArrayList<>());
-//        editAccountPage();
-//        reviewHistoryPage();
     }
 
     void ipAddressPage() {
@@ -919,10 +913,6 @@ public class ClientGUI implements Runnable {
                     JOptionPane.ERROR_MESSAGE);
         }
 
-//        for (int i = 0; i < 15; i++) {
-//            purchaseHistory.add("Some purchase history example" + i);
-//        }
-
         JList<String> historyList = new JList<>();
         DefaultListModel<String> model = new DefaultListModel<>();
         historyList.setModel(model);
@@ -1238,15 +1228,6 @@ public class ClientGUI implements Runnable {
     }
 
     void storePage(String storeName, ArrayList<Product> products) {
-        
-        // ------------Testing-----------------
-        System.out.println("Store: ");
-        for (Product p : products) {
-            System.out.println(p.toString());
-        }
-        System.out.println("------------");
-        // ------------Testing-----------------
-        
         // Setting up store page frame
         resetFrame();
         JPanel jPanel = new JPanel();
