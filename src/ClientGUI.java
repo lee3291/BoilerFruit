@@ -536,8 +536,14 @@ public class ClientGUI implements Runnable {
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            quantity = Integer.parseInt(JOptionPane.showInputDialog(frame, "Enter quantity",
-                    "Purchase Item", JOptionPane.QUESTION_MESSAGE));
+
+            try {
+                quantity = Integer.parseInt(JOptionPane.showInputDialog(frame, "Enter quantity",
+                        "Purchase Item", JOptionPane.QUESTION_MESSAGE));
+            } catch (Exception ex) {
+                return;
+            }
+
             if (quantity <= 0 || quantity > selectedProduct.getQuantity()) {
                 JOptionPane.showMessageDialog(frame, "Please enter a valid quantity!", "ERROR",
                         JOptionPane.ERROR_MESSAGE);
