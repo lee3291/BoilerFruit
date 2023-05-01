@@ -1,5 +1,4 @@
 # Ignore the files generate the program
-*.csv
 *.txt
 # Default ignored files
 .idea/shelf/
@@ -13,4 +12,3 @@
 
 /out/
 .DS_Store
-/data/
