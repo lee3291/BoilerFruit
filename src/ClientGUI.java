@@ -78,7 +78,7 @@ public class ClientGUI implements Runnable {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 try {
-                    socket = new Socket(ipAddress, 8080);
+                    socket = new Socket(InetAddress.getByName(ipAddress), 8080);
                     ois = new ObjectInputStream(socket.getInputStream());
                     printWriter = new PrintWriter(socket.getOutputStream());
                     printWriter.flush();
