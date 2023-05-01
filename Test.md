@@ -72,6 +72,7 @@ Steps:
 6. User selects the `Log in` button. 
 
 Expected result: Application verifies the user's `username` and `password` and loads their homepage automatically. 
+
 Test Status: Passed. 
 
 ## Test 5: Buy Item 
