@@ -305,8 +305,8 @@ public class Server implements Runnable {
      * send an ArrayList of Products that contain the searchKey in their name or description to client
      * ArrayList is empty if there is no matching Product
      *
-     * @param output      the output stream to communicate with client
-     * @param searchKey   the key to search (i.e. the product name or description); '-1' if no search is needed
+     * @param output    the output stream to communicate with client
+     * @param searchKey the key to search (i.e. the product name or description); '-1' if no search is needed
      */
     private void getStoreProduct(ObjectOutputStream output, String storeName, String searchKey) throws IOException {
         // @Ethan
@@ -362,8 +362,8 @@ public class Server implements Runnable {
     }
 
     /**
-     *  Find a store from all the stores of a seller, send to server.
-     *  Send null if store does not exist.
+     * Find a store from all the stores of a seller, send to server.
+     * Send null if store does not exist.
      *
      * @param output    the output stream to communicate with client
      * @param storeName the name of the store
@@ -426,7 +426,7 @@ public class Server implements Runnable {
      * @param output the output stream to communicate with client
      */
     private void getUserType(ObjectOutputStream output) throws IOException {
-        String userType = (currentUser instanceof Customer)? "Customer" : "Seller";
+        String userType = (currentUser instanceof Customer) ? "Customer" : "Seller";
         respondToClient(output, userType);
     }
 
@@ -482,6 +482,7 @@ public class Server implements Runnable {
 
     /**
      * Modify the {@link #users}'s password
+     *
      * @param password the new password of the user
      */
     private void modifyPW(String password) {
@@ -563,9 +564,10 @@ public class Server implements Runnable {
     }
 
     /**
-     *  Add current user(Customer)'s email to a seller's contactingCustomers list.
-     *  Send true if successful.
-     *  If customer email already exists in the list, send false
+     * Add current user(Customer)'s email to a seller's contactingCustomers list.
+     * Send true if successful.
+     * If customer email already exists in the list, send false
+     *
      * @param sellerEmail the sellerEmail the customer is trying to contact.
      */
     private void contactSeller(ObjectOutputStream output, String sellerEmail) throws IOException {
@@ -587,6 +589,7 @@ public class Server implements Runnable {
 
     /**
      * Send an ArrayList of contacted customer to client
+     *
      * @param output the output stream to communicate with client
      */
     private void contactCustomer(ObjectOutputStream output) throws IOException {

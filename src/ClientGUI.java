@@ -624,6 +624,7 @@ public class ClientGUI implements Runnable {
 
     /**
      * Query server for desired object.
+     *
      * @param query is the query convention in {@link Server}, processCommand method
      * @return the expected object
      * @throws Exception IO and ClassNotFound exceptions
@@ -876,7 +877,7 @@ public class ClientGUI implements Runnable {
 
         // north
         JPanel northPanel = new JPanel();
-        northPanel.setLayout(new GridLayout(2,0));
+        northPanel.setLayout(new GridLayout(2, 0));
 
         JLabel titleLabel = new JLabel("Purchase History");
         titleLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -884,7 +885,7 @@ public class ClientGUI implements Runnable {
         northPanel.add(titleLabel);
 
         JPanel columnPanel = new JPanel();
-        columnPanel.setLayout(new GridLayout(1,4));
+        columnPanel.setLayout(new GridLayout(1, 4));
 
         JLabel storeLabel = new JLabel("Store");
         storeLabel.setFont(new Font(null, Font.PLAIN, 20));
@@ -975,6 +976,7 @@ public class ClientGUI implements Runnable {
 
     /**
      * The Page for Seller users
+     *
      * @param stores the user's stores; used to make the page's component
      */
     void sellerPage(ArrayList<Store> stores) { // this stores will be allStores
@@ -1725,7 +1727,7 @@ public class ClientGUI implements Runnable {
     /**
      * Page for modify product
      *
-     * @param storeName the name of the store
+     * @param storeName  the name of the store
      * @param oldProduct the product to be modified
      */
     void modifyProductPage(String storeName, Product oldProduct) {
