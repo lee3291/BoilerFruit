@@ -367,7 +367,6 @@ public class Server implements Runnable {
      *
      * @param output    the output stream to communicate with client
      * @param storeName the name of the store
-     * @throws IOException
      */
     private void findSellerStore(ObjectOutputStream output, String storeName) throws IOException {
         // @Ethan
@@ -485,7 +484,7 @@ public class Server implements Runnable {
      * Modify the {@link #users}'s password
      * @param password the new password of the user
      */
-    private void modifyPW(String password) throws IOException {
+    private void modifyPW(String password) {
         // @Ethan
         currentUser.setPassword(password);
     }
@@ -493,7 +492,7 @@ public class Server implements Runnable {
     /**
      * Set user's online status to false and close the socket
      */
-    private void logOut() throws IOException {
+    private void logOut() {
         currentUser = null; // set current user to null, in case a different user logs in before the socket is lost
     }
 
@@ -553,32 +552,12 @@ public class Server implements Runnable {
         if (type.equals("Customer")) {
             Customer newCustomer = new Customer(username, email, password);
             users.put(email, newCustomer);
-          
-//            // TODO: delete after debug
-//            System.out.printf("Customer|%s|%s|%s\n", username, email, password);
-//            for (User u : users.values()) {
-//                System.out.println("User: ");
-//                System.out.println(u.getUserName());
-//                System.out.println(u.getEmail());
-//                System.out.println(u.getPassword());
-//                System.out.println(u.isOnline());
-//                System.out.println("-----");
-//            }
+
             respondToClient(output, 1);
         } else if (type.equals("Seller")) { // User is seller
             Seller newSeller = new Seller(username, email, password);
             users.put(email, newSeller);
 
-//            // TODO: delete after debug
-//            System.out.printf("Seller|%s|%s|%s\n", username, email, password);
-//            for (User u : users.values()) {
-//                System.out.println("User: ");
-//                System.out.println(u.getUserName());
-//                System.out.println(u.getEmail());
-//                System.out.println(u.getPassword());
-//                System.out.println(u.isOnline());
-//                System.out.println("-----");
-//            }
             respondToClient(output, 1);
         }
     }

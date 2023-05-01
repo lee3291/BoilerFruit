@@ -25,12 +25,6 @@ public class ClientGUI implements Runnable {
     public void run() {
         createGUI();
         ipAddressPage();
-//        loginPage();
-//        signUpPage();
-//        sellerPage(new ArrayList<>());
-//        customerPage(new ArrayList<>());
-//        editAccountPage();
-//        reviewHistoryPage();
     }
 
     void ipAddressPage() {
@@ -918,10 +912,6 @@ public class ClientGUI implements Runnable {
             JOptionPane.showMessageDialog(frame, "Something went wrong, Please try again!", "ERROR",
                     JOptionPane.ERROR_MESSAGE);
         }
-
-//        for (int i = 0; i < 15; i++) {
-//            purchaseHistory.add("Some purchase history example" + i);
-//        }
 
         JList<String> historyList = new JList<>();
         DefaultListModel<String> model = new DefaultListModel<>();
