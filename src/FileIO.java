@@ -14,8 +14,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FileIO {
     private final String dataFolder = "./data/"; // the path to the data directory
@@ -24,10 +24,10 @@ public class FileIO {
     /**
      * Write all user objects in users into a file (path: ./data/users.ser)
      *
-     * @param users a hashmap of all users
+     * @param users a concurrent hashmap of all users
      * @return true if success, false otherwise
      */
-    public boolean writeUsers(HashMap<String, User> users) {
+    public boolean writeUsers(ConcurrentHashMap<String, User> users) {
         new File(dataFolder).mkdirs();
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataFolder + usersFile))) {
             // Write object to file
@@ -48,10 +48,10 @@ public class FileIO {
     /**
      * Read all user object from data file (path: ./data/users.ser)
      *
-     * @return the HashMap<String, User> if success, null otherwise
+     * @return the ConcurrentHashMap<>()<String, User> if success, null otherwise
      */
-    public HashMap<String, User> readUsers() {
-        HashMap<String, User> users = new HashMap<>();
+    public ConcurrentHashMap<String, User> readUsers() {
+        ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
 
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(dataFolder + usersFile))) {
             User curr = (User) ois.readObject();
@@ -180,99 +180,4 @@ public class FileIO {
         System.out.printf("Products are exported to \n\t%s\n", filePath);
         return true;
     }
-
-    // TESTING
-//    public static void printUser(User user) {
-//        System.out.println("--------------------");
-//        if (user instanceof Seller seller) {
-//            System.out.printf("Seller %s\n", seller.getUserName());
-//
-//            System.out.println("Stores: ");
-//            for (Store store : seller.getStores().values()) {
-//                System.out.printf("%s; %.2f: \n", store.getStoreName(), store.getTotalRevenue());
-//                for (Product product : store.getCurrentProducts()) {
-//                    System.out.println(product.productInfo());
-//                }
-//            }
-//        } else if (user instanceof Customer customer) {
-//            System.out.printf("Customer %s\n", customer.getUserName());
-//
-//            System.out.println("Purchase history: ");
-//            for (String his : customer.getPurchaseHistory()) {
-//                System.out.println(his);
-//            }
-//        }
-//    }
-//
-//    public static void main(String[] args) {
-//        HashMap<String, User> users = new HashMap<>();
-//
-//        // Example products
-//        Product product1 = new Product("Apple", "Store", "Some Apples", 2.00,
-//                2);
-//        Product product2 = new Product("Banana", "Store", "Some Bananas", 3.00,
-//                3);
-//        Product product3 = new Product("Oranges", "Store", "Some Oranges", 4.00,
-//                12);
-//        ArrayList<Product> exampleProducts = new ArrayList<>();
-//        exampleProducts.add(product1);
-//        exampleProducts.add(product2);
-//        exampleProducts.add(product3);
-//
-//        // Example Sale history
-//        String saleHistory1 = "Apple, 1, 2.00, Bao2803";
-//        String saleHistory2 = "Oranges, 3, 3.00, Bao2803";
-//        ArrayList<String> exampleSaleHistory = new ArrayList<>();
-//        exampleSaleHistory.add(saleHistory1);
-//        exampleSaleHistory.add(saleHistory2);
-//
-//        String customerEmail1 = "bp@purdue.edu";
-//        ArrayList<String> customerEmails = new ArrayList<>();
-//        customerEmails.add(customerEmail1);
-//
-//        // Example stores
-//        Store store1 = new Store("Amazon", "Bezos", 11, exampleProducts,
-//                exampleSaleHistory, customerEmails);
-//        Store store2 = new Store("Tiki", "Bezos");
-//        Store store3 = new Store("Lazada", "Bezos");
-//        HashMap<String, Store> exampleStores = new HashMap<>();
-//        exampleStores.put(store1.getStoreName(), store1);
-//        exampleStores.put(store2.getStoreName(), store2);
-//        exampleStores.put(store3.getStoreName(), store3);
-//
-//        // Example history
-//        String history1 = "Apple, 1, 2.00, Amazon";
-//        String history2 = "Oranges, 3, 3.00, Amazon";
-//        ArrayList<String> exampleHistory = new ArrayList<>();
-//        exampleHistory.add(history1);
-//        exampleHistory.add(history2);
-//
-//        // Seller
-//        Seller seller = new Seller("Bezos", "b@amazon.com", "password", exampleStores);
-//        users.put(seller.getEmail(), seller);
-//
-//        Seller scamSeller = new Seller("Bezos2", "b2@amazon.com", "password2", exampleStores);
-//        users.put(scamSeller.getEmail(), scamSeller);
-//
-//        // Customer
-//        Customer customer = new Customer("Bao2803", "bp@purdue.edu", "notPassword",
-//                exampleHistory);
-//        users.put(customer.getEmail(), customer);
-//
-//        // Print users
-//        for (User user : users.values()) {
-//            printUser(user);
-//        }
-//        System.out.println("#####################################");
-//
-//        // Write to file
-//        FileIO fileIO = new FileIO();
-//        fileIO.writeUsers(users);
-//
-//        // Read from file and print
-//        HashMap<String, User> usersIn = fileIO.readUsers();
-//        for (User user : usersIn.values()) {
-//            printUser(user);
-//        }
-//    }
 }

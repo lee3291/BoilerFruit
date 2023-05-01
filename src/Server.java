@@ -5,12 +5,13 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server implements Runnable {
     private User currentUser; // the client user
     private final Socket socket; // the client socket
     public final static Object sentinel = new Object(); // gatekeeper object for concurrency
-    private static HashMap<String, User> users; // all the users
+    private static ConcurrentHashMap<String, User> users; // all the users
 
     /**
      * Initiate a new server object
