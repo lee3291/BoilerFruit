@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -78,7 +79,7 @@ public class ClientGUI implements Runnable {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 try {
-                    socket = new Socket(ipAddress, 8080);
+                    socket = new Socket(InetAddress.getByName(ipAddress), 8080);
                     ois = new ObjectInputStream(socket.getInputStream());
                     printWriter = new PrintWriter(socket.getOutputStream());
                     printWriter.flush();
@@ -555,6 +556,7 @@ public class ClientGUI implements Runnable {
                 if (success) {
                     JOptionPane.showMessageDialog(frame, "Purchase Complete!", "SUCCESS",
                             JOptionPane.PLAIN_MESSAGE);
+                    customerPage(((ArrayList<Product>) queryServer("GETMRKPROD_-1")));
                 } else {
                     JOptionPane.showMessageDialog(frame, "Invalid quantity, please refresh and try again!",
                             "Purchase Failed!", JOptionPane.ERROR_MESSAGE);
