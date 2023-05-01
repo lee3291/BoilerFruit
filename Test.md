@@ -84,10 +84,10 @@ Steps:
 2. The seller client creates a new store within their clientGUI side using the `create store` button, and fills in the appropriate store name within the `JOptionPane`.
 3. The seller client adds 5 new products to the created store using the `importCSV` button, and fills in the desired file path within the `JOptionPane`.
 4. The seller client adds one extra product to the created store using the `add product ` button, and fills in the appropriate fields within the `add product page`. 
-5. The customer refreshes the page, s/he should see that the page is populated with 6 products from the store created in step 2.  
+5. The customer refreshes the page, s/he should see that the page is populated with 6 products from the store created in _step 2_.  
 6. The customer chooses `purchase item`, fills in the appropriate quantity in the `JOptionPane`, and the purchase is completed. 
 7. The customer chooses `view history`, and the information from the last purchase appears here.
-8. Meanwhile, the seller can access the `view sale` button within the store created in step 2, and the customer purchase in step 6 should appear here.
+8. Meanwhile, the seller can access the `view sale` button within the store created in _step 2_, and the customer purchase in _step 6_ should appear here.
 
 Expected result: 
 
@@ -162,7 +162,7 @@ Test Status: Passed.
 9. The seller logs in with the new `id` and `password`, the seller should be taken to the `seller page`. 
 10. Going back to the `edit account page`, the seller chooses to delete his/her account this time.
 11. The user is then taken to the `login page`, he/she can no longer log in with neither the new credentials nor the old credentials. 
-12. The customer from *step 2* of **Test 8** can `refresh` his/her page and all the products listed by the deleted seller from step 10 will disappear.
+12. The customer from *step 2* of **Test 8** can `refresh` his/her page and all the products listed by the deleted seller from _step 10_ will disappear.
 
 Expected result: 
 
