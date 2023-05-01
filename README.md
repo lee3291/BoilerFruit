@@ -53,7 +53,7 @@ The `Customer` class is a subclass of the `User` class and represents a customer
 
 The `purchaseHistory` field is an ArrayList that contains Strings, each of which represents information about a single purchase. The String includes the name of the `item`, `quantity`, `price`, and `store`.
 
-The class provides two constructors. The first constructor takes four parameters: `userName`, `email, `password`, and `purchaseHistory`. It calls the constructor of the superclass `User` to set the `userName`, `email`, and `password` fields, and initializes the `purchaseHistory` field using the provided ArrayList.
+The class provides two constructors. The first constructor takes four parameters: `userName`, `email`, `password`, and `purchaseHistory`. It calls the constructor of the superclass `User` to set the `userName`, `email`, and `password` fields, and initializes the `purchaseHistory` field using the provided ArrayList.
 
 The second constructor takes three parameters: `userName`, `email`, and `password`. It calls the constructor of the superclass `User` to set the `userName`, `email`, and `password` fields, and initializes the `purchaseHistory` field with an empty ArrayList.
 
